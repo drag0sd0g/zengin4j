@@ -43,6 +43,13 @@ subprojects {
     }
 
     tasks.withType<Javadoc>().configureEach {
+        // A module whose only source is module-info.java has nothing to
+        // document. JDK 21's javadoc calls that an error; JDK 25's does not.
+        // The §7 skeleton modules have exactly that shape until their epic
+        // fills them in, so skip rather than fail — and keep the JDK 21 leg of
+        // the CI matrix meaningful.
+        onlyIf { source.files.any { file -> file.name != "module-info.java" } }
+
         (options as StandardJavadocDocletOptions).apply {
             encoding = "UTF-8"
             charSet = "UTF-8"
