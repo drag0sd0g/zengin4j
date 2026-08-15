@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }} · JDK ${{ matrix.java }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # R-T18: Windows is mandatory, not optional. Line endings and default
+        # charsets differ materially, and this is a byte-oriented library.
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        java: ['21', '25']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # `build` runs, in one command: compilation on the Java 21 baseline, the
+      # tests, the JaCoCo floor on core (R-T16), the ArchUnit module rules
+      # (R-M5), the descriptor consistency check (R-F1) and the generated-source
+      # drift check (R-M8).
+      - name: Build
+        shell: bash
+        run: ./gradlew build --stacktrace
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ matrix.os }}-jdk${{ matrix.java }}
+          path: |
+            **/build/reports/tests/
+            **/build/reports/jacoco/
+          retention-days: 7
+
+  examples:
+    name: Examples run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+
+      # R-DOC6: an example that does not run is documentation of something that
+      # used to work.
+      - name: Run the examples
+        run: |
+          ./gradlew :zengin4j-testkit:jar
+          java -cp "zengin4j-core/build/libs/*:zengin4j-testkit/build/libs/*" \
+               examples/ParseSougouFurikomi.java
+
+  no-real-identifiers:
+    name: No real payment identifiers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # R-L5, P1. This is a payments library; a leaked-looking fixture is a
+      # liability even when it is invented.
+      - name: Scan for identifiers outside the synthetic ranges
+        run: ./.github/scripts/check-no-real-identifiers.sh
+
+  verified-formats-cite-sources:
+    name: No verified format without sources
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+
+      # R-0.1, risk R2: the descriptor loader refuses `verified: true` below two
+      # cited sources, and this task exercises every bundled descriptor through
+      # it. A descriptor claiming verification it has not earned fails here.
+      - name: Verify descriptors
+        run: ./gradlew :zengin4j-codegen:verifyFormatDescriptors

@@ -1,0 +1,32 @@
+# Version catalogue (R-B1).
+#
+# NOTE: nothing here is a runtime dependency of zengin4j-core (R-M1, P3).
+# Every entry below is test-scoped or build-scoped. The ArchUnit rule
+# `coreHasNoThirdPartyRuntimeDependencies` enforces that at the bytecode level.
+[versions]
+junit = "5.14.4"
+assertj = "3.27.7"
+# jqwik 1.10.x targets JUnit Platform 1.14, i.e. the JUnit 5.14 line.
+# Do not bump JUnit to 6.x without checking jqwik's platform dependency first.
+jqwik = "1.10.1"
+archunit = "1.5.0"
+jacoco = "0.8.15"
+pitest = "1.25.9"
+pitest-junit5 = "1.2.3"
+# Build-scoped only: used by zengin4j-codegen to read the descriptors and
+# generate them into core. It never reaches a published runtime class path.
+snakeyaml = "2.6"
+
+[libraries]
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+jqwik = { module = "net.jqwik:jqwik", version.ref = "jqwik" }
+archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+# Driven through its command line entry point rather than the Gradle plugin:
+# info.solidsoft.pitest 1.15.0 is the newest release and does not run on
+# Gradle 9 (it reads reporting.baseDir, which was removed).
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+pitest-command-line = { module = "org.pitest:pitest-command-line", version.ref = "pitest" }
+pitest-junit5-plugin = { module = "org.pitest:pitest-junit5-plugin", version.ref = "pitest-junit5" }
