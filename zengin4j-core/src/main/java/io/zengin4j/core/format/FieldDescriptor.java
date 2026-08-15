@@ -1,0 +1,111 @@
+package io.zengin4j.core.format;
+
+import java.util.Objects;
+import java.util.Optional;
+
+/**
+ * One fixed-width field within a record.
+ *
+ * <p><strong>{@code offset} is computed, never transcribed.</strong> The
+ * loader assigns it from the cumulative length of the preceding fields
+ * (R-F2). Hand-written offsets are the largest single source of defects in
+ * fixed-length parsers, and they are unnecessary: the lengths already
+ * determine them.
+ *
+ * @param sequence  1-based position within the record, as printed in the
+ *                  source layout tables
+ * @param id        the identifier used in code and in the API, for example
+ *                  {@code beneficiaryName}
+ * @param nameJa    the Japanese field name, for example {@code 受取人名}
+ * @param nameEn    the English gloss
+ * @param type      {@code N} or {@code C}
+ * @param offset    computed byte offset from the start of the record
+ * @param length    field length in <strong>bytes</strong> (R-C15)
+ * @param required  whether a value must be present; informational in 0.1.0,
+ *                  consumed by the validation rules in Epic 4
+ * @param filler    whether the field is reserved space with no meaning
+ * @param sensitive whether the value must be masked in diagnostics (R-E6)
+ * @param format    an optional declared interpretation
+ * @param constant  an optional fixed value the field always carries
+ * @param codeList  an optional code list constraining the value
+ * @param note      an optional remark, typically a {@code [VERIFY]} caveat
+ * @since 0.1.0
+ */
+public record FieldDescriptor(
+        int sequence,
+        String id,
+        String nameJa,
+        String nameEn,
+        FieldType type,
+        int offset,
+        int length,
+        boolean required,
+        boolean filler,
+        boolean sensitive,
+        Optional<FieldFormat> format,
+        Optional<String> constant,
+        Optional<CodeList> codeList,
+        Optional<String> note) {
+
+    /**
+     * Validates the components.
+     *
+     * @throws IllegalArgumentException if the descriptor is internally
+     *                                  inconsistent
+     */
+    public FieldDescriptor {
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(nameJa, "nameJa");
+        Objects.requireNonNull(nameEn, "nameEn");
+        Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(format, "format");
+        Objects.requireNonNull(constant, "constant");
+        Objects.requireNonNull(codeList, "codeList");
+        Objects.requireNonNull(note, "note");
+        if (id.isBlank()) {
+            throw new IllegalArgumentException("field id must not be blank");
+        }
+        if (length < 1) {
+            throw new IllegalArgumentException("field '" + id + "' must be at least one byte, found " + length);
+        }
+        if (offset < 0) {
+            throw new IllegalArgumentException("field '" + id + "' has a negative offset");
+        }
+        if (constant.isPresent() && constant.get().length() != length) {
+            throw new IllegalArgumentException("field '" + id + "' declares constant '" + constant.get()
+                    + "' of " + constant.get().length() + " characters, but the field is " + length + " bytes");
+        }
+        if (format.isPresent()) {
+            FieldFormat declared = format.get();
+            if (type != FieldType.N) {
+                throw new IllegalArgumentException("field '" + id + "' declares format "
+                        + declared.descriptorValue() + ", which applies only to N fields");
+            }
+            Optional<Integer> fixedLength = declared.requiredLength();
+            if (fixedLength.isPresent() && fixedLength.get() != length) {
+                throw new IllegalArgumentException("field '" + id + "' declares format "
+                        + declared.descriptorValue() + ", which requires length " + fixedLength.get()
+                        + ", but the field is " + length + " bytes");
+            }
+        }
+    }
+
+    /**
+     * Returns the offset one past the end of this field.
+     *
+     * @return {@code offset + length}
+     */
+    public int endOffset() {
+        return offset + length;
+    }
+
+    /**
+     * Reports whether this field declares a particular interpretation.
+     *
+     * @param candidate the interpretation to test for
+     * @return {@code true} if this field declares {@code candidate}
+     */
+    public boolean hasFormat(FieldFormat candidate) {
+        return format.isPresent() && format.get() == candidate;
+    }
+}

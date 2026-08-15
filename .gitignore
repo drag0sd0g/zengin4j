@@ -1,0 +1,23 @@
+**/build/
+buildSrc/build/
+buildSrc/.gradle/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.DS_Store
+*.log
+.mcp.*
+*.hprof
+hs_err_pid*.log
+replay_pid*.log
+.kotlin/
+out/
+*.class
+zengin4j-*.md
+.claude/
+# jqwik records failing samples here so it can replay them
+.jqwik-database

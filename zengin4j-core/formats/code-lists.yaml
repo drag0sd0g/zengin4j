@@ -1,0 +1,103 @@
+# Code lists shared by the format descriptors.
+#
+# Each list carries its own citations and is held to the same bar as a format
+# descriptor: verified: true requires at least two independent published
+# sources (R-0.1), which the loader enforces.
+#
+# Every list is open: true. An unrecognised value is carried through as raw
+# field content rather than rejected. Verification means the listed values are
+# confirmed, not that no other value can exist — the JBA document itself
+# defines business type codes beyond the ones any single format needs.
+#
+# Full citations, with retrieval dates, are in docs/SOURCES.md.
+
+code-lists:
+
+  - id: dataKubun
+    name-ja: データ区分
+    name-en: Record Type
+    verified: true
+    open: true
+    sources:
+      - "全国銀行協会 — 標準通信プロトコル（ベーシック手順）適用業務およびレコード・フォーマット, 令和元年12月, section 8. retrieved 2026-08-15"
+      - "群馬銀行 — 全銀協制定ファイルフォーマット【総合振込】. retrieved 2026-08-15"
+      - "兵庫県信用組合 — 全銀協規定フォーマットについて. retrieved 2026-08-15"
+    values:
+      - { code: "1", ja: ヘッダーレコード, en: Header record, verified: true }
+      - { code: "2", ja: データレコード, en: Data record, verified: true }
+      - { code: "8", ja: トレーラーレコード, en: Trailer record, verified: true }
+      - { code: "9", ja: エンドレコード, en: End record, verified: true }
+
+  - id: typeCode
+    name-ja: 種別コード
+    name-en: Business Type
+    verified: true
+    open: true
+    note: "Not exhaustive. The JBA document defines further business types this library does not implement; an unlisted value is carried through rather than rejected."
+    sources:
+      - "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月. retrieved 2026-08-15"
+      - "兵庫県信用組合 — 全銀協規定フォーマットについて. retrieved 2026-08-15"
+    values:
+      - { code: "11", ja: 給与振込（民間）, en: Payroll transfer, verified: true }
+      - { code: "12", ja: 賞与振込（民間）, en: Bonus transfer, verified: true }
+      - { code: "21", ja: 総合振込, en: Bulk credit transfer, verified: true }
+      - { code: "71", ja: 給与振込（地方公務員）, en: Payroll transfer for local government employees, verified: true }
+      - { code: "72", ja: 賞与振込（地方公務員）, en: Bonus transfer for local government employees, verified: true }
+      - { code: "91", ja: 預金口座振替, en: Direct debit, verified: true, note: "Used by both the instruction file and the result file, which is why a 種別コード alone cannot always identify a layout. See ADR-0007." }
+      - { code: "41", ja: 株式配当金振込, en: Share dividend transfer, verified: false, note: "Confirmed by the JBA document only; a second independent source is still wanted." }
+
+  - id: codeKubun
+    name-ja: コード区分
+    name-en: Character Code
+    verified: true
+    open: true
+    note: "Value 1 indicates EBCDIC. The reader rejects such files by name rather than decoding them as JIS (R-C14)."
+    sources:
+      - "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, section 8. retrieved 2026-08-15"
+      - "十八親和銀行 — 全銀フォーマット. retrieved 2026-08-15"
+    values:
+      - { code: "0", ja: JIS, en: JIS, verified: true }
+      - { code: "1", ja: EBCDIC, en: EBCDIC, verified: true }
+
+  - id: accountType
+    name-ja: 預金種目
+    name-en: Account Type
+    verified: true
+    open: true
+    note: "The data record admits all four values. For the originator's own account in the header, the JBA document lists only 1, 2 and 9 — a narrower set that this shared list does not express; see OQ-9."
+    sources:
+      - "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, section 8. retrieved 2026-08-15"
+      - "群馬銀行 — 全銀協制定ファイルフォーマット【総合振込】. retrieved 2026-08-15"
+      - "兵庫県信用組合 — 全銀協規定フォーマットについて. retrieved 2026-08-15"
+    values:
+      - { code: "1", ja: 普通預金, en: Ordinary deposit, verified: true }
+      - { code: "2", ja: 当座預金, en: Current account, verified: true }
+      - { code: "4", ja: 貯蓄預金, en: Savings deposit, verified: true }
+      - { code: "9", ja: その他, en: Other, verified: true }
+
+  - id: newCode
+    name-ja: 新規コード
+    name-en: New Account Code
+    verified: true
+    open: true
+    sources:
+      - "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, section 8. retrieved 2026-08-15"
+      - "愛知銀行 — 総合振込レコード・フォーマット. retrieved 2026-08-15"
+      - "十八親和銀行 — 全銀フォーマット. retrieved 2026-08-15"
+    values:
+      - { code: "0", ja: その他, en: Other, verified: true }
+      - { code: "1", ja: 第1回振込分, en: First transfer to this account, verified: true }
+      - { code: "2", ja: 変更分, en: "Beneficiary bank, branch, account type or account number changed", verified: true }
+
+  - id: transferCategory
+    name-ja: 振込指定区分
+    name-en: Transfer Method
+    verified: true
+    open: true
+    note: "Several institutions document this field as unused and require 0, and one names code 7 電信振込 rather than テレ振込. The codes agree; the wording and the obligation do not."
+    sources:
+      - "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, section 8. retrieved 2026-08-15"
+      - "愛知銀行 — 総合振込レコード・フォーマット. retrieved 2026-08-15"
+    values:
+      - { code: "7", ja: テレ振込, en: Telegraphic transfer, verified: true }
+      - { code: "8", ja: 文書振込, en: Document transfer, verified: true }
