@@ -17,7 +17,6 @@ replay_pid*.log
 .kotlin/
 out/
 *.class
-zengin4j-*.md
 .claude/
 # jqwik records failing samples here so it can replay them
 .jqwik-database
