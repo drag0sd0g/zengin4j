@@ -64,7 +64,7 @@ public final class ParseSougouFurikomi {
         MonthDayResolver resolver = MonthDayResolver.forwardLooking(LocalDate.now());
 
         for (Batch batch : parsed.batches()) {
-            String valueDate = batch.header().valueDate()
+            String valueDate = batch.header().effectiveDate()
                     .map(monthDay -> resolver.resolve(monthDay).explain())
                     .orElse("no value date");
 

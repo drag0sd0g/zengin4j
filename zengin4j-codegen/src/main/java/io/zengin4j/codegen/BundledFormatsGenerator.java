@@ -1,8 +1,10 @@
 package io.zengin4j.codegen;
 
+import io.zengin4j.core.charset.CharacterClass;
 import io.zengin4j.core.format.CodeList;
 import io.zengin4j.core.format.CodeValue;
 import io.zengin4j.core.format.FieldDescriptor;
+import io.zengin4j.core.format.FieldSpec;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
@@ -44,6 +46,7 @@ final class BundledFormatsGenerator {
         StringBuilder out = new StringBuilder();
         out.append("package ").append(PACKAGE).append(';').append(NL).append(NL)
                 .append("import io.zengin4j.core.annotation.Generated;").append(NL)
+                .append("import io.zengin4j.core.charset.CharacterClass;").append(NL)
                 .append("import io.zengin4j.core.format.CodeList;").append(NL)
                 .append("import io.zengin4j.core.format.CodeValue;").append(NL)
                 .append("import io.zengin4j.core.format.FieldFormat;").append(NL)
@@ -255,6 +258,17 @@ final class BundledFormatsGenerator {
                     out.append(".withCodeList(codeLists.get(").append(quote(value.id())).append("))"));
             field.note().ifPresent(value ->
                     out.append(".withNote(").append(quote(value)).append(')'));
+            // Only when it differs from what the field type implies, so the
+            // generated source shows the declarations rather than the defaults.
+            if (!field.codes().isEmpty()) {
+                out.append(".withCodes(List.of(")
+                        .append(field.codes().stream().map(BundledFormatsGenerator::quote)
+                                .collect(java.util.stream.Collectors.joining(", ")))
+                        .append("))");
+            }
+            if (field.charClass() != FieldSpec.defaultCharacterClass(field.type())) {
+                out.append(".withCharacterClass(CharacterClass.").append(field.charClass().name()).append(')');
+            }
             out.append(i == fields.size() - 1 ? "));" : ",").append(NL);
         }
         out.append("    }").append(NL).append(NL);

@@ -1,0 +1,29 @@
+# R-B8. Two ecosystems, because a supply-chain problem can arrive through either
+# the library's dependencies or the workflows that build and release it.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # Test tooling moves together and is not shipped; one PR rather than five.
+      test-dependencies:
+        patterns:
+          - "org.junit*"
+          - "org.assertj*"
+          - "com.tngtech.archunit*"
+          - "com.code-intelligence*"
+          - "org.openjdk.jmh*"
+    commit-message:
+      prefix: build
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci

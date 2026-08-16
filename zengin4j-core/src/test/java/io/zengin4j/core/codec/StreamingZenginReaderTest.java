@@ -51,7 +51,7 @@ class StreamingZenginReaderTest {
                 switch (view.kind()) {
                     case HEADER -> {
                         assertThat(view.asString("originatorCode")).isEqualTo("9900000001");
-                        assertThat(view.asString("originatorName")).isEqualTo("ﾃｽﾄｼｮｳｼﾞ");
+                        assertThat(view.asString("originatorName")).isEqualTo("ﾃｽﾄｼﾖｳｼﾞ");
                         assertThat(view.asMonthDay(view.field("valueDate")))
                                 .contains(MonthDay.of(9, 30));
                         assertThat(view.asCodeKubun(view.field("codeKubun"))).isEqualTo(CodeKubun.JIS);

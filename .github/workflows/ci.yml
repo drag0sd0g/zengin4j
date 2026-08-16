@@ -77,6 +77,24 @@ jobs:
             echo "::endgroup::"
           done
 
+  constant-memory:
+    name: 1 GB under a 64 MB heap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+
+      # R-P2. The constrained heap is the assertion: a 1 GB file is roughly nine
+      # million records, and anything on the read path retaining per-record
+      # state dies long before the end. Completing is the result. Takes about
+      # ten seconds, so it runs on every push rather than nightly.
+      - name: Stream a 1 GB file under a constrained heap
+        run: ./gradlew :benchmarks:constantMemory
+
   no-real-identifiers:
     name: No real payment identifiers
     runs-on: ubuntu-latest

@@ -35,19 +35,21 @@ ZEDI のプロファイルは、Business Application Header と電文本体を *
 
 ## 現在の状況
 
-本リポジトリは **Epic 2（総合振込の読み書き）** の段階です。
+本リポジトリは **Epic 3（120 バイト系フォーマットと文字集合）** の段階です。
 
 | | |
 |---|---|
-| ✅ | 総合振込（`21`）の読み取り: ストリーミング / バッチ / ファイル一括の 3 種類の API |
+| ✅ | 120 バイト系 4 フォーマット: 総合振込（`21`）、給与振込（`11`）、賞与振込（`12`）、預金口座振替（`91`） |
+| ✅ | 読み取り: ストリーミング / バッチ / ファイル一括の 3 種類の API |
 | ✅ | **バイト単位で同一の**書き出し。読み取ったファイルの区切り形式もそのまま再現 |
 | ✅ | ファイル組み立て。トレーラの件数・合計金額は明細から自動計算 |
 | ✅ | データとしてのフォーマット定義、バイト位置の自動計算、ビルド時の桁数合計チェック |
 | ✅ | フォーマット形状に対応した生成レコード型（コミット済み・差分検出付き） |
+| ✅ | 項目ごとの使用可能文字チェック。違反バイトの位置を返します |
+| ✅ | Shift_JIS / CP932 / UTF-8 対応。両者の差異は文書化しテストで固定 |
 | ✅ | 任意のレコード区切り（なし / CR / LF / CRLF、混在も可）、BOM、EOF バイトの処理 |
 | ✅ | 厳格モードと寛容モード。不正レコードは例外ではなくデータとして表現 |
 | ✅ | 年を持たない `MMDD` 日付の年補完（明示的な戦略指定が必須） |
-| ⬜ | 残りの 120 バイト系フォーマットと文字集合の処理 — Epic 3 |
 | ⬜ | バイト位置つき検証結果、JSON / SARIF 出力 — Epic 4 |
 | ⬜ | コマンドラインツール — Epic 5 |
 | ⬜ | 半角カナ変換と濁点を壊さない切り詰め — Epic 6 |
@@ -102,7 +104,7 @@ try (ZenginReader reader = ZenginReaders.open(path, options)) {
 ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
         .allowUnverifiedFormats(true)   // 0.1.0 では必須。DISCLAIMER.md を参照
         .header(h -> h.set("originatorCode", "9900000001")
-                      .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
+                      .set("originatorName", "ﾃｽﾄｼﾖｳｼﾞ")
                       .set("valueDate", MonthDay.of(9, 30)))
         .payment(p -> p.set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ")
                        .set("accountNumber", "9876543")
@@ -124,7 +126,8 @@ assert Arrays.equals(ZenginWriters.toByteArray(parsed, WriterOptions.defaults())
 各レコードが元のバイト列を保持し、復号した値から再生成しない理由がこれです。予備領域や、まだ検証
 できていない値が、往復しても変化しません。
 
-実行可能な例は [`examples/`](examples/) にあります。
+実行可能な例は [`examples/`](examples/) にあります。各フォーマットのバイト配置は
+[`docs/formats/`](docs/formats/) にあり、ライブラリが実際に使用する定義から生成しています。
 
 ## 2 つの境界
 
@@ -182,6 +185,12 @@ JDK 21 以降が必要です。使用する JDK に関わらず Java 21 のバ�
 ファジング自体はゲートに含めていません。非決定的であることが本質であり、コミットごとの検査に求め
 られる性質とは正反対だからです。すでに発見済みの入力の再実行は決定的で 2 秒程度なので、含めていま
 す。
+
+## リリース
+
+公開は手動承認付きの GitHub Actions でのみ行い、開発マシンからは実行できません。手順は
+[RELEASING.md](RELEASING.md) を参照してください。公開対象は `zengin4j-core` と
+`zengin4j-testkit` のみです。
 
 ## ライセンス
 

@@ -40,6 +40,9 @@ EXCLUDES=(
     ':(exclude)**/build/**'
     ':(exclude)zengin4j-build-specification.md'
     ':(exclude)**/resources/conformance/input/**'
+    # JMH's own output: nanosecond timings and sample counts, written by the
+    # harness rather than by anyone here. Committed so runs can be compared.
+    ':(exclude)benchmarks/results/*.json'
 )
 
 violations=0

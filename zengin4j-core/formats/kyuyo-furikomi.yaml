@@ -1,0 +1,92 @@
+# 給与振込 (kyuyo furikomi) — payroll transfer, 種別コード 11, 120 bytes.
+#
+# verified: false, though seven independent sources now agree on every offset
+# and every length. What holds the flag is D-002: sources split evenly on
+# whether 社員番号 and 所属コード are N or C.
+#
+# **This format is not 総合振込 with three fields renamed.** The data record has
+# fourteen fields, not sixteen:
+#
+#   総合振込                         給与振込
+#   12 顧客コード1  C(10)            12 社員番号   C(10)
+#   13 顧客コード2  C(10)            13 所属コード C(10)
+#   14 振込指定区分 N(1)             14 ダミー     C(9)
+#   15 識別表示     C(1)             —
+#   16 ダミー       C(7)             —
+#
+# The last twenty-nine bytes total the same either way, which is exactly why
+# deriving this layout from 総合振込 looks safe and is not. A parser assuming
+# 総合振込's tail would read this format's filler as a 振込指定区分 and an
+# 識別表示, and would treat 社員番号 and 所属コード as an EDI payload whenever
+# the byte at offset 112 happened to be Y.
+#
+# Byte offsets do not appear in this file. They are computed from the cumulative
+# field lengths when the descriptor is loaded (R-F2).
+
+format:
+  id: kyuyo-furikomi
+  name-ja: 給与振込
+  name-en: Payroll Transfer
+  type-code: "11"
+  record-length: 120
+  verified: false
+  sources:
+    - "全国銀行協会 — 「全銀協パーソナル・コンピュータ用標準通信プロトコル（ベーシック手順）適用業務およびレコード・フォーマット」令和元年12月, section 4 給与・賞与振込レコード・フォーマット. https://www.zenginkyo.or.jp/fileadmin/res/abstract/efforts/system/jba_protocol_pc.pdf retrieved 2026-08-15. Supports all four record types."
+    - "十八親和銀行 — 「全銀フォーマット」. https://www.18shinwabank.co.jp/pdf/bb_format_zengin.pdf retrieved 2026-08-15. Supports the data record, including field 14 as ダミー C(9)."
+    - "愛知銀行 — 「給与振込レコード・フォーマット」. https://www.aichibank.co.jp/corporate/efficiently/bizdirect/files/pdf/zengin_format.pdf retrieved 2026-08-15. Supports the data record."
+    - "大分銀行 — 「給与・賞与振込ファイル（全銀協規定形式）」. https://www.dhbk.co.jp/business/efficiency/ib/pdf/kyuuyo_shouyo_zenginkyou.pdf retrieved 2026-08-16. All four record types with byte positions; gives 社員番号/所属コード as C."
+    - "ろうきん — 「給与・賞与振込 振込先ファイルフォーマット（全銀協規定形式）」. https://fb.rokin.jp/manual/pdf/format_kyuuyoshouyo1.pdf retrieved 2026-08-16. All four record types; gives 社員番号/所属コード as N."
+    - "三菱UFJ銀行 — 「給与・賞与振込 ファイルフォーマット」. https://bizstation.bk.mufg.jp/biz/help/pdf/form_4_1_2_20080512.pdf retrieved 2026-08-16. Labels field 9 預金者名 while describing its content as 受取人名."
+    - "きらぼし銀行 — 「《給与・賞与振込》振込依頼ファイル・フォーマット（全銀協規定形式）」. https://www.kiraboshibank.co.jp/ retrieved 2026-08-16. All four record types; gives 社員番号/所属コード as C."
+  note: "Every offset and length is corroborated by seven independent sources, which agree. Held at verified: false by D-002 — the standard gives 社員番号/所属コード as N(10) and this descriptor declares C, for the reason recorded there — and by D-003 on the permitted character set. See docs/DISCREPANCIES.md."
+
+  records:
+
+    header:
+      discriminator: "1"
+      fields:
+        - { seq: 1,  id: dataKubun,        ja: データ区分,   en: Record Type,        type: N, length: 1,  const: "1", codelist: dataKubun }
+        - { seq: 2,  id: typeCode,         ja: 種別コード,   en: Business Type,      type: N, length: 2,  const: "11", codelist: typeCode }
+        - { seq: 3,  id: codeKubun,        ja: コード区分,   en: Character Code,     type: N, length: 1,  codelist: codeKubun, format: CODE-KUBUN }
+        - { seq: 4,  id: originatorCode,   ja: 委託者コード, en: Originator Code,    type: N, length: 10, required: true }
+        - { seq: 5,  id: originatorName,   ja: 委託者名,     en: Originator Name,    type: C, length: 40, charclass: PAYROLL_NAME }
+        - { seq: 6,  id: valueDate,        ja: 振込指定日,   en: Value Date,         type: N, length: 4,  format: MMDD }
+        - { seq: 7,  id: originBankCode,   ja: 仕向銀行番号, en: Origin Bank Code,   type: N, length: 4,  required: true }
+        - { seq: 8,  id: originBankName,   ja: 仕向銀行名,   en: Origin Bank Name,   type: C, length: 15, charclass: BANK_NAME }
+        - { seq: 9,  id: originBranchCode, ja: 仕向支店番号, en: Origin Branch Code, type: N, length: 3,  required: true }
+        - { seq: 10, id: originBranchName, ja: 仕向支店名,   en: Origin Branch Name, type: C, length: 15, charclass: BANK_NAME }
+        - { seq: 11, id: accountType,      ja: 預金種目,     en: Account Type,       type: N, length: 1,  codelist: accountType, codes: "1,2,9" }
+        - { seq: 12, id: accountNumber,    ja: 口座番号,     en: Account Number,     type: N, length: 7,  sensitive: true }
+        - { seq: 13, id: dummy,            ja: ダミー,       en: Filler,             type: C, length: 17, filler: true }
+
+    data:
+      discriminator: "2"
+      fields:
+        - { seq: 1,  id: dataKubun,             ja: データ区分,       en: Record Type,             type: N, length: 1,  const: "2", codelist: dataKubun }
+        - { seq: 2,  id: beneficiaryBankCode,   ja: 被仕向銀行番号,   en: Beneficiary Bank Code,   type: N, length: 4,  required: true }
+        - { seq: 3,  id: beneficiaryBankName,   ja: 被仕向銀行名,     en: Beneficiary Bank Name,   type: C, length: 15, charclass: BANK_NAME }
+        - { seq: 4,  id: beneficiaryBranchCode, ja: 被仕向支店番号,   en: Beneficiary Branch Code, type: N, length: 3,  required: true }
+        - { seq: 5,  id: beneficiaryBranchName, ja: 被仕向支店名,     en: Beneficiary Branch Name, type: C, length: 15, charclass: BANK_NAME }
+        - { seq: 6,  id: clearingHouseCode,     ja: 手形交換所番号,   en: Clearing House Code,     type: N, length: 4 }
+        - { seq: 7,  id: accountType,           ja: 預金種目,         en: Account Type,            type: N, length: 1,  codelist: accountType, codes: "1,2", note: "給与振込 admits only 普通預金 and 当座預金, a narrower set than 総合振込's." }
+        - { seq: 8,  id: accountNumber,         ja: 口座番号,         en: Account Number,          type: N, length: 7,  sensitive: true, required: true }
+        - { seq: 9,  id: beneficiaryName,       ja: 受取人名,         en: Beneficiary Name,        type: C, length: 30, charclass: PAYROLL_NAME, required: true, note: "Three of four sources name this 受取人名; 三菱UFJ labels it 預金者名 while describing its content as 受取人名. Same field, same bytes, same meaning." }
+        - { seq: 10, id: amount,                ja: 振込金額,         en: Amount,                  type: N, length: 10, format: AMOUNT, required: true }
+        - { seq: 11, id: newCode,               ja: 新規コード,       en: New Account Code,        type: N, length: 1,  codelist: newCode }
+        - { seq: 12, id: employeeNumber,        ja: 社員番号,         en: Employee Number,         type: C, length: 10, note: "Sources split evenly on N versus C — the same disagreement as 総合振込 顧客コード1, at the same byte positions. Declared C, which preserves either reading. See D-002." }
+        - { seq: 13, id: departmentCode,        ja: 所属コード,       en: Department Code,         type: C, length: 10, note: "Sources split evenly on N versus C, as for 社員番号. Declared C. See D-002." }
+        - { seq: 14, id: dummy,                 ja: ダミー,           en: Filler,                  type: C, length: 9,  filler: true, note: "Nine bytes of filler where 総合振込 has 振込指定区分, 識別表示 and a seven-byte ダミー. There is no EDI overlay in this format." }
+
+    trailer:
+      discriminator: "8"
+      fields:
+        - { seq: 1, id: dataKubun,   ja: データ区分, en: Record Type,   type: N, length: 1,   const: "8", codelist: dataKubun }
+        - { seq: 2, id: recordCount, ja: 合計件数,   en: Record Count,  type: N, length: 6,   format: COUNT }
+        - { seq: 3, id: totalAmount, ja: 合計金額,   en: Total Amount,  type: N, length: 12,  format: AMOUNT }
+        - { seq: 4, id: dummy,       ja: ダミー,     en: Filler,        type: C, length: 101, filler: true }
+
+    end:
+      discriminator: "9"
+      fields:
+        - { seq: 1, id: dataKubun, ja: データ区分, en: Record Type, type: N, length: 1,   const: "9", codelist: dataKubun }
+        - { seq: 2, id: dummy,     ja: ダミー,     en: Filler,      type: C, length: 119, filler: true }

@@ -24,6 +24,8 @@ implementing. An implementation that makes twenty undocumented judgement calls i
 | [0017](0017-property-testing-without-jqwik.md) | Property testing without jqwik: seeded generators plus Jazzer | Accepted |
 | [0018](0018-golden-files-are-text-not-json.md) | Golden files are a text rendering, not JSON | Accepted |
 | [0019](0019-building-gates-on-verified.md) | Building a file gates on `verified`; writing one does not | Accepted |
+| [0020](0020-one-descriptor-for-type-code-91.md) | One descriptor for 種別コード 91: the two layouts are identical | Accepted |
+| [0021](0021-the-shared-header-date-is-effective-date.md) | The shared header date is `effectiveDate`; formats keep their own names | Accepted |
 
 ## Template
 

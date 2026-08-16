@@ -3,6 +3,7 @@ package io.zengin4j.codegen;
 import io.zengin4j.core.format.CodeList;
 import io.zengin4j.core.format.CodeValue;
 import io.zengin4j.core.format.FieldDescriptor;
+import io.zengin4j.core.format.FieldSpec;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
@@ -162,7 +163,14 @@ final class FormatDocGenerator {
         List<String> notes = new ArrayList<>();
         field.constant().ifPresent(value -> notes.add("fixed `" + value + "`"));
         field.format().ifPresent(value -> notes.add("format `" + value.descriptorValue() + "`"));
-        field.codeList().ifPresent(list -> notes.add("code list `" + list.id() + "`"));
+        field.codeList().ifPresent(list -> notes.add("code list `" + list.id() + "`"
+                + (field.codes().isEmpty() ? "" : ", narrowed to " + String.join("/", field.codes()))));
+        if (field.charClass() != FieldSpec.defaultCharacterClass(field.type())) {
+            notes.add("characters: " + field.charClass().nameEn()
+                    + (field.charClass().symbols().isEmpty()
+                            ? ", no symbols"
+                            : ", symbols `" + field.charClass().symbols() + "`"));
+        }
         if (field.required()) {
             notes.add("required");
         }

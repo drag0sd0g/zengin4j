@@ -9,13 +9,23 @@ by any standards body or bank.
 
 Every format descriptor shipped in this release is marked `verified: false`.
 
-That does not mean nobody has checked. The 総合振込 layout has since been
-compared field by field against six independent published sources, including
-the JBA's own protocol document, and **they agree on every offset and every
-length** — the citations are in [docs/SOURCES.md](docs/SOURCES.md). What holds
-the flag at `false` is that those sources disagree about one field's
-*attribute*, recorded as [D-002](docs/DISCREPANCIES.md), and the project's
-rules keep a format unverified until such a disagreement is settled.
+That does not mean nobody has checked, and it does not mean they are all equally
+provisional:
+
+| Format | Sources | What holds it at `false` |
+|---|---:|---|
+| 総合振込 (`21`) | 6 | [D-002](docs/DISCREPANCIES.md) — sources disagree on 顧客コード1/2's attribute |
+| 預金口座振替 (`91`) | 3 | D-002 (the same disagreement, on 顧客番号) and [D-003](docs/DISCREPANCIES.md) |
+| 給与振込 (`11`) | 3 | D-003, and the header and trailer are corroborated less directly than the data record |
+| 賞与振込 (`12`) | 2 | inherits 給与振込's status along with its layout |
+
+Every offset and length in every one of them is corroborated by at least two
+independent published sources, and where those sources cover the same field they
+agree — the citations are in [docs/SOURCES.md](docs/SOURCES.md). What holds each
+flag at `false` is a field-level disagreement recorded in
+[docs/DISCREPANCIES.md](docs/DISCREPANCIES.md), and the project's rules keep a
+format unverified until such a disagreement is settled, however solid the rest
+of it is.
 
 The library still refuses to read a file with an unverified descriptor unless
 you say, in your own code:

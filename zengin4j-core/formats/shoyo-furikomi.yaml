@@ -1,0 +1,28 @@
+# 賞与振込 (shoyo furikomi) — bonus transfer, 種別コード 12, 120 bytes.
+#
+# verified: false, and inheriting 給与振込's status along with its layout.
+#
+# **This is the one case where deriving a layout is the documented reading.**
+# The standard states that 賞与振込 uses the 給与振込 record format with
+# 種別コード 12 — it does not restate the fields, because there is nothing to
+# restate. Writing them out again here would create two copies of one layout
+# and a way for them to disagree, so this descriptor borrows the layout instead
+# and changes only what identifies the format.
+#
+# Every other format in this project declares its own fields, including ones
+# that look derivable. 給与振込 looks like 総合振込 with three fields renamed
+# and is not (see kyuyo-furikomi.yaml). The difference is that here the standard
+# says they are the same, and there it says they are not.
+
+format:
+  id: shoyo-furikomi
+  name-ja: 賞与振込
+  name-en: Bonus Transfer
+  type-code: "12"
+  record-length: 120
+  same-layout-as: kyuyo-furikomi
+  verified: false
+  sources:
+    - "全国銀行協会 — 「全銀協パーソナル・コンピュータ用標準通信プロトコル（ベーシック手順）適用業務およびレコード・フォーマット」令和元年12月, section 4 給与・賞与振込レコード・フォーマット. https://www.zenginkyo.or.jp/fileadmin/res/abstract/efforts/system/jba_protocol_pc.pdf retrieved 2026-08-15. States that 賞与振込 uses the 給与振込 layout with 種別コード 12."
+    - "兵庫県信用組合 — 「全銀協規定フォーマットについて」. https://www.hyogokenshin.co.jp/wp-content/uploads/format1.pdf retrieved 2026-08-15. Lists 賞与振込 as 種別コード 12 sharing the 給与振込 format."
+  note: "Layout borrowed from kyuyo-furikomi, which is the reading the standard states. Held at verified: false because the layout it borrows is."

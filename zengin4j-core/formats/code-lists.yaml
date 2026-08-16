@@ -64,15 +64,20 @@ code-lists:
     name-en: Account Type
     verified: true
     open: true
-    note: "The data record admits all four values. For the originator's own account in the header, the JBA document lists only 1, 2 and 9 — a narrower set that this shared list does not express; see OQ-9."
+    note: "The master list, from 付録3 預金種目コード. The standard states that not every code is valid for every business, and that where a format enumerates a subset that subset governs — so a field narrows this list rather than the list being split. The narrowing each field applies is recorded on the field. See OQ-9."
     sources:
-      - "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, section 8. retrieved 2026-08-15"
+      - "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, 付録3 預金種目コード. retrieved 2026-08-15"
       - "群馬銀行 — 全銀協制定ファイルフォーマット【総合振込】. retrieved 2026-08-15"
       - "兵庫県信用組合 — 全銀協規定フォーマットについて. retrieved 2026-08-15"
     values:
       - { code: "1", ja: 普通預金, en: Ordinary deposit, verified: true }
       - { code: "2", ja: 当座預金, en: Current account, verified: true }
+      - { code: "3", ja: 納税準備預金, en: Tax reserve deposit, verified: true }
       - { code: "4", ja: 貯蓄預金, en: Savings deposit, verified: true }
+      - { code: "5", ja: 通知預金, en: Deposit at notice, verified: true }
+      - { code: "6", ja: 定期預金, en: Time deposit, verified: true }
+      - { code: "7", ja: 積立定期預金, en: Instalment time deposit, verified: true }
+      - { code: "8", ja: 定期積金, en: Instalment savings, verified: true }
       - { code: "9", ja: その他, en: Other, verified: true }
 
   - id: newCode
@@ -101,3 +106,21 @@ code-lists:
     values:
       - { code: "7", ja: テレ振込, en: Telegraphic transfer, verified: true }
       - { code: "8", ja: 文書振込, en: Document transfer, verified: true }
+
+  - id: transferResult
+    name-ja: 振替結果コード
+    name-en: Direct Debit Result
+    verified: true
+    open: true
+    note: "The functional analogue of an ISO 20022 R-transaction reason code, and the most useful thing this library exposes to an English-speaking integrator. Populated in a 口座振替結果 file; zero throughout an instruction file. Note code 4: the standard says no mandate is on file, which is not the same as an account being closed."
+    sources:
+      - "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, section 16 預金口座振替（処理結果明細）. retrieved 2026-08-15"
+      - "兵庫県信用組合 — 全銀協規定フォーマットについて. retrieved 2026-08-15"
+    values:
+      - { code: "0", ja: 振替済, en: Collected, verified: true }
+      - { code: "1", ja: 資金不足, en: Insufficient funds, verified: true }
+      - { code: "2", ja: 取引なし, en: No such account or no transaction, verified: true }
+      - { code: "3", ja: 預金者の都合による振替停止, en: Stopped at the depositor's instruction, verified: true }
+      - { code: "4", ja: 預金口座振替依頼書なし, en: No direct debit mandate on file, verified: true }
+      - { code: "8", ja: 委託者の都合による振替停止, en: Stopped at the originator's instruction, verified: true }
+      - { code: "9", ja: その他, en: Other, verified: true }

@@ -33,7 +33,7 @@ class ZenginFileBuilderTest {
         ZenginFile file = Fixtures.builder(descriptor)
                 .header(header -> header
                         .set("originatorCode", "9900000001")
-                        .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
+                        .set("originatorName", "ﾃｽﾄｼﾖｳｼﾞ")
                         .set("valueDate", MonthDay.of(9, 30)))
                 .payment(payment -> payment
                         .set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ")
@@ -124,7 +124,7 @@ class ZenginFileBuilderTest {
                 .header(header -> header
                         .set("valueDate", MonthDay.of(9, 30))
                         .set("originatorCode", "9900000001")
-                        .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ"))
+                        .set("originatorName", "ﾃｽﾄｼﾖｳｼﾞ"))
                 .payment(payment -> payment
                         .set("amount", 150_000L)
                         .set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ"))

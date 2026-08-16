@@ -65,7 +65,7 @@ public final class GenericHeaderRecord extends GenericRecord implements HeaderRe
     }
 
     @Override
-    public Optional<MonthDay> valueDate() {
+    public Optional<MonthDay> effectiveDate() {
         return valueDate;
     }
 }

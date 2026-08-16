@@ -32,7 +32,7 @@ format:
     - "兵庫県信用組合 — 「全銀協規定フォーマットについて」. https://www.hyogokenshin.co.jp/wp-content/uploads/format1.pdf retrieved 2026-08-15. Supports all four record types."
     - "十八親和銀行 — 「全銀フォーマット」. https://www.18shinwabank.co.jp/pdf/bb_format_zengin.pdf retrieved 2026-08-15. Supports the data record."
     - "三井住友銀行 — 「ファイルレイアウト（総合振込・全銀形式）」. https://www.smbc.co.jp/hojin/eb/web21/pdf/file-layout_01.pdf retrieved 2026-08-15. Supports the data record."
-  note: "Offsets and lengths corroborated by six independent sources including the JBA standard. Held at verified: false by D-002 (顧客コード1/2 attribute) per R-0.2. See docs/DISCREPANCIES.md."
+  note: "Offsets and lengths corroborated by six independent sources including the JBA standard. Held at verified: false by D-002 — settled against the standard, which describes 顧客コード1/2 as N(10) each with a C(20) EDI overlay when 識別表示 is Y; this descriptor declares C because the schema cannot express the condition (OQ-8, Epic 7). See docs/DISCREPANCIES.md."
 
   records:
 
@@ -43,13 +43,13 @@ format:
         - { seq: 2,  id: typeCode,         ja: 種別コード,   en: Business Type,      type: N, length: 2,  const: "21", codelist: typeCode }
         - { seq: 3,  id: codeKubun,        ja: コード区分,   en: Character Code,     type: N, length: 1,  codelist: codeKubun, format: CODE-KUBUN }
         - { seq: 4,  id: originatorCode,   ja: 委託者コード, en: Originator Code,    type: N, length: 10, required: true }
-        - { seq: 5,  id: originatorName,   ja: 委託者名,     en: Originator Name,    type: C, length: 40 }
+        - { seq: 5,  id: originatorName,   ja: 委託者名,     en: Originator Name,    type: C, length: 40, charclass: PARTY_NAME }
         - { seq: 6,  id: valueDate,        ja: 振込指定日,   en: Value Date,         type: N, length: 4,  format: MMDD }
         - { seq: 7,  id: originBankCode,   ja: 仕向銀行番号, en: Origin Bank Code,   type: N, length: 4,  required: true }
-        - { seq: 8,  id: originBankName,   ja: 仕向銀行名,   en: Origin Bank Name,   type: C, length: 15 }
+        - { seq: 8,  id: originBankName,   ja: 仕向銀行名,   en: Origin Bank Name,   type: C, length: 15, charclass: BANK_NAME }
         - { seq: 9,  id: originBranchCode, ja: 仕向支店番号, en: Origin Branch Code, type: N, length: 3,  required: true }
-        - { seq: 10, id: originBranchName, ja: 仕向支店名,   en: Origin Branch Name, type: C, length: 15 }
-        - { seq: 11, id: accountType,      ja: 預金種目,     en: Account Type,       type: N, length: 1,  codelist: accountType }
+        - { seq: 10, id: originBranchName, ja: 仕向支店名,   en: Origin Branch Name, type: C, length: 15, charclass: BANK_NAME }
+        - { seq: 11, id: accountType,      ja: 預金種目,     en: Account Type,       type: N, length: 1,  codelist: accountType, codes: "1,2,9" }
         - { seq: 12, id: accountNumber,    ja: 口座番号,     en: Account Number,     type: N, length: 7,  sensitive: true }
         - { seq: 13, id: dummy,            ja: ダミー,       en: Filler,             type: C, length: 17, filler: true }
 
@@ -58,13 +58,13 @@ format:
       fields:
         - { seq: 1,  id: dataKubun,             ja: データ区分,       en: Record Type,             type: N, length: 1,  const: "2", codelist: dataKubun }
         - { seq: 2,  id: beneficiaryBankCode,   ja: 被仕向銀行番号,   en: Beneficiary Bank Code,   type: N, length: 4,  required: true }
-        - { seq: 3,  id: beneficiaryBankName,   ja: 被仕向銀行名,     en: Beneficiary Bank Name,   type: C, length: 15 }
+        - { seq: 3,  id: beneficiaryBankName,   ja: 被仕向銀行名,     en: Beneficiary Bank Name,   type: C, length: 15, charclass: BANK_NAME }
         - { seq: 4,  id: beneficiaryBranchCode, ja: 被仕向支店番号,   en: Beneficiary Branch Code, type: N, length: 3,  required: true }
-        - { seq: 5,  id: beneficiaryBranchName, ja: 被仕向支店名,     en: Beneficiary Branch Name, type: C, length: 15 }
+        - { seq: 5,  id: beneficiaryBranchName, ja: 被仕向支店名,     en: Beneficiary Branch Name, type: C, length: 15, charclass: BANK_NAME }
         - { seq: 6,  id: clearingHouseCode,     ja: 手形交換所番号,   en: Clearing House Code,     type: N, length: 4 }
-        - { seq: 7,  id: accountType,           ja: 預金種目,         en: Account Type,            type: N, length: 1,  codelist: accountType }
+        - { seq: 7,  id: accountType,           ja: 預金種目,         en: Account Type,            type: N, length: 1,  codelist: accountType, codes: "1,2,4,9" }
         - { seq: 8,  id: accountNumber,         ja: 口座番号,         en: Account Number,          type: N, length: 7,  required: true, sensitive: true }
-        - { seq: 9,  id: beneficiaryName,       ja: 受取人名,         en: Beneficiary Name,        type: C, length: 30, required: true }
+        - { seq: 9,  id: beneficiaryName,       ja: 受取人名,         en: Beneficiary Name,        type: C, length: 30, charclass: PARTY_NAME, required: true }
         - { seq: 10, id: amount,                ja: 振込金額,         en: Transfer Amount,         type: N, length: 10, required: true, format: AMOUNT }
         - { seq: 11, id: newCode,               ja: 新規コード,       en: New Account Code,        type: N, length: 1,  codelist: newCode }
         # D-002: the JBA standard and three institution guides give these as N;

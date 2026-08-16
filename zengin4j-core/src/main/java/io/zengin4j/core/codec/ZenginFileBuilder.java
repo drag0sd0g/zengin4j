@@ -32,7 +32,7 @@ import java.util.function.Consumer;
  * <pre>{@code
  * ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
  *         .header(h -> h.set("originatorCode", "9900000001")
- *                       .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
+ *                       .set("originatorName", "ﾃｽﾄｼﾖｳｼﾞ")
  *                       .set("valueDate", MonthDay.of(9, 30)))
  *         .payment(p -> p.set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ")
  *                        .set("amount", 150_000L))

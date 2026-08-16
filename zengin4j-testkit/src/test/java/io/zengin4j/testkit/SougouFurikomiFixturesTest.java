@@ -33,7 +33,7 @@ class SougouFurikomiFixturesTest {
         Batch batch = file.batches().get(0);
         assertThat(batch.header().originatorCode()).isEqualTo(SougouFurikomiFixtures.ORIGINATOR_CODE);
         assertThat(batch.header().originatorName()).isEqualTo(SougouFurikomiFixtures.ORIGINATOR_NAME);
-        assertThat(batch.header().valueDate()).contains(MonthDay.of(9, 30));
+        assertThat(batch.header().effectiveDate()).contains(MonthDay.of(9, 30));
         assertThat(batch.computedTotal()).isEqualTo(SougouFurikomiFixtures.AMOUNT);
         assertThat(batch.trailer()).get().extracting(t -> t.recordCount()).isEqualTo(1);
     }

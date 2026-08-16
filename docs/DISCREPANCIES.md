@@ -36,52 +36,95 @@ worth catching before it is copied into documentation.
 
 ---
 
-## D-002 — Attribute of 顧客コード1 and 顧客コード2
+## D-002 — Attribute of 顧客コード1 and 顧客コード2, and the fields sharing their bytes
 
-**Status:** open. This is what holds `sougou-furikomi` at `verified: false` (R-0.2).
+**Settled 2026-08-16 against the primary source. It was never a disagreement.**
 
-**Sources**
+Institution publications give these fields as `N`, as `C`, or as "N(10) または
+C(10)", and the same split appears in 給与振込's 社員番号/所属コード and in
+預金口座振替's 顧客番号 — the same byte positions in three formats. That looked
+like five sources contradicting each other.
 
-| Source | Reading |
-|---|---|
-| 全国銀行協会, 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月 §8 | `N(10)` each |
-| 愛知銀行 | `N(10)` each |
-| 十八親和銀行 | `N(10)` each ("お客様番号1/2") |
-| 三井住友銀行 | `N`, with a note that the attribute becomes `C` according to the identification code |
-| 群馬銀行 | `C(10)` each ("顧客番号1/2") |
-| 兵庫県信用組合 | カナ (i.e. `C`) 10 each |
+The JBA standard resolves it by describing the field twice, deliberately:
 
-Full citations in [SOURCES.md](SOURCES.md). Lengths and offsets are not in dispute: ten bytes each,
-at offsets 91 and 101, in every source.
+| 項番 | 項目名 | 桁数 | Condition |
+|---|---|---|---|
+| 12 | ※顧客コード1 | `N(10)` | right-aligned, zero-padded |
+| 13 | ※顧客コード2 | `N(10)` | right-aligned, zero-padded |
+| 12 | ※EDI情報 | `C(20)` | **when 項番15 識別表示 is `Y`** — left-aligned, space-padded |
 
-**Analysis.** The disagreement is real but explicable. All six sources also document an overlay: when
-識別表示 (field 15) is `Y`, fields 12 and 13 together are a single `C(20)` 金融EDI情報 field rather
-than two customer codes. So the same twenty bytes are `N` in one mode and `C` in the other, and the
-institutions that document them as `C` appear to be describing what those bytes carry in practice —
-customer references are routinely alphanumeric. SMBC states the conditional attribute explicitly,
-which is the reading that reconciles the other five.
+The same twenty bytes are *either* two numeric customer codes *or* one text EDI
+payload, selected by a different field. Sources giving `N` describe the ordinary
+case; sources giving `C` describe the overlay; sources giving "N or C" describe
+both. Nobody was wrong.
 
-The build specification's own worked example (§20.1) illustrates the tension without commenting on
-it: it places `INV20260001` across these two fields, which the `N` attribute would forbid.
+The standard states the same attributes elsewhere: 社員番号 and 所属コード are
+`N(10)` (§4), and 預金口座振替's 顧客番号 is `N(20)` (§15) with no overlay.
 
-**Implemented.** `C(10)` for both — the conservative reading, and unchanged from before this
-question was investigated, so no parsed output moved (R-B10).
+**Implemented: `C`, knowingly departing from the standard.** The descriptor
+schema declares one attribute per field and cannot express "N unless 識別表示
+is Y". Of the two single-attribute readings:
 
-`C` accepts digits and letters alike. Reading is unaffected either way: a zero-padded numeric value
-decodes identically under both attributes, because trailing-space stripping cannot touch it. The
-choice governs two things that are not yet exercised:
+- `N` decodes the ordinary case correctly and **fails on an EDI payload**, which
+  is text and does not parse as a number.
+- `C` decodes both — an EDI payload as itself, and a zero-padded numeric code as
+  its digits, leading zeros preserved.
 
-- **padding on write** — `N` pads left with zeros, `C` pads right with spaces (Epic 2);
-- **character-set validation** — declaring `N` would flag every alphanumeric customer code, and
-  every EDI payload, as a violation (Epic 4).
+`C` is the reading that never loses data, which is what §0.6 asks for. See
+[ADR-0015](adr/0015-customer-code-declared-as-text.md).
 
-Both failure modes of choosing `N` are false rejections of legitimate data. The failure mode of
-choosing `C` is a missed validation finding on a field whose permitted content is itself disputed.
+**What this now blocks.** Nothing evidentiary: the question is answered, and the
+offsets were never in doubt. What keeps the affected formats at
+`verified: false` is that their descriptors deliberately declare an attribute
+the standard does not, and a `verified` flag should not be set on a layout that
+knowingly differs from its sources — however defensible the difference.
 
-**To settle it.** Confirm against a further institution guide that documents the field under both
-values of 識別表示, or against 全銀ネット's ZEDI documentation, which has to define the EDI payload
-precisely. If the conditional attribute is confirmed, the descriptor schema needs conditional
-fields — see OQ-8 — and this stops being a discrepancy and becomes a modelling gap.
+**To close it.** Give the descriptor schema conditional fields, so 顧客コード1/2
+can be declared `N` with a `C(20)` overlay predicated on 識別表示. That is
+[OQ-8](OPEN_QUESTIONS.md)'s modelling gap, already scheduled for Epic 7 because
+the ISO 20022 mapping needs to read the EDI payload anyway. When it lands, this
+entry closes and the flags can be revisited.
+
+---
+
+## D-003 — How wide is the permitted character set for names?
+
+**Found 2026-08-16, implementing the character-set validation for Epic 3.**
+
+The sources agree on the base set — kana excluding ｦ and small kana, voicing marks, digits, and
+the exclusion of the long vowel mark ｰ — and disagree about how many symbols a name field admits.
+
+| Source | 店舗名 (bank/branch) | 口座名等 (party names) |
+|---|---|---|
+| 全国銀行協会 付録1 注1/注2 | 1 symbol: `-` | 4 symbols: `( ) - .` |
+| PCA 全銀協使用可能文字 | hyphen only | `( ) - .` plus space |
+| 大分銀行 口座振替ファイル | 8 symbols: `￥ ． （ ） ／ － 「 」`, and ｦ **permitted** | the same 8 |
+
+The first two agree with each other and with the standard. The third states a single wider set for
+every name field in 預金口座振替 — the set the standard reserves for EDI information — and permits
+ｦ, which 付録1 excludes outside EDI.
+
+**A second disagreement, in the standard itself.** The JBA's own 新旧対照表 shows 付録1 being
+*revised*: the new text keeps「ヲと小文字を除く」as the general rule but adds an exception under
+which, for 支店名・仕向店名・仕向支店名・被仕向支店名 and for 口座名・振込依頼人名・受取人名 in
+総合振込 and four other businesses, only small kana are excluded — so ｦ becomes permitted in those
+fields. Institution publications consulted still state the older, stricter rule.
+
+**Implemented: the stricter reading.** `CharacterClass` excludes ｦ from every class except
+`EDI_INFORMATION`, and gives 店舗名 one symbol and 口座名等 four. A validator exists to predict what
+an institution will reject, and every institution publication consulted states the narrow rule —
+including institutions whose own systems follow the revision. Accepting ｦ because the standard now
+allows it would pass files that a bank on the older rule will refuse, which is the failure that
+costs money.
+
+**What this means for a user.** A finding against ｦ or against a symbol outside the narrow set may
+be a false positive for your institution. It is never a false negative: nothing this library
+accepts is rejected by the narrow rule.
+
+**To settle it.** Confirm the revised 付録1 text against a current institution publication that
+states the wider rule for 総合振込 specifically, rather than for 預金口座振替. If institutions have
+adopted the revision, the classes gain a per-format switch and the narrow set becomes the
+conservative default rather than the only reading.
 
 ---
 

@@ -1,6 +1,7 @@
 package io.zengin4j.core.format.generated;
 
 import io.zengin4j.core.annotation.Generated;
+import io.zengin4j.core.charset.CharacterClass;
 import io.zengin4j.core.format.CodeList;
 import io.zengin4j.core.format.CodeValue;
 import io.zengin4j.core.format.FieldFormat;
@@ -50,6 +51,7 @@ public final class BundledFormats {
         lists.put("accountType", accountType());
         lists.put("newCode", newCode());
         lists.put("transferCategory", transferCategory());
+        lists.put("transferResult", transferResult());
         return Collections.unmodifiableMap(lists);
     }
 
@@ -61,7 +63,7 @@ public final class BundledFormats {
      * @return the descriptors, in a stable order
      */
     public static List<FormatDescriptor> formats(Map<String, CodeList> codeLists) {
-        return List.of(sougouFurikomi(codeLists));
+        return List.of(kouzaFurikae(codeLists), kyuyoFurikomi(codeLists), shoyoFurikomi(codeLists), sougouFurikomi(codeLists));
     }
 
     private static CodeList dataKubun() {
@@ -130,13 +132,18 @@ public final class BundledFormats {
                 List.of(
                         new CodeValue("1", "普通預金", "Ordinary deposit", true, Optional.empty()),
                         new CodeValue("2", "当座預金", "Current account", true, Optional.empty()),
+                        new CodeValue("3", "納税準備預金", "Tax reserve deposit", true, Optional.empty()),
                         new CodeValue("4", "貯蓄預金", "Savings deposit", true, Optional.empty()),
+                        new CodeValue("5", "通知預金", "Deposit at notice", true, Optional.empty()),
+                        new CodeValue("6", "定期預金", "Time deposit", true, Optional.empty()),
+                        new CodeValue("7", "積立定期預金", "Instalment time deposit", true, Optional.empty()),
+                        new CodeValue("8", "定期積金", "Instalment savings", true, Optional.empty()),
                         new CodeValue("9", "その他", "Other", true, Optional.empty())),
                 List.of(
-                        "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, section 8. retrieved 2026-08-15",
+                        "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, 付録3 預金種目コード. retrieved 2026-08-15",
                         "群馬銀行 — 全銀協制定ファイルフォーマット【総合振込】. retrieved 2026-08-15",
                         "兵庫県信用組合 — 全銀協規定フォーマットについて. retrieved 2026-08-15"),
-                Optional.of("The data record admits all four values. For the originator's own account in the header, the JBA document lists only 1, 2 and 9 — a narrower set that this shared list does not express; see OQ-9."));
+                Optional.of("The master list, from 付録3 預金種目コード. The standard states that not every code is valid for every business, and that where a format enumerates a subset that subset governs — so a field narrows this list rather than the list being split. The narrowing each field applies is recorded on the field. See OQ-9."));
     }
 
     private static CodeList newCode() {
@@ -173,6 +180,250 @@ public final class BundledFormats {
                 Optional.of("Several institutions document this field as unused and require 0, and one names code 7 電信振込 rather than テレ振込. The codes agree; the wording and the obligation do not."));
     }
 
+    private static CodeList transferResult() {
+        return new CodeList(
+                "transferResult",
+                "振替結果コード",
+                "Direct Debit Result",
+                true,
+                true,
+                List.of(
+                        new CodeValue("0", "振替済", "Collected", true, Optional.empty()),
+                        new CodeValue("1", "資金不足", "Insufficient funds", true, Optional.empty()),
+                        new CodeValue("2", "取引なし", "No such account or no transaction", true, Optional.empty()),
+                        new CodeValue("3", "預金者の都合による振替停止", "Stopped at the depositor's instruction", true, Optional.empty()),
+                        new CodeValue("4", "預金口座振替依頼書なし", "No direct debit mandate on file", true, Optional.empty()),
+                        new CodeValue("8", "委託者の都合による振替停止", "Stopped at the originator's instruction", true, Optional.empty()),
+                        new CodeValue("9", "その他", "Other", true, Optional.empty())),
+                List.of(
+                        "全国銀行協会 — 標準通信プロトコル適用業務およびレコード・フォーマット, 令和元年12月, section 16 預金口座振替（処理結果明細）. retrieved 2026-08-15",
+                        "兵庫県信用組合 — 全銀協規定フォーマットについて. retrieved 2026-08-15"),
+                Optional.of("The functional analogue of an ISO 20022 R-transaction reason code, and the most useful thing this library exposes to an English-speaking integrator. Populated in a 口座振替結果 file; zero throughout an instruction file. Note code 4: the standard says no mandate is on file, which is not the same as an account being closed."));
+    }
+
+    /** 預金口座振替 — from kouza-furikae.yaml. */
+    private static FormatDescriptor kouzaFurikae(Map<String, CodeList> codeLists) {
+        FormatId id = FormatId.of("kouza-furikae");
+        Map<RecordKind, RecordDescriptor> records = new EnumMap<>(RecordKind.class);
+        records.put(RecordKind.HEADER, kouzaFurikaeHeader(id, codeLists));
+        records.put(RecordKind.DATA, kouzaFurikaeData(id, codeLists));
+        records.put(RecordKind.TRAILER, kouzaFurikaeTrailer(id, codeLists));
+        records.put(RecordKind.END, kouzaFurikaeEnd(id, codeLists));
+        return new FormatDescriptor(
+                id,
+                "預金口座振替",
+                "Direct Debit",
+                "91",
+                120,
+                false,
+                List.of(
+                        "全国銀行協会 — 「全銀協パーソナル・コンピュータ用標準通信プロトコル（ベーシック手順）適用業務およびレコード・フォーマット」令和元年12月, sections 15–16 預金口座振替（依頼明細・処理結果明細）. https://www.zenginkyo.or.jp/fileadmin/res/abstract/efforts/system/jba_protocol_pc.pdf retrieved 2026-08-15. Supports all four record types and the 振替結果コード list.",
+                        "大分銀行 — 「口座振替ファイル（全銀協規定形式）」. https://www.dhbk.co.jp/business/efficiency/ib/pdf/koufuri_zenginkyou.pdf retrieved 2026-08-16. Supports all four record types field by field, with byte positions.",
+                        "北洋システム開発 — 「全国銀行協会制定のレコードフォーマット」. https://www.hsd-hh.co.jp/daikin/doc/zenginrec_format.pdf retrieved 2026-08-16. Supports all four record types, and states that 振替結果コード is zero on request and set by the bank on return."),
+                Optional.of("Offsets, lengths and the 振替結果コード list corroborated by three independent sources including the JBA standard. Held at verified: false by D-002 — the standard gives 顧客番号 as N(20) and this descriptor declares C, for the reason recorded there — and by D-003 (one source states a wider permitted character set for names than 付録1 does). See docs/DISCREPANCIES.md."),
+                records);
+    }
+
+    private static RecordDescriptor kouzaFurikaeHeader(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.HEADER, (byte) '1', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("1").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "typeCode", "種別コード", "Business Type", FieldType.N, 2).withConstant("91").withCodeList(codeLists.get("typeCode")),
+                FieldSpec.of(3, "codeKubun", "コード区分", "Character Code", FieldType.N, 1).withFormat(FieldFormat.CODE_KUBUN).withCodeList(codeLists.get("codeKubun")),
+                FieldSpec.of(4, "originatorCode", "委託者コード", "Originator Code", FieldType.N, 10).withRequired(),
+                FieldSpec.of(5, "originatorName", "委託者名", "Originator Name", FieldType.C, 40).withCharacterClass(CharacterClass.PARTY_NAME),
+                FieldSpec.of(6, "debitDate", "引落日", "Debit Date", FieldType.N, 4).withRequired().withFormat(FieldFormat.MMDD).withNote("引落指定日, the date the payers' accounts are debited. Not a value date: no funds move to a payee on this date."),
+                FieldSpec.of(7, "collectionBankCode", "取引銀行番号", "Collection Bank Code", FieldType.N, 4).withRequired().withNote("入金先金融機関コード — where the collected funds land. This is the originator's own bank, not a payer's."),
+                FieldSpec.of(8, "collectionBankName", "取引銀行名", "Collection Bank Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(9, "collectionBranchCode", "取引支店番号", "Collection Branch Code", FieldType.N, 3).withRequired(),
+                FieldSpec.of(10, "collectionBranchName", "取引支店名", "Collection Branch Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(11, "collectionAccountType", "預金種目", "Collection Account Type", FieldType.N, 1).withCodeList(codeLists.get("accountType")).withCodes(List.of("1", "2", "9")),
+                FieldSpec.of(12, "collectionAccountNumber", "口座番号", "Collection Account No.", FieldType.N, 7).withSensitive(),
+                FieldSpec.of(13, "dummy", "ダミー", "Filler", FieldType.C, 17).withFiller()));
+    }
+
+    private static RecordDescriptor kouzaFurikaeData(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.DATA, (byte) '2', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("2").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "payerBankCode", "引落銀行番号", "Payer Bank Code", FieldType.N, 4).withRequired().withNote("請求先金融機関コード — the account being debited. 9900 for ゆうちょ銀行."),
+                FieldSpec.of(3, "payerBankName", "引落銀行名", "Payer Bank Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(4, "payerBranchCode", "引落支店番号", "Payer Branch Code", FieldType.N, 3).withRequired(),
+                FieldSpec.of(5, "payerBranchName", "引落支店名", "Payer Branch Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(6, "reserved", "ダミー", "Reserved", FieldType.C, 4).withFiller().withNote("Unused. 総合振込 carries 手形交換所番号 in these four bytes; this format does not."),
+                FieldSpec.of(7, "payerAccountType", "預金種目", "Payer Account Type", FieldType.N, 1).withRequired().withCodeList(codeLists.get("accountType")).withNote("Admits 3 納税準備預金, which 総合振込 does not.").withCodes(List.of("1", "2", "3", "9")),
+                FieldSpec.of(8, "payerAccountNumber", "口座番号", "Payer Account Number", FieldType.N, 7).withRequired().withSensitive(),
+                FieldSpec.of(9, "payerName", "預金者名", "Payer Name", FieldType.C, 30).withRequired().withCharacterClass(CharacterClass.PARTY_NAME),
+                FieldSpec.of(10, "debitAmount", "引落金額", "Debit Amount", FieldType.N, 10).withRequired().withFormat(FieldFormat.AMOUNT),
+                FieldSpec.of(11, "newCode", "新規コード", "New Account Code", FieldType.N, 1).withCodeList(codeLists.get("newCode")),
+                FieldSpec.of(12, "customerNumber", "顧客番号", "Customer Number", FieldType.C, 20).withNote("The standard gives this as N(20) with no EDI overlay. Declared C to stay consistent with the same bytes in the other formats, where the overlay does exist and C is the only reading that survives it. See D-002."),
+                FieldSpec.of(13, "transferResult", "振替結果コード", "Transfer Result", FieldType.N, 1).withCodeList(codeLists.get("transferResult")).withNote("Zero throughout an instruction file; set by the bank in a returned result file. This field, and the trailer's four result totals, are the whole difference between the two."),
+                FieldSpec.of(14, "dummy", "ダミー", "Filler", FieldType.C, 8).withFiller()));
+    }
+
+    private static RecordDescriptor kouzaFurikaeTrailer(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.TRAILER, (byte) '8', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("8").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "recordCount", "合計件数", "Record Count", FieldType.N, 6).withFormat(FieldFormat.COUNT),
+                FieldSpec.of(3, "totalAmount", "合計金額", "Total Amount", FieldType.N, 12).withFormat(FieldFormat.AMOUNT),
+                FieldSpec.of(4, "collectedCount", "振替済件数", "Collected Count", FieldType.N, 6).withNote("Zero in an instruction file; filled in by the bank on return."),
+                FieldSpec.of(5, "collectedAmount", "振替済金額", "Collected Amount", FieldType.N, 12).withNote("Zero in an instruction file; filled in by the bank on return."),
+                FieldSpec.of(6, "uncollectedCount", "振替不能件数", "Uncollected Count", FieldType.N, 6).withNote("Zero in an instruction file; filled in by the bank on return."),
+                FieldSpec.of(7, "uncollectedAmount", "振替不能金額", "Uncollected Amount", FieldType.N, 12).withNote("Zero in an instruction file; filled in by the bank on return."),
+                FieldSpec.of(8, "dummy", "ダミー", "Filler", FieldType.C, 65).withFiller()));
+    }
+
+    private static RecordDescriptor kouzaFurikaeEnd(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.END, (byte) '9', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("9").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "dummy", "ダミー", "Filler", FieldType.C, 119).withFiller()));
+    }
+
+    /** 給与振込 — from kyuyo-furikomi.yaml. */
+    private static FormatDescriptor kyuyoFurikomi(Map<String, CodeList> codeLists) {
+        FormatId id = FormatId.of("kyuyo-furikomi");
+        Map<RecordKind, RecordDescriptor> records = new EnumMap<>(RecordKind.class);
+        records.put(RecordKind.HEADER, kyuyoFurikomiHeader(id, codeLists));
+        records.put(RecordKind.DATA, kyuyoFurikomiData(id, codeLists));
+        records.put(RecordKind.TRAILER, kyuyoFurikomiTrailer(id, codeLists));
+        records.put(RecordKind.END, kyuyoFurikomiEnd(id, codeLists));
+        return new FormatDescriptor(
+                id,
+                "給与振込",
+                "Payroll Transfer",
+                "11",
+                120,
+                false,
+                List.of(
+                        "全国銀行協会 — 「全銀協パーソナル・コンピュータ用標準通信プロトコル（ベーシック手順）適用業務およびレコード・フォーマット」令和元年12月, section 4 給与・賞与振込レコード・フォーマット. https://www.zenginkyo.or.jp/fileadmin/res/abstract/efforts/system/jba_protocol_pc.pdf retrieved 2026-08-15. Supports all four record types.",
+                        "十八親和銀行 — 「全銀フォーマット」. https://www.18shinwabank.co.jp/pdf/bb_format_zengin.pdf retrieved 2026-08-15. Supports the data record, including field 14 as ダミー C(9).",
+                        "愛知銀行 — 「給与振込レコード・フォーマット」. https://www.aichibank.co.jp/corporate/efficiently/bizdirect/files/pdf/zengin_format.pdf retrieved 2026-08-15. Supports the data record.",
+                        "大分銀行 — 「給与・賞与振込ファイル（全銀協規定形式）」. https://www.dhbk.co.jp/business/efficiency/ib/pdf/kyuuyo_shouyo_zenginkyou.pdf retrieved 2026-08-16. All four record types with byte positions; gives 社員番号/所属コード as C.",
+                        "ろうきん — 「給与・賞与振込 振込先ファイルフォーマット（全銀協規定形式）」. https://fb.rokin.jp/manual/pdf/format_kyuuyoshouyo1.pdf retrieved 2026-08-16. All four record types; gives 社員番号/所属コード as N.",
+                        "三菱UFJ銀行 — 「給与・賞与振込 ファイルフォーマット」. https://bizstation.bk.mufg.jp/biz/help/pdf/form_4_1_2_20080512.pdf retrieved 2026-08-16. Labels field 9 預金者名 while describing its content as 受取人名.",
+                        "きらぼし銀行 — 「《給与・賞与振込》振込依頼ファイル・フォーマット（全銀協規定形式）」. https://www.kiraboshibank.co.jp/ retrieved 2026-08-16. All four record types; gives 社員番号/所属コード as C."),
+                Optional.of("Every offset and length is corroborated by seven independent sources, which agree. Held at verified: false by D-002 — the standard gives 社員番号/所属コード as N(10) and this descriptor declares C, for the reason recorded there — and by D-003 on the permitted character set. See docs/DISCREPANCIES.md."),
+                records);
+    }
+
+    private static RecordDescriptor kyuyoFurikomiHeader(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.HEADER, (byte) '1', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("1").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "typeCode", "種別コード", "Business Type", FieldType.N, 2).withConstant("11").withCodeList(codeLists.get("typeCode")),
+                FieldSpec.of(3, "codeKubun", "コード区分", "Character Code", FieldType.N, 1).withFormat(FieldFormat.CODE_KUBUN).withCodeList(codeLists.get("codeKubun")),
+                FieldSpec.of(4, "originatorCode", "委託者コード", "Originator Code", FieldType.N, 10).withRequired(),
+                FieldSpec.of(5, "originatorName", "委託者名", "Originator Name", FieldType.C, 40).withCharacterClass(CharacterClass.PAYROLL_NAME),
+                FieldSpec.of(6, "valueDate", "振込指定日", "Value Date", FieldType.N, 4).withFormat(FieldFormat.MMDD),
+                FieldSpec.of(7, "originBankCode", "仕向銀行番号", "Origin Bank Code", FieldType.N, 4).withRequired(),
+                FieldSpec.of(8, "originBankName", "仕向銀行名", "Origin Bank Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(9, "originBranchCode", "仕向支店番号", "Origin Branch Code", FieldType.N, 3).withRequired(),
+                FieldSpec.of(10, "originBranchName", "仕向支店名", "Origin Branch Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(11, "accountType", "預金種目", "Account Type", FieldType.N, 1).withCodeList(codeLists.get("accountType")).withCodes(List.of("1", "2", "9")),
+                FieldSpec.of(12, "accountNumber", "口座番号", "Account Number", FieldType.N, 7).withSensitive(),
+                FieldSpec.of(13, "dummy", "ダミー", "Filler", FieldType.C, 17).withFiller()));
+    }
+
+    private static RecordDescriptor kyuyoFurikomiData(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.DATA, (byte) '2', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("2").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "beneficiaryBankCode", "被仕向銀行番号", "Beneficiary Bank Code", FieldType.N, 4).withRequired(),
+                FieldSpec.of(3, "beneficiaryBankName", "被仕向銀行名", "Beneficiary Bank Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(4, "beneficiaryBranchCode", "被仕向支店番号", "Beneficiary Branch Code", FieldType.N, 3).withRequired(),
+                FieldSpec.of(5, "beneficiaryBranchName", "被仕向支店名", "Beneficiary Branch Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(6, "clearingHouseCode", "手形交換所番号", "Clearing House Code", FieldType.N, 4),
+                FieldSpec.of(7, "accountType", "預金種目", "Account Type", FieldType.N, 1).withCodeList(codeLists.get("accountType")).withNote("給与振込 admits only 普通預金 and 当座預金, a narrower set than 総合振込's.").withCodes(List.of("1", "2")),
+                FieldSpec.of(8, "accountNumber", "口座番号", "Account Number", FieldType.N, 7).withRequired().withSensitive(),
+                FieldSpec.of(9, "beneficiaryName", "受取人名", "Beneficiary Name", FieldType.C, 30).withRequired().withNote("Three of four sources name this 受取人名; 三菱UFJ labels it 預金者名 while describing its content as 受取人名. Same field, same bytes, same meaning.").withCharacterClass(CharacterClass.PAYROLL_NAME),
+                FieldSpec.of(10, "amount", "振込金額", "Amount", FieldType.N, 10).withRequired().withFormat(FieldFormat.AMOUNT),
+                FieldSpec.of(11, "newCode", "新規コード", "New Account Code", FieldType.N, 1).withCodeList(codeLists.get("newCode")),
+                FieldSpec.of(12, "employeeNumber", "社員番号", "Employee Number", FieldType.C, 10).withNote("Sources split evenly on N versus C — the same disagreement as 総合振込 顧客コード1, at the same byte positions. Declared C, which preserves either reading. See D-002."),
+                FieldSpec.of(13, "departmentCode", "所属コード", "Department Code", FieldType.C, 10).withNote("Sources split evenly on N versus C, as for 社員番号. Declared C. See D-002."),
+                FieldSpec.of(14, "dummy", "ダミー", "Filler", FieldType.C, 9).withFiller().withNote("Nine bytes of filler where 総合振込 has 振込指定区分, 識別表示 and a seven-byte ダミー. There is no EDI overlay in this format.")));
+    }
+
+    private static RecordDescriptor kyuyoFurikomiTrailer(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.TRAILER, (byte) '8', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("8").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "recordCount", "合計件数", "Record Count", FieldType.N, 6).withFormat(FieldFormat.COUNT),
+                FieldSpec.of(3, "totalAmount", "合計金額", "Total Amount", FieldType.N, 12).withFormat(FieldFormat.AMOUNT),
+                FieldSpec.of(4, "dummy", "ダミー", "Filler", FieldType.C, 101).withFiller()));
+    }
+
+    private static RecordDescriptor kyuyoFurikomiEnd(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.END, (byte) '9', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("9").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "dummy", "ダミー", "Filler", FieldType.C, 119).withFiller()));
+    }
+
+    /** 賞与振込 — from shoyo-furikomi.yaml. */
+    private static FormatDescriptor shoyoFurikomi(Map<String, CodeList> codeLists) {
+        FormatId id = FormatId.of("shoyo-furikomi");
+        Map<RecordKind, RecordDescriptor> records = new EnumMap<>(RecordKind.class);
+        records.put(RecordKind.HEADER, shoyoFurikomiHeader(id, codeLists));
+        records.put(RecordKind.DATA, shoyoFurikomiData(id, codeLists));
+        records.put(RecordKind.TRAILER, shoyoFurikomiTrailer(id, codeLists));
+        records.put(RecordKind.END, shoyoFurikomiEnd(id, codeLists));
+        return new FormatDescriptor(
+                id,
+                "賞与振込",
+                "Bonus Transfer",
+                "12",
+                120,
+                false,
+                List.of(
+                        "全国銀行協会 — 「全銀協パーソナル・コンピュータ用標準通信プロトコル（ベーシック手順）適用業務およびレコード・フォーマット」令和元年12月, section 4 給与・賞与振込レコード・フォーマット. https://www.zenginkyo.or.jp/fileadmin/res/abstract/efforts/system/jba_protocol_pc.pdf retrieved 2026-08-15. States that 賞与振込 uses the 給与振込 layout with 種別コード 12.",
+                        "兵庫県信用組合 — 「全銀協規定フォーマットについて」. https://www.hyogokenshin.co.jp/wp-content/uploads/format1.pdf retrieved 2026-08-15. Lists 賞与振込 as 種別コード 12 sharing the 給与振込 format."),
+                Optional.of("Layout borrowed from kyuyo-furikomi, which is the reading the standard states. Held at verified: false because the layout it borrows is."),
+                records);
+    }
+
+    private static RecordDescriptor shoyoFurikomiHeader(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.HEADER, (byte) '1', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("1").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "typeCode", "種別コード", "Business Type", FieldType.N, 2).withConstant("12").withCodeList(codeLists.get("typeCode")),
+                FieldSpec.of(3, "codeKubun", "コード区分", "Character Code", FieldType.N, 1).withFormat(FieldFormat.CODE_KUBUN).withCodeList(codeLists.get("codeKubun")),
+                FieldSpec.of(4, "originatorCode", "委託者コード", "Originator Code", FieldType.N, 10).withRequired(),
+                FieldSpec.of(5, "originatorName", "委託者名", "Originator Name", FieldType.C, 40).withCharacterClass(CharacterClass.PAYROLL_NAME),
+                FieldSpec.of(6, "valueDate", "振込指定日", "Value Date", FieldType.N, 4).withFormat(FieldFormat.MMDD),
+                FieldSpec.of(7, "originBankCode", "仕向銀行番号", "Origin Bank Code", FieldType.N, 4).withRequired(),
+                FieldSpec.of(8, "originBankName", "仕向銀行名", "Origin Bank Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(9, "originBranchCode", "仕向支店番号", "Origin Branch Code", FieldType.N, 3).withRequired(),
+                FieldSpec.of(10, "originBranchName", "仕向支店名", "Origin Branch Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(11, "accountType", "預金種目", "Account Type", FieldType.N, 1).withCodeList(codeLists.get("accountType")).withCodes(List.of("1", "2", "9")),
+                FieldSpec.of(12, "accountNumber", "口座番号", "Account Number", FieldType.N, 7).withSensitive(),
+                FieldSpec.of(13, "dummy", "ダミー", "Filler", FieldType.C, 17).withFiller()));
+    }
+
+    private static RecordDescriptor shoyoFurikomiData(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.DATA, (byte) '2', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("2").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "beneficiaryBankCode", "被仕向銀行番号", "Beneficiary Bank Code", FieldType.N, 4).withRequired(),
+                FieldSpec.of(3, "beneficiaryBankName", "被仕向銀行名", "Beneficiary Bank Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(4, "beneficiaryBranchCode", "被仕向支店番号", "Beneficiary Branch Code", FieldType.N, 3).withRequired(),
+                FieldSpec.of(5, "beneficiaryBranchName", "被仕向支店名", "Beneficiary Branch Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(6, "clearingHouseCode", "手形交換所番号", "Clearing House Code", FieldType.N, 4),
+                FieldSpec.of(7, "accountType", "預金種目", "Account Type", FieldType.N, 1).withCodeList(codeLists.get("accountType")).withNote("給与振込 admits only 普通預金 and 当座預金, a narrower set than 総合振込's.").withCodes(List.of("1", "2")),
+                FieldSpec.of(8, "accountNumber", "口座番号", "Account Number", FieldType.N, 7).withRequired().withSensitive(),
+                FieldSpec.of(9, "beneficiaryName", "受取人名", "Beneficiary Name", FieldType.C, 30).withRequired().withNote("Three of four sources name this 受取人名; 三菱UFJ labels it 預金者名 while describing its content as 受取人名. Same field, same bytes, same meaning.").withCharacterClass(CharacterClass.PAYROLL_NAME),
+                FieldSpec.of(10, "amount", "振込金額", "Amount", FieldType.N, 10).withRequired().withFormat(FieldFormat.AMOUNT),
+                FieldSpec.of(11, "newCode", "新規コード", "New Account Code", FieldType.N, 1).withCodeList(codeLists.get("newCode")),
+                FieldSpec.of(12, "employeeNumber", "社員番号", "Employee Number", FieldType.C, 10).withNote("Sources split evenly on N versus C — the same disagreement as 総合振込 顧客コード1, at the same byte positions. Declared C, which preserves either reading. See D-002."),
+                FieldSpec.of(13, "departmentCode", "所属コード", "Department Code", FieldType.C, 10).withNote("Sources split evenly on N versus C, as for 社員番号. Declared C. See D-002."),
+                FieldSpec.of(14, "dummy", "ダミー", "Filler", FieldType.C, 9).withFiller().withNote("Nine bytes of filler where 総合振込 has 振込指定区分, 識別表示 and a seven-byte ダミー. There is no EDI overlay in this format.")));
+    }
+
+    private static RecordDescriptor shoyoFurikomiTrailer(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.TRAILER, (byte) '8', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("8").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "recordCount", "合計件数", "Record Count", FieldType.N, 6).withFormat(FieldFormat.COUNT),
+                FieldSpec.of(3, "totalAmount", "合計金額", "Total Amount", FieldType.N, 12).withFormat(FieldFormat.AMOUNT),
+                FieldSpec.of(4, "dummy", "ダミー", "Filler", FieldType.C, 101).withFiller()));
+    }
+
+    private static RecordDescriptor shoyoFurikomiEnd(FormatId id, Map<String, CodeList> codeLists) {
+        return RecordDescriptor.of(id, RecordKind.END, (byte) '9', 120, List.of(
+                FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("9").withCodeList(codeLists.get("dataKubun")),
+                FieldSpec.of(2, "dummy", "ダミー", "Filler", FieldType.C, 119).withFiller()));
+    }
+
     /** 総合振込 — from sougou-furikomi.yaml. */
     private static FormatDescriptor sougouFurikomi(Map<String, CodeList> codeLists) {
         FormatId id = FormatId.of("sougou-furikomi");
@@ -195,7 +446,7 @@ public final class BundledFormats {
                         "兵庫県信用組合 — 「全銀協規定フォーマットについて」. https://www.hyogokenshin.co.jp/wp-content/uploads/format1.pdf retrieved 2026-08-15. Supports all four record types.",
                         "十八親和銀行 — 「全銀フォーマット」. https://www.18shinwabank.co.jp/pdf/bb_format_zengin.pdf retrieved 2026-08-15. Supports the data record.",
                         "三井住友銀行 — 「ファイルレイアウト（総合振込・全銀形式）」. https://www.smbc.co.jp/hojin/eb/web21/pdf/file-layout_01.pdf retrieved 2026-08-15. Supports the data record."),
-                Optional.of("Offsets and lengths corroborated by six independent sources including the JBA standard. Held at verified: false by D-002 (顧客コード1/2 attribute) per R-0.2. See docs/DISCREPANCIES.md."),
+                Optional.of("Offsets and lengths corroborated by six independent sources including the JBA standard. Held at verified: false by D-002 — settled against the standard, which describes 顧客コード1/2 as N(10) each with a C(20) EDI overlay when 識別表示 is Y; this descriptor declares C because the schema cannot express the condition (OQ-8, Epic 7). See docs/DISCREPANCIES.md."),
                 records);
     }
 
@@ -205,13 +456,13 @@ public final class BundledFormats {
                 FieldSpec.of(2, "typeCode", "種別コード", "Business Type", FieldType.N, 2).withConstant("21").withCodeList(codeLists.get("typeCode")),
                 FieldSpec.of(3, "codeKubun", "コード区分", "Character Code", FieldType.N, 1).withFormat(FieldFormat.CODE_KUBUN).withCodeList(codeLists.get("codeKubun")),
                 FieldSpec.of(4, "originatorCode", "委託者コード", "Originator Code", FieldType.N, 10).withRequired(),
-                FieldSpec.of(5, "originatorName", "委託者名", "Originator Name", FieldType.C, 40),
+                FieldSpec.of(5, "originatorName", "委託者名", "Originator Name", FieldType.C, 40).withCharacterClass(CharacterClass.PARTY_NAME),
                 FieldSpec.of(6, "valueDate", "振込指定日", "Value Date", FieldType.N, 4).withFormat(FieldFormat.MMDD),
                 FieldSpec.of(7, "originBankCode", "仕向銀行番号", "Origin Bank Code", FieldType.N, 4).withRequired(),
-                FieldSpec.of(8, "originBankName", "仕向銀行名", "Origin Bank Name", FieldType.C, 15),
+                FieldSpec.of(8, "originBankName", "仕向銀行名", "Origin Bank Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
                 FieldSpec.of(9, "originBranchCode", "仕向支店番号", "Origin Branch Code", FieldType.N, 3).withRequired(),
-                FieldSpec.of(10, "originBranchName", "仕向支店名", "Origin Branch Name", FieldType.C, 15),
-                FieldSpec.of(11, "accountType", "預金種目", "Account Type", FieldType.N, 1).withCodeList(codeLists.get("accountType")),
+                FieldSpec.of(10, "originBranchName", "仕向支店名", "Origin Branch Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
+                FieldSpec.of(11, "accountType", "預金種目", "Account Type", FieldType.N, 1).withCodeList(codeLists.get("accountType")).withCodes(List.of("1", "2", "9")),
                 FieldSpec.of(12, "accountNumber", "口座番号", "Account Number", FieldType.N, 7).withSensitive(),
                 FieldSpec.of(13, "dummy", "ダミー", "Filler", FieldType.C, 17).withFiller()));
     }
@@ -220,13 +471,13 @@ public final class BundledFormats {
         return RecordDescriptor.of(id, RecordKind.DATA, (byte) '2', 120, List.of(
                 FieldSpec.of(1, "dataKubun", "データ区分", "Record Type", FieldType.N, 1).withConstant("2").withCodeList(codeLists.get("dataKubun")),
                 FieldSpec.of(2, "beneficiaryBankCode", "被仕向銀行番号", "Beneficiary Bank Code", FieldType.N, 4).withRequired(),
-                FieldSpec.of(3, "beneficiaryBankName", "被仕向銀行名", "Beneficiary Bank Name", FieldType.C, 15),
+                FieldSpec.of(3, "beneficiaryBankName", "被仕向銀行名", "Beneficiary Bank Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
                 FieldSpec.of(4, "beneficiaryBranchCode", "被仕向支店番号", "Beneficiary Branch Code", FieldType.N, 3).withRequired(),
-                FieldSpec.of(5, "beneficiaryBranchName", "被仕向支店名", "Beneficiary Branch Name", FieldType.C, 15),
+                FieldSpec.of(5, "beneficiaryBranchName", "被仕向支店名", "Beneficiary Branch Name", FieldType.C, 15).withCharacterClass(CharacterClass.BANK_NAME),
                 FieldSpec.of(6, "clearingHouseCode", "手形交換所番号", "Clearing House Code", FieldType.N, 4),
-                FieldSpec.of(7, "accountType", "預金種目", "Account Type", FieldType.N, 1).withCodeList(codeLists.get("accountType")),
+                FieldSpec.of(7, "accountType", "預金種目", "Account Type", FieldType.N, 1).withCodeList(codeLists.get("accountType")).withCodes(List.of("1", "2", "4", "9")),
                 FieldSpec.of(8, "accountNumber", "口座番号", "Account Number", FieldType.N, 7).withRequired().withSensitive(),
-                FieldSpec.of(9, "beneficiaryName", "受取人名", "Beneficiary Name", FieldType.C, 30).withRequired(),
+                FieldSpec.of(9, "beneficiaryName", "受取人名", "Beneficiary Name", FieldType.C, 30).withRequired().withCharacterClass(CharacterClass.PARTY_NAME),
                 FieldSpec.of(10, "amount", "振込金額", "Transfer Amount", FieldType.N, 10).withRequired().withFormat(FieldFormat.AMOUNT),
                 FieldSpec.of(11, "newCode", "新規コード", "New Account Code", FieldType.N, 1).withCodeList(codeLists.get("newCode")),
                 FieldSpec.of(12, "customerCode1", "顧客コード1", "Customer Code 1", FieldType.C, 10).withNote("[D-002] N in the JBA standard, C here; also the first half of EDI情報 C(20) when 識別表示 is Y."),
