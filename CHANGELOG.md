@@ -209,6 +209,12 @@ A research pass against published sources. No parsed output changed, so no versi
 - **A 1 GB constant-memory check** (R-P2), running in CI on every push: 8,802,795 records streamed
   under a 64 MB heap, 9 MB in use at the end. The constrained heap is the assertion, not a number
   to interpret.
+- **A per-record allocation in the character check, found by the new R-P3 test.**
+  `RecordCharacters.isClean` and `validate` iterated the field list with an enhanced-for, which
+  allocates an iterator per call — once per record under `CharacterPolicy.WARN` or `REJECT`. It
+  passed on a fast developer machine, where escape analysis removes it, and failed on every CI
+  runner. Both now use indexed loops, and the tests pass under `-Xint` with the JIT disabled
+  entirely, which is what distinguishes "allocation-free" from "optimised away".
 - **R-P3 is now asserted rather than claimed.** `FieldAllocationTest` measures thread allocation
   while reading the same file with one field decoded per record and with eight, and requires the
   difference to be exactly zero bytes per additional field. The claim appeared in five places in

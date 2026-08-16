@@ -46,8 +46,12 @@ public final class RecordCharacters {
         Objects.requireNonNull(record, "record");
         Objects.requireNonNull(descriptor, "descriptor");
 
+        List<FieldDescriptor> fields = descriptor.fields();
         List<CharacterViolation> violations = null;
-        for (FieldDescriptor field : descriptor.fields()) {
+        // Indexed rather than enhanced-for: this runs per record, and an
+        // iterator per call is an allocation per call (R-P3).
+        for (int i = 0; i < fields.size(); i++) {
+            FieldDescriptor field = fields.get(i);
             if (field.charClass() == CharacterClass.UNRESTRICTED) {
                 continue;
             }
@@ -74,7 +78,12 @@ public final class RecordCharacters {
         Objects.requireNonNull(record, "record");
         Objects.requireNonNull(descriptor, "descriptor");
 
-        for (FieldDescriptor field : descriptor.fields()) {
+        List<FieldDescriptor> fields = descriptor.fields();
+        // Indexed for the same reason as above. This is the check the reader
+        // runs on every record under CharacterPolicy.WARN or REJECT, so an
+        // iterator here is an allocation per record.
+        for (int i = 0; i < fields.size(); i++) {
+            FieldDescriptor field = fields.get(i);
             if (field.charClass() != CharacterClass.UNRESTRICTED
                     && !CharacterSet.isClean(record, field.offset(), field.length(), field.charClass())) {
                 return false;

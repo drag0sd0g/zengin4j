@@ -31,6 +31,15 @@ import org.junit.jupiter.api.Test;
  *
  * <p>Uses {@code com.sun.management.ThreadMXBean}, which HotSpot provides and
  * other JVMs may not; the test skips rather than fails where it is absent.
+ *
+ * <p><strong>These pass under {@code -Xint}</strong>, with the JIT disabled
+ * entirely. That matters: escape analysis will remove a short-lived
+ * {@code Optional} or iterator once a path is hot, which makes it easy to
+ * believe a hot path is allocation-free when it is merely optimised. Passing
+ * with no JIT at all means the allocations are absent from the code rather than
+ * from the compiled form of it — and CI runners, which are slower and share
+ * cores, sit somewhere between the two. This test first failed on exactly that
+ * difference.
  */
 class FieldAllocationTest {
 
