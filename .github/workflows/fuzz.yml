@@ -59,7 +59,7 @@ jobs:
       # the runner. It has to leave the machine before the runner is destroyed.
       - name: Upload findings
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fuzz-findings
           path: |
