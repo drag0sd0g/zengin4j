@@ -74,7 +74,16 @@ class GoldenFileTest {
             write(EXPECTED, rendered);
             return;
         }
-        assertThat(rendered).isEqualTo(new String(resource(EXPECTED), StandardCharsets.UTF_8));
+        String expected = new String(resource(EXPECTED), StandardCharsets.UTF_8);
+
+        // Checked separately so this failure names itself. A checkout that
+        // rewrote the line endings otherwise fails the comparison below with a
+        // diff of invisible characters, on Windows and nowhere else (R-T18).
+        assertThat(expected)
+                .as("the committed rendering reached the test with CRLF line endings, so git"
+                        + " rewrote it on checkout — which .gitattributes exists to prevent")
+                .doesNotContain("\r\n");
+        assertThat(rendered).isEqualTo(expected);
     }
 
     /** INV-1 against a file that is committed rather than generated. */

@@ -52,6 +52,11 @@ public final class BuildSougouFurikomi {
         System.out.println("== a well-formed file ==");
 
         ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+                // Every descriptor in 0.1.0 is verified: false, and building a
+                // file places real values at those offsets. The opt-in is
+                // required so the decision is visible in your code, not ours.
+                // Read DISCLAIMER.md before doing this against a real bank.
+                .allowUnverifiedFormats(true)
                 .header(header -> header
                         .set("originatorCode", "9900000001")
                         .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
@@ -101,6 +106,7 @@ public final class BuildSougouFurikomi {
         System.out.println("== a file whose trailer lies ==");
 
         ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+                .allowUnverifiedFormats(true)
                 .header(header -> header.set("originatorCode", "9900000001"))
                 .payment(payment -> payment.set("amount", 150_000L))
                 // Overriding the computed trailer is deliberate and explicit.
@@ -138,6 +144,7 @@ public final class BuildSougouFurikomi {
 
     private static ZenginFile fixture(FormatDescriptor descriptor) {
         return ZenginFileBuilder.forFormat(descriptor)
+                .allowUnverifiedFormats(true)
                 .header(header -> header.set("originatorCode", "9900000001"))
                 .payment(payment -> payment.set("amount", 150_000L))
                 .build();

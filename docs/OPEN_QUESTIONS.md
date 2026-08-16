@@ -20,7 +20,7 @@ does, and a future reader deserves the evidence, not just the outcome.
 | OQ-7 | Blank `N` field | Open (design) |
 | OQ-8 | 金融EDI情報 overlay | **Narrowed** — both ends now specified |
 | OQ-9 | 預金種目 narrower set | **Closed** — master list plus per-field narrowing |
-| OQ-10 | Should writing gate on `verified` as reading does? | Open (design) — raised in Epic 2 |
+| OQ-10 | Should writing gate on `verified` as reading does? | **Closed** — yes, on the builder ([ADR-0019](adr/0019-building-gates-on-verified.md)) |
 
 ---
 
@@ -72,13 +72,6 @@ index exists so that whoever picks up an epic sees those tasks without reading t
   read so far. → [Q7](#carried-from-the-build-specification-30)
 - **振込入金通知 has two variants** (フォーマットA/B) sharing 種別コード `01`, differing in whether
   12-digit amount fields are present. → [OQ-1](#oq-1--how-should-種別コード-91-be-disambiguated)
-
-### Before 1.0
-
-- **Decide whether writing gates on `verified`.** Reading refuses an unverified descriptor without
-  an explicit opt-in; writing does not, and the consequences of a wrong offset are worse on the
-  write side. Changing it after 1.0 is breaking (R-B10).
-  → [OQ-10](#oq-10--should-writing-gate-on-verified-the-way-reading-does)
 
 ### Unassigned
 
@@ -305,15 +298,20 @@ system, where their own reconciliation may catch it. A wrong offset when writing
 instruction that a bank will act on. If the opt-in exists so that trusting a provisional layout is
 recorded where a reviewer can see it, that argument is *stronger* for output than for input.
 
-**Implemented in the meantime:** no gate, and the asymmetry stated plainly in
-[DISCLAIMER.md](../DISCLAIMER.md) so nobody infers protection that is not there. Documenting a
-sharp edge is not the same as removing it; this is deliberately the conservative option only in the
-sense that it changes no API.
+**Closed 2026-08-16: yes, and on the builder.** `ZenginFileBuilder.build()` now throws
+`UnverifiedFormatException` unless `allowUnverifiedFormats(true)` was set.
 
-**To decide:** whether `ZenginFileBuilder.forFormat` should refuse an unverified descriptor absent
-an explicit opt-in, and if so what carries it — a `WriterOptions` flag consulted at write time, or
-a second `forFormat` overload. Either way it lands before 1.0, because it is a breaking change
-afterwards (R-B10).
+The gate went on the builder rather than on `WriterOptions`, which was the first proposal. Two
+reasons. `ZenginFile` carries a `FormatId`, not a `FormatDescriptor`, so a writer-side check would
+have to rediscover the descriptor through a registry to read a flag the builder already had. And
+the risk is not evenly spread across the two paths: building places caller-supplied values at
+descriptor-defined offsets, which is the step a provisional layout can get wrong, whereas writing a
+file that was just *read* reproduces bytes that already existed. Gating the writer would have added
+friction to the one path that introduces no new risk.
+
+The exception names whichever opt-in the caller actually needs — a diagnostic that prescribes the
+wrong remedy costs more than one that says nothing. See
+[ADR-0019](adr/0019-building-gates-on-verified.md).
 
 ---
 

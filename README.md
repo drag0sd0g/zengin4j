@@ -104,6 +104,7 @@ with them by accident:
 
 ```java
 ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        .allowUnverifiedFormats(true)   // required in 0.1.0 — read DISCLAIMER.md first
         .header(h -> h.set("originatorCode", "9900000001")
                       .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
                       .set("valueDate", MonthDay.of(9, 30)))

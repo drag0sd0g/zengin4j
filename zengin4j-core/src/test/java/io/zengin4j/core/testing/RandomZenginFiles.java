@@ -116,7 +116,7 @@ public final class RandomZenginFiles {
      * @return the built file
      */
     public static ZenginFile built(Random random, FormatDescriptor descriptor) {
-        ZenginFileBuilder builder = ZenginFileBuilder.forFormat(descriptor)
+        ZenginFileBuilder builder = Fixtures.builder(descriptor)
                 .charset(ZenginCharset.MS932)
                 .framing(framing(random));
 

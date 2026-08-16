@@ -174,7 +174,7 @@ class RoundTripProperties {
      */
     @Test
     void anEmptyBatchRoundTrips() {
-        ZenginFile built = ZenginFileBuilder.forFormat(DESCRIPTOR)
+        ZenginFile built = Fixtures.builder(DESCRIPTOR)
                 .header(header -> header.set("originatorCode", "9900000001"))
                 .build();
 

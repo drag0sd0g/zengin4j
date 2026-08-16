@@ -3,6 +3,7 @@ package io.zengin4j.core.codec;
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.error.AmountOverflowException;
 import io.zengin4j.core.error.FormatDescriptorException;
+import io.zengin4j.core.error.UnverifiedFormatException;
 import io.zengin4j.core.format.FieldFormat;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
@@ -67,6 +68,7 @@ public final class ZenginFileBuilder {
 
     private ZenginCharset charset = ZenginCharset.defaultCharset();
     private FileFraming framing = FileFraming.conventional();
+    private boolean allowUnverifiedFormats;
 
     private final List<PendingBatch> batches = new ArrayList<>();
     private PendingBatch current;
@@ -84,6 +86,29 @@ public final class ZenginFileBuilder {
      */
     public static ZenginFileBuilder forFormat(FormatDescriptor descriptor) {
         return new ZenginFileBuilder(descriptor);
+    }
+
+    /**
+     * Permits building on a format whose byte layout is not verified.
+     *
+     * <p>Off by default, mirroring
+     * {@link ReaderOptions#allowUnverifiedFormats()} — and it matters more here
+     * than it does there. A wrong offset when reading puts wrong data in the
+     * caller's own system, where their reconciliation may catch it. A wrong
+     * offset when writing puts a wrong payment instruction in front of a bank,
+     * where nothing will.
+     *
+     * <p>The opt-in exists so that the decision to place real values at
+     * provisional offsets is written down in the caller's own code, where a
+     * reviewer sees it, rather than taken on their behalf.
+     *
+     * @param value whether to allow an unverified descriptor
+     * @return this builder
+     * @since 0.1.0
+     */
+    public ZenginFileBuilder allowUnverifiedFormats(boolean value) {
+        this.allowUnverifiedFormats = value;
+        return this;
     }
 
     /**
@@ -183,15 +208,29 @@ public final class ZenginFileBuilder {
      *
      * @return the materialised file, with computed trailers and an end record
      *         if the format declares one
-     * @throws IllegalStateException     if no header was added
-     * @throws AmountOverflowException   if a batch's amounts do not fit a
-     *                                   {@code long} (R-D7)
-     * @throws FormatDescriptorException if the format lacks a record kind the
-     *                                   build needs
+     * @throws IllegalStateException      if no header was added
+     * @throws UnverifiedFormatException  if the format's byte layout is not
+     *                                    verified and
+     *                                    {@link #allowUnverifiedFormats(boolean)}
+     *                                    was not set
+     * @throws AmountOverflowException    if a batch's amounts do not fit a
+     *                                    {@code long} (R-D7)
+     * @throws FormatDescriptorException  if the format lacks a record kind the
+     *                                    build needs
      */
     public ZenginFile build() {
         if (batches.isEmpty()) {
             throw new IllegalStateException("a file needs at least one header record");
+        }
+        // Checked here rather than in ZenginWriters, because this is where
+        // values are placed at descriptor-defined offsets — the step an
+        // unverified layout can get wrong. A file the reader produced already
+        // passed the equivalent gate, and writing it back reproduces bytes that
+        // already existed, so the writer re-asking would add friction to the
+        // one path that introduces no risk.
+        if (!descriptor.verified() && !allowUnverifiedFormats) {
+            throw new UnverifiedFormatException(descriptor.id().value(),
+                    UnverifiedFormatException.Operation.BUILDING);
         }
 
         RecordDescriptor headerDescriptor = descriptor.record(RecordKind.HEADER);

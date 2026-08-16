@@ -134,15 +134,29 @@ A research pass against published sources. No parsed output changed, so no versi
 
 ### Documented — Epic 2
 
-- **Writing has no `verified` gate, and [DISCLAIMER.md](DISCLAIMER.md) now says so.** Reading an
-  unverified descriptor requires `allowUnverifiedFormats(true)`; `ZenginFileBuilder` and
-  `ZenginWriters` take a descriptor and use it. The consequences are asymmetric in the direction
-  the current design does *not* protect — a wrong offset when reading gives you bad data in your
-  own system, a wrong offset when writing sends a bad instruction to a bank. Recorded as
-  [OQ-10](docs/OPEN_QUESTIONS.md) to be decided before 1.0, since adding the gate later is
-  breaking.
 - Both READMEs gain a builder and round-trip quickstart, and their `Building` sections list the
   fuzzing and golden-file commands. The Japanese one had also fallen behind on `pitest`.
+- **A `.gitattributes`.** Without one, GitHub's Windows runners check out with
+  `core.autocrlf=true`, every LF in a committed fixture becomes CRLF, and the golden-file test
+  fails on Windows and nowhere else — with a diff of invisible characters. Fixture directories are
+  marked binary explicitly rather than left to git's NUL heuristic, which a fixed-length record of
+  ASCII digits and spaces would defeat. `GoldenFileTest` now names this failure if it recurs.
+
+### Changed — write-side verification gate (breaking)
+
+- **`ZenginFileBuilder.build()` now refuses a `verified: false` descriptor** unless
+  `allowUnverifiedFormats(true)` is set on the builder. Reading has required the equivalent since
+  Epic 1; building did not, and the consequences are worse on this side — a wrong offset when
+  reading gives you bad data in your own system, a wrong offset when building sends a bad
+  instruction to a bank. Every descriptor shipped today is `verified: false`, so **this affects
+  every caller that builds a file**: add the one line.
+- The gate is on the builder rather than on `WriterOptions`, and **writing a file you just read
+  needs no opt-in** — those bytes already existed and are reproduced exactly, so the round trip
+  carries no risk the read did not. [ADR-0019](docs/adr/0019-building-gates-on-verified.md), closing
+  [OQ-10](docs/OPEN_QUESTIONS.md).
+- **`UnverifiedFormatException` now names the opt-in that applies**, reading or building, and
+  exposes which operation was refused. A diagnostic that prescribes the wrong remedy costs more
+  than one that says nothing.
 
 ### Known limitations
 
@@ -169,7 +183,7 @@ A research pass against published sources. No parsed output changed, so no versi
 `./gradlew build` enforces, on every run: the Java 21 baseline, the tests, ≥ 90% line and ≥ 85%
 branch coverage on `core`, the ArchUnit module rules, descriptor consistency, and that the
 committed generated sources match the descriptors, and the committed fuzzing corpora replay. Current
-figures: 221 tests, 95.3% line and 90.1% branch coverage.
+figures: 223 tests, 95.4% line and 89.9% branch coverage.
 
 Mutating fuzz runs are not part of `check` — they are nightly, via `fuzzAll`. Replaying what
 fuzzing has already found is, because it is deterministic and costs about two seconds.

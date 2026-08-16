@@ -1,0 +1,28 @@
+# zengin4j is a byte-oriented library, so what git does to line endings on
+# checkout is a correctness concern rather than a cosmetic one (R-T18).
+#
+# Without this file, GitHub's Windows runners check out with core.autocrlf=true,
+# every LF in a committed fixture becomes CRLF, and a golden file that asserts on
+# exact content fails on Windows and nowhere else — with a diff of invisible
+# characters.
+
+# Normalise text to LF in the repository and in every working tree, so a golden
+# file compares equal on all three platforms.
+* text=auto eol=lf
+
+# The Gradle wrapper is generated. Leave it exactly as Gradle wrote it — the
+# .bat needs its CRLFs for cmd.exe, and neither file is ours to renormalise.
+/gradlew.bat -text
+/gradlew    -text
+
+# Test fixtures are bytes, not text, and nothing may rewrite them.
+#
+# Marked explicitly rather than left to git's heuristic, which looks for a NUL in
+# the first 8000 bytes: a fixed-length record of ASCII digits and spaces contains
+# none, so an all-ASCII corpus would be silently rewritten. The two committed
+# today happen to carry high-bit bytes and are detected correctly — that is luck,
+# not a property to rely on.
+zengin4j-core/src/test/resources/conformance/input/** -text
+zengin4j-core/src/test/resources/io/zengin4j/core/*Inputs/** -text
+
+*.jar binary

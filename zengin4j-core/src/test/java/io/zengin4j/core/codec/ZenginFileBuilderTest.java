@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.error.FormatDescriptorException;
+import io.zengin4j.core.error.UnverifiedFormatException;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.model.Batch;
@@ -29,7 +30,7 @@ class ZenginFileBuilderTest {
 
     @Test
     void buildsAFileWithAComputedTrailer() {
-        ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        ZenginFile file = Fixtures.builder(descriptor)
                 .header(header -> header
                         .set("originatorCode", "9900000001")
                         .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
@@ -89,7 +90,7 @@ class ZenginFileBuilderTest {
     @Test
     void assignsByteOffsetsThatMatchWhereTheRecordsAreWritten() {
         ZenginFile withSeparators = simpleFile();
-        ZenginFile without = ZenginFileBuilder.forFormat(descriptor)
+        ZenginFile without = Fixtures.builder(descriptor)
                 .framing(FileFraming.none())
                 .header(header -> header.set("originatorCode", "9900000001"))
                 .payment(payment -> payment.set("amount", 1L))
@@ -106,7 +107,7 @@ class ZenginFileBuilderTest {
     /** Zero is a legitimate amount; only a negative one is a programming error. */
     @Test
     void acceptsAZeroAmount() {
-        ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        ZenginFile file = Fixtures.builder(descriptor)
                 .header(header -> header.set("originatorCode", "9900000001"))
                 .payment(payment -> payment.set("amount", 0L))
                 .build();
@@ -119,7 +120,7 @@ class ZenginFileBuilderTest {
     /** Every setter returns the collector, so any of them can be chained from. */
     @Test
     void everySetterIsChainable() {
-        ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        ZenginFile file = Fixtures.builder(descriptor)
                 .header(header -> header
                         .set("valueDate", MonthDay.of(9, 30))
                         .set("originatorCode", "9900000001")
@@ -137,7 +138,7 @@ class ZenginFileBuilderTest {
 
     @Test
     void supportsMultipleBatches() {
-        ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        ZenginFile file = Fixtures.builder(descriptor)
                 .header(header -> header.set("originatorCode", "9900000001"))
                 .payment(payment -> payment.set("amount", 100L))
                 .header(header -> header.set("originatorCode", "9900000002"))
@@ -159,7 +160,7 @@ class ZenginFileBuilderTest {
      */
     @Test
     void anExplicitTrailerOverridesTheComputedOne() {
-        ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        ZenginFile file = Fixtures.builder(descriptor)
                 .header(header -> header.set("originatorCode", "9900000001"))
                 .payment(payment -> payment.set("amount", 100L))
                 .trailer(trailer -> trailer.set("recordCount", 99L).set("totalAmount", 12_345L))
@@ -174,7 +175,7 @@ class ZenginFileBuilderTest {
 
     @Test
     void theEndRecordCanBeCustomised() {
-        ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        ZenginFile file = Fixtures.builder(descriptor)
                 .header(header -> header.set("originatorCode", "9900000001"))
                 .endRecord(end -> end.set("dummy", "X"))
                 .build();
@@ -185,7 +186,7 @@ class ZenginFileBuilderTest {
 
     @Test
     void framingAndCharsetAreConfigurable() {
-        ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        ZenginFile file = Fixtures.builder(descriptor)
                 .charset(ZenginCharset.MS932)
                 .framing(new FileFraming(false, SeparatorStyle.LF, false, true))
                 .header(header -> header.set("originatorCode", "9900000001"))
@@ -204,17 +205,62 @@ class ZenginFileBuilderTest {
         assertThat(simpleFile().framing()).isEqualTo(FileFraming.conventional());
     }
 
+    /**
+     * OQ-10: building on a provisional layout requires saying so.
+     *
+     * <p>Every other test here goes through {@code Fixtures.builder}, which
+     * opts in. This is the one place the raw entry point is used, because this
+     * is the behaviour being asserted.
+     */
+    @Test
+    void refusesToBuildOnAnUnverifiedFormatWithoutAnExplicitOptIn() {
+        assertThat(descriptor.verified()).isFalse();
+
+        assertThatExceptionOfType(UnverifiedFormatException.class)
+                .isThrownBy(() -> ZenginFileBuilder.forFormat(descriptor)
+                        .header(header -> header.set("originatorCode", "9900000001"))
+                        .build())
+                .satisfies(thrown -> {
+                    assertThat(thrown.formatId()).isEqualTo("sougou-furikomi");
+                    assertThat(thrown.operation())
+                            .isEqualTo(UnverifiedFormatException.Operation.BUILDING);
+                    // The remedy named must be the one that actually applies here.
+                    assertThat(thrown.messageEn())
+                            .contains("ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)")
+                            .doesNotContain("ReaderOptions");
+                    assertThat(thrown.messageJa()).isNotBlank();
+                });
+
+        // And the opt-in is what makes it work.
+        assertThat(ZenginFileBuilder.forFormat(descriptor)
+                .allowUnverifiedFormats(true)
+                .header(header -> header.set("originatorCode", "9900000001"))
+                .build()
+                .totalRecords()).isEqualTo(3);
+    }
+
+    /** Reading and building name different remedies, because they need different ones. */
+    @Test
+    void theReadingRemedyIsStillNamedWhenReadingIsWhatFailed() {
+        UnverifiedFormatException reading = new UnverifiedFormatException("sougou-furikomi");
+
+        assertThat(reading.operation()).isEqualTo(UnverifiedFormatException.Operation.READING);
+        assertThat(reading.messageEn())
+                .contains("ReaderOptions.builder().allowUnverifiedFormats(true)")
+                .doesNotContain("ZenginFileBuilder");
+    }
+
     @Test
     void rejectsMisuse() {
         assertThatIllegalStateException()
-                .isThrownBy(() -> ZenginFileBuilder.forFormat(descriptor).build())
+                .isThrownBy(() -> Fixtures.builder(descriptor).build())
                 .withMessageContaining("at least one header");
         assertThatIllegalStateException()
-                .isThrownBy(() -> ZenginFileBuilder.forFormat(descriptor)
+                .isThrownBy(() -> Fixtures.builder(descriptor)
                         .payment(payment -> payment.set("amount", 1L)))
                 .withMessageContaining("must follow a header");
         assertThatIllegalStateException()
-                .isThrownBy(() -> ZenginFileBuilder.forFormat(descriptor)
+                .isThrownBy(() -> Fixtures.builder(descriptor)
                         .trailer(trailer -> trailer.set("recordCount", 1L)))
                 .withMessageContaining("must follow a header");
     }
@@ -222,20 +268,20 @@ class ZenginFileBuilderTest {
     @Test
     void rejectsUnknownFieldsAndNegativeValues() {
         assertThatExceptionOfType(FormatDescriptorException.class)
-                .isThrownBy(() -> ZenginFileBuilder.forFormat(descriptor)
+                .isThrownBy(() -> Fixtures.builder(descriptor)
                         .header(header -> header.set("noSuchField", "x")))
                 .withMessageContaining("has no field 'noSuchField'");
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> ZenginFileBuilder.forFormat(descriptor)
+                .isThrownBy(() -> Fixtures.builder(descriptor)
                         .header(header -> header.set("originatorCode", -1L)))
                 .withMessageContaining("cannot carry a negative value");
         // Every overload validates the id, not just the String one.
         assertThatExceptionOfType(FormatDescriptorException.class)
-                .isThrownBy(() -> ZenginFileBuilder.forFormat(descriptor)
+                .isThrownBy(() -> Fixtures.builder(descriptor)
                         .header(header -> header.set("noSuchField", 1L)))
                 .withMessageContaining("has no field 'noSuchField'");
         assertThatExceptionOfType(FormatDescriptorException.class)
-                .isThrownBy(() -> ZenginFileBuilder.forFormat(descriptor)
+                .isThrownBy(() -> Fixtures.builder(descriptor)
                         .header(header -> header.set("noSuchField", MonthDay.of(9, 30))))
                 .withMessageContaining("has no field 'noSuchField'");
     }
@@ -243,7 +289,7 @@ class ZenginFileBuilderTest {
     @Test
     void rejectsValuesThatDoNotFitTheirField() {
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> ZenginFileBuilder.forFormat(descriptor)
+                .isThrownBy(() -> Fixtures.builder(descriptor)
                         .header(header -> header.set("originatorCode", "999999999999999"))
                         .build())
                 .withMessageContaining("does not fit");
@@ -281,7 +327,7 @@ class ZenginFileBuilderTest {
     }
 
     private ZenginFile simpleFile() {
-        return ZenginFileBuilder.forFormat(descriptor)
+        return Fixtures.builder(descriptor)
                 .header(header -> header
                         .set("originatorCode", "9900000001")
                         .set("valueDate", MonthDay.of(9, 30)))

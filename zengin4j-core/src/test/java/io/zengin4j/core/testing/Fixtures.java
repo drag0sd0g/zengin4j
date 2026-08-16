@@ -4,6 +4,7 @@ import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.codec.FieldCodec;
 import io.zengin4j.core.codec.PadPolicy;
 import io.zengin4j.core.codec.ReaderOptions;
+import io.zengin4j.core.codec.ZenginFileBuilder;
 import io.zengin4j.core.codec.RecordFramer;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FormatDescriptor;
@@ -67,6 +68,21 @@ public final class Fixtures {
                 .warningListener(warning -> {
                     // expected in tests; the reader still collects them
                 });
+    }
+
+    /**
+     * A builder that has already acknowledged the provisional layout.
+     *
+     * <p>Every bundled descriptor is {@code verified: false}, and building on
+     * one requires an explicit opt-in. Tests take it here so that the one test
+     * asserting the gate <em>fires</em> is the only place the raw
+     * {@code ZenginFileBuilder.forFormat} appears.
+     *
+     * @param descriptor the format to build
+     * @return a builder that will not refuse the descriptor
+     */
+    public static ZenginFileBuilder builder(FormatDescriptor descriptor) {
+        return ZenginFileBuilder.forFormat(descriptor).allowUnverifiedFormats(true);
     }
 
     public static byte[] header(FormatDescriptor descriptor) {

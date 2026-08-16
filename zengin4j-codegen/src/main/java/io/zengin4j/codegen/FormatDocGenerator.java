@@ -100,16 +100,15 @@ final class FormatDocGenerator {
                     .append("> reading a file with this format requires").append(NL)
                     .append("> `ReaderOptions.builder().allowUnverifiedFormats(true)`.").append(NL)
                     .append("> ").append(NL)
-                    .append("> **Writing has no such gate** — the builder and writer use whatever")
+                    .append("> Building one requires the same acknowledgement, through").append(NL)
+                    .append("> `ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)`.")
                     .append(NL)
-                    .append("> descriptor they are given. A wrong byte offset in a payment file")
+                    .append("> ").append(NL)
+                    .append("> A wrong byte offset in a payment file produces silently corrupted")
                     .append(NL)
-                    .append("> produces silently corrupted financial instructions, and on the write")
+                    .append("> financial instructions. Check the layout against your own")
                     .append(NL)
-                    .append("> side nothing downstream will catch it. Check the layout against your")
-                    .append(NL)
-                    .append("> own institution's specification before relying on it.")
-                    .append(NL).append(NL);
+                    .append("> institution's specification before relying on it.").append(NL).append(NL);
             return;
         }
         out.append("> ## ⚠ Corroborated, but not yet verified").append(NL)
@@ -129,13 +128,14 @@ final class FormatDocGenerator {
                 .append("> note in the table below.").append(NL)
                 .append("> ").append(NL)
                 .append("> Reading a file with this format still requires").append(NL)
-                .append("> `ReaderOptions.builder().allowUnverifiedFormats(true)`. **Writing has no")
+                .append("> `ReaderOptions.builder().allowUnverifiedFormats(true)`, and building one")
                 .append(NL)
-                .append("> such gate**, so producing a file from this layout is the less guarded")
+                .append("> requires").append(NL)
+                .append("> `ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)`. You")
                 .append(NL)
-                .append("> direction, not the safer one. Check the layout against your own")
+                .append("> should still check the layout against your own institution's")
                 .append(NL)
-                .append("> institution's specification either way.")
+                .append("> specification.")
                 .append(NL).append(NL);
     }
 

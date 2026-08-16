@@ -100,6 +100,7 @@ try (ZenginReader reader = ZenginReaders.open(path, options)) {
 
 ```java
 ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        .allowUnverifiedFormats(true)   // 0.1.0 では必須。DISCLAIMER.md を参照
         .header(h -> h.set("originatorCode", "9900000001")
                       .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
                       .set("valueDate", MonthDay.of(9, 30)))
