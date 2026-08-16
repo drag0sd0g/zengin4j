@@ -1,15 +1,12 @@
 package io.zengin4j.testkit;
 
 import io.zengin4j.core.charset.ZenginCharset;
-import io.zengin4j.core.codec.FieldCodec;
-import io.zengin4j.core.codec.PadPolicy;
-import io.zengin4j.core.format.FieldDescriptor;
+import io.zengin4j.core.codec.RecordEncoder;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.model.SeparatorStyle;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Builds record bytes from a descriptor and a map of field values.
@@ -18,6 +15,10 @@ import java.util.Objects;
  * type prescribes: zeros for {@code N}, spaces for {@code C}. Unknown field
  * ids are rejected, because a fixture that silently ignores a misspelled field
  * asserts nothing.
+ *
+ * <p>Encoding itself is {@link io.zengin4j.core.codec.RecordEncoder}'s, not a
+ * copy of it. A fixture generator that padded fields its own way could produce
+ * bytes the library would never write, and then agree with itself about them.
  *
  * @since 0.1.0
  */
@@ -37,30 +38,7 @@ public final class SyntheticRecords {
      *                                  or a value does not fit its field
      */
     public static byte[] encode(RecordDescriptor descriptor, ZenginCharset charset, Map<String, String> values) {
-        Objects.requireNonNull(descriptor, "descriptor");
-        Objects.requireNonNull(charset, "charset");
-        Objects.requireNonNull(values, "values");
-        for (String id : values.keySet()) {
-            if (descriptor.find(id).isEmpty()) {
-                throw new IllegalArgumentException("the " + descriptor.kind() + " record of format "
-                        + descriptor.formatId() + " has no field '" + id + "'");
-            }
-        }
-
-        byte[] frame = new byte[descriptor.recordLength()];
-        for (FieldDescriptor field : descriptor.fields()) {
-            String value = values.get(field.id());
-            if (value == null) {
-                value = field.constant().orElse(null);
-            }
-            if (value == null) {
-                FieldCodec.fill(frame, field.offset(), field.length(), field.type().padByte());
-            } else {
-                FieldCodec.encodeText(value, frame, field.offset(), field.length(), charset,
-                        PadPolicy.of(field.type()));
-            }
-        }
-        return frame;
+        return RecordEncoder.encode(descriptor, charset, values);
     }
 
     /**

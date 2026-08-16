@@ -4,12 +4,14 @@ import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.codec.FieldCodec;
 import io.zengin4j.core.codec.PadPolicy;
 import io.zengin4j.core.codec.ReaderOptions;
+import io.zengin4j.core.codec.RecordFramer;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.format.FormatRegistry;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
+import io.zengin4j.core.model.FileFraming;
 import java.io.ByteArrayOutputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -120,6 +122,37 @@ public final class Fixtures {
     public static byte[] file(FormatDescriptor descriptor) {
         return join(CRLF, header(descriptor), data(descriptor), trailer(descriptor, 1, AMOUNT),
                 end(descriptor));
+    }
+
+    /**
+     * The same four records, framed as asked.
+     *
+     * <p>Assembled here rather than through {@code ZenginWriters}, so a test
+     * that reads this and writes it again is comparing the writer against an
+     * independent assembly rather than against itself.
+     *
+     * @param descriptor the format
+     * @param framing    the framing to apply; must not be {@code MIXED}
+     * @return the framed file
+     */
+    public static byte[] framed(FormatDescriptor descriptor, FileFraming framing) {
+        byte[] separator = framing.separator().bytes().orElseThrow();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        if (framing.byteOrderMarkPresent()) {
+            out.writeBytes(RecordFramer.BYTE_ORDER_MARK);
+        }
+        List<byte[]> records = List.of(header(descriptor), data(descriptor),
+                trailer(descriptor, 1, AMOUNT), end(descriptor));
+        for (int i = 0; i < records.size(); i++) {
+            out.writeBytes(records.get(i));
+            if (i < records.size() - 1 || framing.trailingSeparator()) {
+                out.writeBytes(separator);
+            }
+        }
+        if (framing.trailingEofByte()) {
+            out.write(RecordFramer.EOF_BYTE);
+        }
+        return out.toByteArray();
     }
 
     public static byte[] encode(RecordDescriptor descriptor, Map<String, String> values) {

@@ -6,10 +6,10 @@
 [versions]
 junit = "5.14.4"
 assertj = "3.27.7"
-# jqwik 1.10.x targets JUnit Platform 1.14, i.e. the JUnit 5.14 line.
-# Do not bump JUnit to 6.x without checking jqwik's platform dependency first.
-jqwik = "1.10.1"
 archunit = "1.5.0"
+# Coverage-guided fuzzing (R-T9). Test-scoped, and run by its own task rather
+# than by `check`: fuzzing is a nightly job, not a per-commit one.
+jazzer = "0.30.0"
 jacoco = "0.8.15"
 pitest = "1.25.9"
 pitest-junit5 = "1.2.3"
@@ -22,8 +22,8 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
-jqwik = { module = "net.jqwik:jqwik", version.ref = "jqwik" }
 archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+jazzer-junit = { module = "com.code-intelligence:jazzer-junit", version.ref = "jazzer" }
 # Driven through its command line entry point rather than the Gradle plugin:
 # info.solidsoft.pitest 1.15.0 is the newest release and does not run on
 # Gradle 9 (it reads reporting.baseDir, which was removed).

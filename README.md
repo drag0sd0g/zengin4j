@@ -39,17 +39,18 @@ in Epic 7; see [Status](#status).
 
 ## Status
 
-This repository is at **Epic 1 — walking skeleton**. What works today:
+This repository is at **Epic 2 — reading and writing 総合振込**. What works today:
 
 | | |
 |---|---|
 | ✅ | Reading 総合振込 (`21`) files: streaming, batch and whole-file APIs |
+| ✅ | Writing files back **byte for byte**, including framing the file arrived with |
+| ✅ | Building files, with each batch trailer's count and total computed from its payments |
 | ✅ | Format descriptors as data, with computed byte offsets and a build-time length check |
 | ✅ | Generated, format-shaped record types, committed and drift-checked |
 | ✅ | Optional separators (none / CR / LF / CRLF, even mixed), byte order marks, EOF byte |
 | ✅ | Strict and lenient parsing, with malformed records surfaced as data rather than exceptions |
 | ✅ | Year inference for the yearless `MMDD` dates, as an explicit, named decision |
-| ⬜ | Writing files and byte-exact round tripping — Epic 2 |
 | ⬜ | The remaining 120-byte formats and the character-set machinery — Epic 3 |
 | ⬜ | Validation with byte-level findings, JSON and SARIF — Epic 4 |
 | ⬜ | CLI — Epic 5 |
@@ -97,6 +98,35 @@ try (ZenginReader reader = ZenginReaders.open(path, options)) {
 > `next()`.** Accessing a stale one raises `StaleRecordViewException` rather than returning the
 > wrong record's data. Call `materialize()` on anything you need to keep — or use
 > `ZenginReaders.batches(...)`, which materialises by default.
+
+Building a file computes each batch trailer from the payments it contains, so it cannot disagree
+with them by accident:
+
+```java
+ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        .header(h -> h.set("originatorCode", "9900000001")
+                      .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
+                      .set("valueDate", MonthDay.of(9, 30)))
+        .payment(p -> p.set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ")
+                       .set("accountNumber", "9876543")
+                       .set("amount", 150_000L))
+        .build();                       // trailer: 1 record, ¥150,000
+
+ZenginWriters.write(file, Path.of("payments.txt"), WriterOptions.defaults());
+```
+
+**A file read and written again is byte-identical to what arrived** — its separator convention,
+its byte order mark, whether a separator followed the final record, and any filler this library
+does not interpret:
+
+```java
+ZenginFile parsed = ZenginReaders.readFile(path, options);
+
+assert Arrays.equals(ZenginWriters.toByteArray(parsed, WriterOptions.defaults()), original);
+```
+
+That is the point of retaining every record's raw bytes rather than re-encoding from decoded
+fields: reserved space and values nobody has verified yet survive the trip untouched.
 
 Runnable versions live in [`examples/`](examples/).
 
@@ -153,13 +183,20 @@ Architecture decision records live in [`docs/adr/`](docs/adr/).
 ./gradlew build                    # compile, test, coverage gate, architecture rules, drift check
 ./gradlew generateFormatSources    # regenerate record classes and docs after editing a descriptor
 ./gradlew :zengin4j-core:pitest    # mutation testing; opt-in, takes about a minute
+./gradlew :zengin4j-core:fuzzAll   # coverage-guided fuzzing; opt-in, runs nightly in CI
+./gradlew test -Pgolden.regenerate # rewrite the golden files, then read the diff
 ```
 
 Requires a JDK 21 or newer; the build targets Java 21 bytecode regardless of which you use.
 
 `build` is the gate: it fails on a test failure, on coverage below 90% line or 85% branch in
-`core`, on a module-dependency violation, on a descriptor whose field lengths do not add up, and on
-committed generated sources that have drifted from the descriptors they came from.
+`core`, on a module-dependency violation, on a descriptor whose field lengths do not add up, on
+committed generated sources that have drifted from the descriptors they came from, and on a
+committed fuzzing input that no longer behaves as it did when it was found.
+
+Fuzzing itself is not in the gate — it is non-deterministic by design, which is the opposite of
+what a per-commit check should be. Replaying what it has already found is, because that is
+deterministic and takes about two seconds.
 
 ## Licence
 

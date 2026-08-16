@@ -59,7 +59,24 @@ class ModelTest {
         assertThat(FileFraming.none().separator()).isEqualTo(SeparatorStyle.NONE);
         assertThat(FileFraming.none().isReproducible()).isTrue();
         assertThat(FileFraming.none().byteOrderMarkPresent()).isFalse();
-        assertThat(new FileFraming(false, SeparatorStyle.MIXED, false).isReproducible()).isFalse();
+        assertThat(FileFraming.none().trailingSeparator()).isFalse();
+        assertThat(FileFraming.none().hasSeparator()).isFalse();
+        assertThat(new FileFraming(false, SeparatorStyle.MIXED, false, false).isReproducible()).isFalse();
+    }
+
+    /**
+     * OQ-4: the documented framing appends a separator to every record,
+     * including the last, so that is what a file built from scratch gets.
+     */
+    @Test
+    void conventionalFramingAppendsASeparatorAfterEveryRecord() {
+        FileFraming conventional = FileFraming.conventional();
+
+        assertThat(conventional.separator()).isEqualTo(SeparatorStyle.CRLF);
+        assertThat(conventional.trailingSeparator()).isTrue();
+        assertThat(conventional.hasSeparator()).isTrue();
+        assertThat(conventional.byteOrderMarkPresent()).isFalse();
+        assertThat(conventional.trailingEofByte()).isFalse();
     }
 
     @Test

@@ -13,8 +13,10 @@
 > note in the table below.
 > 
 > Reading a file with this format still requires
-> `ReaderOptions.builder().allowUnverifiedFormats(true)`, and you should
-> still check the layout against your own institution's specification.
+> `ReaderOptions.builder().allowUnverifiedFormats(true)`. **Writing has no
+> such gate**, so producing a file from this layout is the less guarded
+> direction, not the safer one. Check the layout against your own
+> institution's specification either way.
 
 ## At a glance
 

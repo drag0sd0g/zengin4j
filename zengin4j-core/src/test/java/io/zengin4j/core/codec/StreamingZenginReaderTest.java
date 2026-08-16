@@ -15,7 +15,9 @@ import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.format.FormatRegistry;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.model.DataRecord;
+import io.zengin4j.core.model.FileFraming;
 import io.zengin4j.core.model.SeparatorStyle;
+import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.ZenginRecord;
 import io.zengin4j.core.testing.Fixtures;
 import java.io.ByteArrayInputStream;
@@ -25,6 +27,7 @@ import java.time.MonthDay;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -398,6 +401,97 @@ class StreamingZenginReaderTest {
             }
         }
         assertThat(total).isEqualTo(Fixtures.AMOUNT);
+    }
+
+    /**
+     * The framing paths — skipping a leading byte order mark, consuming a
+     * separator run, consuming the EOF byte — each have to survive the buffer
+     * running out mid-way. A one-record buffer fed a byte at a time puts a
+     * refill at every one of those points, in every framing combination.
+     *
+     * <p>Round-tripping is the assertion rather than a field value, because a
+     * refill that loses or duplicates a byte shows up in the output even when
+     * every decoded field still looks plausible (INV-1).
+     */
+    @Test
+    void survivesABufferRefillAtEveryFramingBoundary() {
+        for (SeparatorStyle style : List.of(SeparatorStyle.NONE, SeparatorStyle.CR,
+                SeparatorStyle.LF, SeparatorStyle.CRLF)) {
+            for (boolean mark : List.of(true, false)) {
+                for (boolean eof : List.of(true, false)) {
+                    FileFraming framing = new FileFraming(mark, style, style != SeparatorStyle.NONE, eof);
+                    byte[] source = Fixtures.framed(descriptor, framing);
+                    ReaderOptions tiny = Fixtures.optionsBuilder()
+                            .byteOrderMark(ByteOrderMarkPolicy.STRIP)
+                            .bufferRecords(1)
+                            .build();
+
+                    ZenginFile file = ZenginReaders.readFile(new DribblingStream(source, 1), tiny);
+
+                    assertThat(file.framing())
+                            .as("%s mark=%s eof=%s", style, mark, eof)
+                            .isEqualTo(framing);
+                    assertThat(ZenginWriters.toByteArray(file, WriterOptions.defaults()))
+                            .as("%s mark=%s eof=%s", style, mark, eof)
+                            .isEqualTo(source);
+                }
+            }
+        }
+    }
+
+    /**
+     * A run of separators longer than whatever is left in the buffer.
+     *
+     * <p>{@code fill} drains the stream greedily, so feeding it slowly does not
+     * produce a partial buffer — the only way to run out mid-framing is for the
+     * framing itself to be longer than the buffer's tail. Blank lines between
+     * records do that, and a file that has been through a text editor has them.
+     *
+     * <p>Such a run is reported as {@link SeparatorStyle#MIXED}, and that is the
+     * right answer rather than a limitation: nothing distinguishes "one CRLF
+     * plus blank lines" from "two conventions in one file", and both are
+     * equally unreproducible. The reader says so and the writer refuses,
+     * instead of silently normalising the blank lines away.
+     */
+    @Test
+    void readsThroughASeparatorRunLongerThanTheBuffer() {
+        byte[] blankLines = new byte[400];
+        for (int i = 0; i < blankLines.length; i += 2) {
+            blankLines[i] = '\r';
+            blankLines[i + 1] = '\n';
+        }
+        byte[] file = Fixtures.concat(List.of(
+                Fixtures.header(descriptor), blankLines,
+                Fixtures.data(descriptor), blankLines,
+                Fixtures.trailer(descriptor, 1, Fixtures.AMOUNT), blankLines,
+                Fixtures.end(descriptor), blankLines,
+                new byte[] {RecordFramer.EOF_BYTE}));
+        ReaderOptions tiny = Fixtures.optionsBuilder().bufferRecords(1).build();
+
+        try (ZenginReader reader = ZenginReaders.open(new ByteArrayInputStream(file), tiny)) {
+            assertThat(drain(reader)).hasSize(4);
+            assertThat(reader.framing().separator()).isEqualTo(SeparatorStyle.MIXED);
+            assertThat(reader.framing().isReproducible()).isFalse();
+            assertThat(reader.framing().trailingEofByte()).isTrue();
+        }
+    }
+
+    /** A reader owns the stream it opened and must release it (R-C21). */
+    @Test
+    void closingTheReaderClosesTheStreamItOpened() {
+        AtomicBoolean closed = new AtomicBoolean();
+        InputStream source = new ByteArrayInputStream(Fixtures.file(descriptor)) {
+            @Override
+            public void close() {
+                closed.set(true);
+            }
+        };
+
+        try (ZenginReader reader = ZenginReaders.open(source, Fixtures.options())) {
+            reader.next();
+        }
+
+        assertThat(closed).isTrue();
     }
 
     @Test

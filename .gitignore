@@ -18,5 +18,8 @@ replay_pid*.log
 out/
 *.class
 .claude/
-# jqwik records failing samples here so it can replay them
-.jqwik-database
+# Jazzer writes its working corpus here during fuzzing runs, and a crashing
+# input here when it finds one. A finding worth keeping gets committed as a
+# regression fixture rather than left in an ignored directory (ADR-0017).
+.cifuzz-corpus/
+.cifuzz-findings/

@@ -4,6 +4,76 @@ dependencies {
     // R-M1 / P3: this list must stay empty for api, implementation and
     // runtimeOnly. If you are about to add one, read §7 first.
     testImplementation(libs.archunit.junit5)
+    testImplementation(libs.jazzer.junit)
+}
+
+// R-T9: fuzzing, on its own tasks.
+//
+// Kept out of `check` deliberately. Fuzzing is a nightly job — it is slow, and
+// it is non-deterministic by design, which is the opposite of what a
+// per-commit gate should be. INV-3 is covered on every build by the seeded
+// property in InvariantProperties; this is the deeper pass.
+//
+//     ./gradlew :zengin4j-core:fuzz          replay every corpus — fast, deterministic
+//     ./gradlew :zengin4j-core:fuzzAll       mutate every target, each in its own JVM
+//     ./gradlew :zengin4j-core:fuzzReading   mutate one target
+//
+// **One target per JVM when mutating.** libFuzzer terminates the process when a
+// target's time budget expires, so a second target in the same JVM never runs
+// and Gradle — still expecting it — fails with a missing results file rather
+// than with anything that names the cause. Hence a task per target rather than
+// a flag on one task: the broken combination is not expressible.
+//
+// Jazzer's JUnit integration switches on the JAZZER_FUZZ environment variable,
+// not a system property. Per-run duration comes from @FuzzTest(maxDuration).
+//
+// Adding a @FuzzTest means adding it here. FuzzTargetsAreWiredTest fails the
+// build if that is forgotten, so a target cannot go silently un-fuzzed.
+val fuzzTargets = mapOf(
+    "Reading" to "io.zengin4j.core.ReaderFuzzTest.readingNeverMisbehaves",
+    "RoundTrip" to "io.zengin4j.core.ReaderFuzzTest.anythingReadableIsWritable",
+)
+
+fun Test.fuzzTaskDefaults() {
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    // Tag filtering comes from the root build, which routes the `fuzz` tag
+    // here and excludes it everywhere else.
+    outputs.upToDateWhen { false }
+    testLogging {
+        events("passed", "failed")
+    }
+}
+
+// Replay is in `check`: it is deterministic, takes about two seconds, and a
+// crash reproducer that only runs nightly lets the regression it was committed
+// to prevent reach main first. Mutating runs stay nightly.
+val fuzzReplay = tasks.register<Test>("fuzz") {
+    fuzzTaskDefaults()
+    description = "Replays the committed fuzzing corpora (R-T9). Deterministic; part of check."
+}
+
+val mutatingFuzzTasks = fuzzTargets.map { (name, target) ->
+    tasks.register<Test>("fuzz$name") {
+        fuzzTaskDefaults()
+        description = "Fuzzes $target for the duration it declares."
+        environment("JAZZER_FUZZ", "1")
+        // Trailing wildcard: a @FuzzTest reports as `name(byte[])`, so an exact
+        // method match finds nothing and Gradle fails with "no tests found".
+        filter { includeTestsMatching("$target*") }
+    }
+}
+
+tasks.register("fuzzAll") {
+    group = "verification"
+    description = "Fuzzes every target, each in its own JVM (R-T9)."
+    dependsOn(mutatingFuzzTasks)
+}
+
+tasks.named<Test>("test") {
+    // So the guard test can compare the wiring above against the annotations.
+    systemProperty("zengin4j.fuzz.targets", fuzzTargets.values.sorted().joinToString(","))
 }
 
 tasks.jar {
@@ -57,7 +127,7 @@ tasks.jacocoTestCoverageVerification {
 }
 
 tasks.check {
-    dependsOn(tasks.jacocoTestCoverageVerification, tasks.jacocoTestReport)
+    dependsOn(tasks.jacocoTestCoverageVerification, tasks.jacocoTestReport, fuzzReplay)
 }
 
 // R-T15: mutation testing, opt-in.
@@ -91,13 +161,44 @@ tasks.register<JavaExec>("pitest") {
         "--targetTests", "io.zengin4j.core.*",
         "--sourceDirs", layout.projectDirectory.dir("src/main/java").asFile.absolutePath,
         "--outputFormats", "HTML,XML",
-        // Generated code is excluded for the same reason it is excluded from the
-        // coverage counters: it measures the generator, not the codec.
-        "--excludedClasses", "io.zengin4j.core.model.generated.*",
-        "--excludedTestClasses", "io.zengin4j.core.ArchitectureTest",
+        // ArchitectureTest and FuzzTargetsAreWiredTest assert on the class path
+        // and the build's own wiring rather than on behaviour: they pass under
+        // every mutant and kill none, and the latter reads a system property
+        // only the `test` task sets, so PIT's JVM fails it outright.
+        // ReaderFuzzTest is excluded for the reason it is tagged `fuzz` — its
+        // duration is a wall clock, not a test count.
+        "--excludedTestClasses", "io.zengin4j.core.ArchitectureTest"
+                + ",io.zengin4j.core.FuzzTargetsAreWiredTest"
+                + ",io.zengin4j.core.ReaderFuzzTest",
         "--mutationThreshold", "80",
         "--timestampedReports", "false",
         "--testPlugin", "junit5",
         "--threads", Runtime.getRuntime().availableProcessors().toString(),
     )
+
+    // --targetClasses matches everything on the class path, and the test classes
+    // are on it. Mutating a test is meaningless — nothing asserts on a test's own
+    // logic, so every such mutant survives — and it dilutes the score in
+    // proportion to how much test code exists, which is exactly backwards.
+    //
+    // The exclusion is derived from the compiled test output rather than from a
+    // naming convention, so a generator or fixture that is not named *Test is
+    // excluded too, and a new one needs no change here.
+    //
+    // Generated model code is excluded for the reason it is excluded from the
+    // coverage counters: it measures the generator, not the codec.
+    val testClassesDirs = sourceSets["test"].output.classesDirs
+    argumentProviders.add(CommandLineArgumentProvider {
+        val excluded = mutableListOf("io.zengin4j.core.model.generated.*")
+        testClassesDirs.filter { it.isDirectory }.forEach { root ->
+            root.walkTopDown()
+                .filter { it.isFile && it.extension == "class" }
+                .mapTo(excluded) {
+                    it.relativeTo(root).invariantSeparatorsPath
+                        .removeSuffix(".class")
+                        .replace('/', '.')
+                }
+        }
+        listOf("--excludedClasses", excluded.sorted().joinToString(","))
+    })
 }

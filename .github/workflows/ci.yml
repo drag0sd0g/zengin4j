@@ -71,8 +71,11 @@ jobs:
       - name: Run the examples
         run: |
           ./gradlew :zengin4j-testkit:jar
-          java -cp "zengin4j-core/build/libs/*:zengin4j-testkit/build/libs/*" \
-               examples/ParseSougouFurikomi.java
+          for example in examples/*.java; do
+            echo "::group::$example"
+            java -cp "zengin4j-core/build/libs/*:zengin4j-testkit/build/libs/*" "$example"
+            echo "::endgroup::"
+          done
 
   no-real-identifiers:
     name: No real payment identifiers
