@@ -76,6 +76,12 @@ final class StreamingZenginReader implements ZenginReader {
     private SeparatorStyle separatorStyle;
     private boolean separatorsMixed;
 
+    /**
+     * Whether a separator has been consumed since the last record was handed
+     * out. At end of input this answers OQ-4: did the file end with one?
+     */
+    private boolean separatorSinceLastRecord;
+
     StreamingZenginReader(InputStream stream, ReaderOptions options) {
         this.stream = Objects.requireNonNull(stream, "stream");
         this.options = Objects.requireNonNull(options, "options");
@@ -121,6 +127,7 @@ final class StreamingZenginReader implements ZenginReader {
         ensureAvailable(recordLength);
         generation.advance();
         recordNumber++;
+        separatorSinceLastRecord = false;
         long offset = absoluteOffset();
         int start = position;
         int have = available();
@@ -163,7 +170,7 @@ final class StreamingZenginReader implements ZenginReader {
         } else {
             style = separatorStyle == null ? SeparatorStyle.NONE : separatorStyle;
         }
-        return new FileFraming(byteOrderMarkPresent, style, trailingEofByte);
+        return new FileFraming(byteOrderMarkPresent, style, separatorSinceLastRecord, trailingEofByte);
     }
 
     @Override
@@ -355,6 +362,7 @@ final class StreamingZenginReader implements ZenginReader {
                 ? RecordFramer.classify(Arrays.copyOf(run, count)).orElse(null)
                 : null;
         observeSeparator(style);
+        separatorSinceLastRecord = true;
     }
 
     private void observeSeparator(SeparatorStyle style) {

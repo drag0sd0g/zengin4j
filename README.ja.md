@@ -35,17 +35,18 @@ ZEDI のプロファイルは、Business Application Header と電文本体を *
 
 ## 現在の状況
 
-本リポジトリは **Epic 1（ウォーキングスケルトン）** の段階です。
+本リポジトリは **Epic 2（総合振込の読み書き）** の段階です。
 
 | | |
 |---|---|
 | ✅ | 総合振込（`21`）の読み取り: ストリーミング / バッチ / ファイル一括の 3 種類の API |
+| ✅ | **バイト単位で同一の**書き出し。読み取ったファイルの区切り形式もそのまま再現 |
+| ✅ | ファイル組み立て。トレーラの件数・合計金額は明細から自動計算 |
 | ✅ | データとしてのフォーマット定義、バイト位置の自動計算、ビルド時の桁数合計チェック |
 | ✅ | フォーマット形状に対応した生成レコード型（コミット済み・差分検出付き） |
 | ✅ | 任意のレコード区切り（なし / CR / LF / CRLF、混在も可）、BOM、EOF バイトの処理 |
 | ✅ | 厳格モードと寛容モード。不正レコードは例外ではなくデータとして表現 |
 | ✅ | 年を持たない `MMDD` 日付の年補完（明示的な戦略指定が必須） |
-| ⬜ | ファイル書き出しとバイト単位のラウンドトリップ — Epic 2 |
 | ⬜ | 残りの 120 バイト系フォーマットと文字集合の処理 — Epic 3 |
 | ⬜ | バイト位置つき検証結果、JSON / SARIF 出力 — Epic 4 |
 | ⬜ | コマンドラインツール — Epic 5 |
@@ -94,6 +95,35 @@ try (ZenginReader reader = ZenginReaders.open(path, options)) {
 > `StaleRecordViewException` を送出します。保持が必要な場合は `materialize()` を呼ぶか、既定で
 > レコードを実体化する `ZenginReaders.batches(...)` を使ってください。
 
+ファイルを組み立てる際、各バッチのトレーラ（件数・合計金額）は明細から自動計算されます。取り違えて
+不整合なファイルを作ってしまうことはありません。
+
+```java
+ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        .allowUnverifiedFormats(true)   // 0.1.0 では必須。DISCLAIMER.md を参照
+        .header(h -> h.set("originatorCode", "9900000001")
+                      .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
+                      .set("valueDate", MonthDay.of(9, 30)))
+        .payment(p -> p.set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ")
+                       .set("accountNumber", "9876543")
+                       .set("amount", 150_000L))
+        .build();                       // トレーラ: 1 件 / ¥150,000
+
+ZenginWriters.write(file, Path.of("payments.txt"), WriterOptions.defaults());
+```
+
+**読み込んだファイルを書き戻すと、バイト単位で元と一致します。** レコード区切りの形式、BOM の有無、
+最終レコードの後に区切りがあったかどうか、そして本ライブラリが解釈しない予備領域まで再現されます。
+
+```java
+ZenginFile parsed = ZenginReaders.readFile(path, options);
+
+assert Arrays.equals(ZenginWriters.toByteArray(parsed, WriterOptions.defaults()), original);
+```
+
+各レコードが元のバイト列を保持し、復号した値から再生成しない理由がこれです。予備領域や、まだ検証
+できていない値が、往復しても変化しません。
+
 実行可能な例は [`examples/`](examples/) にあります。
 
 ## 2 つの境界
@@ -136,11 +166,22 @@ ISO 20022 へ移行しておらず、実装の根拠となる公開プロファ�
 ## ビルド
 
 ```bash
-./gradlew build                 # コンパイル・テスト・カバレッジ・アーキテクチャ規則・差分検出
-./gradlew generateFormatSources # 定義ファイル変更後にレコード型とドキュメントを再生成
+./gradlew build                    # コンパイル・テスト・カバレッジ・アーキテクチャ規則・差分検出
+./gradlew generateFormatSources    # 定義ファイル変更後にレコード型とドキュメントを再生成
+./gradlew :zengin4j-core:pitest    # ミューテーションテスト（任意実行・1 分程度）
+./gradlew :zengin4j-core:fuzzAll   # カバレッジ誘導ファジング（任意実行・CI では毎晩実行）
+./gradlew test -Pgolden.regenerate # ゴールデンファイルを再生成し、差分を確認する
 ```
 
 JDK 21 以降が必要です。使用する JDK に関わらず Java 21 のバイトコードを生成します。
+
+`build` がゲートです。テスト失敗、`core` の行カバレッジ 90% / 分岐 85% 未満、モジュール依存違反、
+桁数合計の合わないフォーマット定義、定義とずれた生成コード、そして発見時と挙動の変わったファジング
+入力のいずれかがあれば失敗します。
+
+ファジング自体はゲートに含めていません。非決定的であることが本質であり、コミットごとの検査に求め
+られる性質とは正反対だからです。すでに発見済みの入力の再実行は決定的で 2 秒程度なので、含めていま
+す。
 
 ## ライセンス
 

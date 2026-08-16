@@ -1,0 +1,68 @@
+name: Fuzz
+
+# R-T9. Coverage-guided fuzzing is excluded from `check` because its cost is a
+# wall clock rather than a test count — a pull request should not wait on it.
+# Run nightly instead, where the time is free and the corpus accumulates.
+on:
+  schedule:
+    # 03:17 UTC. An odd minute, so this is not queued behind everything else
+    # that fires on the hour.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz
+  cancel-in-progress: false
+
+jobs:
+  fuzz:
+    name: Coverage-guided fuzzing
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # A fuzzer that starts from nothing every night re-derives the same
+      # shallow inputs every night. Restoring the corpus is what lets each run
+      # begin where the last one stopped, which is where the value is.
+      - name: Restore the corpus
+        uses: actions/cache/restore@v4
+        with:
+          path: zengin4j-core/.cifuzz-corpus
+          key: fuzz-corpus-${{ github.run_id }}
+          restore-keys: fuzz-corpus-
+
+      # fuzzAll, not fuzz: each target needs its own JVM, because libFuzzer
+      # terminates the process when a target's time budget expires.
+      - name: Fuzz
+        run: ./gradlew :zengin4j-core:fuzzAll --stacktrace
+
+      - name: Save the corpus
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: zengin4j-core/.cifuzz-corpus
+          key: fuzz-corpus-${{ github.run_id }}
+
+      # A crashing input is the entire point of this job, and it exists only on
+      # the runner. It has to leave the machine before the runner is destroyed.
+      - name: Upload findings
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-findings
+          path: |
+            zengin4j-core/.cifuzz-findings/
+            zengin4j-core/build/reports/tests/
+          retention-days: 30

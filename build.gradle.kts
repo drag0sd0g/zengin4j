@@ -10,7 +10,6 @@ val junitBom = libs.junit.bom
 val junitJupiter = libs.junit.jupiter
 val junitPlatformLauncher = libs.junit.platform.launcher
 val assertjCore = libs.assertj.core
-val jqwikLib = libs.jqwik
 
 // Common Java conventions.
 //
@@ -76,10 +75,29 @@ subprojects {
     }
 
     tasks.withType<Test>().configureEach {
-        useJUnitPlatform()
+        // Fuzzing runs from its own tasks, so `check` stays fast and
+        // deterministic. The two filters are mutually exclusive: a task named
+        // `fuzz…` runs nothing but the tag, and every other task skips it.
+        //
+        // Matched by prefix rather than by equality because each fuzz target
+        // needs its own task — see the comment on fuzzTargets in
+        // zengin4j-core/build.gradle.kts.
+        val fuzzing = name.startsWith("fuzz")
+        useJUnitPlatform {
+            if (fuzzing) {
+                includeTags("fuzz")
+            } else {
+                excludeTags("fuzz")
+            }
+        }
         // Fixed-length payment files are byte-oriented; a platform-dependent
         // default charset must never leak into a test result (R-T18).
         defaultCharacterEncoding = "UTF-8"
+        // ./gradlew test -Pgolden.regenerate rewrites the committed golden
+        // files. A -D on the command line would reach the Gradle JVM, not this
+        // one, so it is forwarded explicitly.
+        systemProperty("zengin4j.golden.regenerate",
+                providers.gradleProperty("golden.regenerate").isPresent)
         testLogging {
             events("failed")
             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
@@ -94,7 +112,6 @@ subprojects {
         "testImplementation"(platform(junitBom))
         "testImplementation"(junitJupiter)
         "testImplementation"(assertjCore)
-        "testImplementation"(jqwikLib)
         "testRuntimeOnly"(junitPlatformLauncher)
     }
 }

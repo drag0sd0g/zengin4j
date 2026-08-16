@@ -21,12 +21,25 @@ MIN_DIGITS=7
 
 # Third-party text and build output are not ours to police. The build
 # specification is an input to this project, not a product of it.
+#
+# The conformance corpora under input/ are excluded for a structural reason,
+# not a convenience one. In a fixed-length record every field abuts the next
+# with no separator, so a digit run spans field boundaries and takes its first
+# digit from whatever precedes it — which is a データ区分 or 種別コード
+# constant, never the 9 this convention requires. No conformant file of these
+# formats can pass this check, whatever its account numbers are.
+#
+# Nothing is lost by that. Each corpus is committed alongside a rendering that
+# prints one field per line, those renderings are not excluded, and every field
+# of every record appears in them. A real identifier in a corpus is still
+# caught — in the representation where a digit run means a single field.
 EXCLUDES=(
     ':(exclude)LICENSE'
     ':(exclude)gradle/wrapper/*'
     ':(exclude)gradlew*'
     ':(exclude)**/build/**'
     ':(exclude)zengin4j-build-specification.md'
+    ':(exclude)**/resources/conformance/input/**'
 )
 
 violations=0

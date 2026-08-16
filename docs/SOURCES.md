@@ -82,6 +82,37 @@ signal this exercise exists to surface.
    Supports the data record. Documents 顧客コード1/2 as `N` with the attribute changing to `C`
    according to the identification code — the reading that explains D-002.
 
+## Sources consulted beyond the shipped descriptor
+
+These support answers recorded in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) rather than the
+`sougou-furikomi` layout itself. They are cited here because a question closed without a citation
+is only an opinion.
+
+7. **全国銀行協会**, the document cited at (1) above, further sections. Retrieved 2026-08-15.
+   - §1 振込入金通知 and §2 入出金取引明細 — the 200-byte layouts and their 種別コード (`01`, `03`),
+     closing OQ-2 and supplying Q7.
+   - §4 給与振込 and §5 賞与振込 — closing Q9.
+   - §15–16 預金口座振替 — the 振替結果コード list, closing Q6, plus the format's own trailer shape.
+   - 付録1 使用文字一覧 — the per-field-class character sets, closing Q5.
+   - 付録3 預金種目コード — the nine-value master list and the narrowing rule, closing OQ-9.
+
+8. **一般社団法人全国銀行資金決済ネットワーク (Zengin-Net)** — 「全銀EDIシステム 簡易XMLファイル作成機能
+   操作マニュアル」第1.2版, 2018年12月. Retrieved 2026-08-15 via
+   <https://www.tottoribank.co.jp/business/houjin_ib/service/ikkatsu/img/s-zedi_manual.pdf>.
+   Specifies how 金融EDI情報 is carried in `pain.001`: MIME headers and Base64 payload split across
+   `<Ustrd>` elements at 76 characters per line, inside `<RmtInf>`. Narrows OQ-8 and supplies the
+   detail R-I10 and R-I12 depend on.
+
+9. **`zengin-code/source-data`** — machine-readable Japanese financial institution codes.
+   <https://github.com/zengin-code/source-data>, retrieved 2026-08-15. 1,146 institutions; `9900`
+   (ゆうちょ銀行) is the only assigned code in the `99xx` block, which is what closes OQ-5. A
+   dataset, not a specification — evidence about which codes are *in use*, not about the format.
+
+10. **`Kyash/zengin-go`** — `samples/sample.txt`. Retrieved 2026-08-15. Used for differential
+    testing (R-T17), not as authority: decoding it with this library's offsets reconciles the
+    file's own trailer totals, which is empirical corroboration no document can provide. Also the
+    source of a data point in [D-002](DISCREPANCIES.md), and of the observation recorded in OQ-4.
+
 ## Naming variants observed
 
 The same field is named differently across sources. All are in current use; none changes a byte

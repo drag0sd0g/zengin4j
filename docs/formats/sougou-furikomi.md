@@ -13,8 +13,11 @@
 > note in the table below.
 > 
 > Reading a file with this format still requires
-> `ReaderOptions.builder().allowUnverifiedFormats(true)`, and you should
-> still check the layout against your own institution's specification.
+> `ReaderOptions.builder().allowUnverifiedFormats(true)`, and building one
+> requires
+> `ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)`. You
+> should still check the layout against your own institution's
+> specification.
 
 ## At a glance
 

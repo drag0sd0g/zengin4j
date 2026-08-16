@@ -100,6 +100,10 @@ final class FormatDocGenerator {
                     .append("> reading a file with this format requires").append(NL)
                     .append("> `ReaderOptions.builder().allowUnverifiedFormats(true)`.").append(NL)
                     .append("> ").append(NL)
+                    .append("> Building one requires the same acknowledgement, through").append(NL)
+                    .append("> `ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)`.")
+                    .append(NL)
+                    .append("> ").append(NL)
                     .append("> A wrong byte offset in a payment file produces silently corrupted")
                     .append(NL)
                     .append("> financial instructions. Check the layout against your own")
@@ -124,9 +128,14 @@ final class FormatDocGenerator {
                 .append("> note in the table below.").append(NL)
                 .append("> ").append(NL)
                 .append("> Reading a file with this format still requires").append(NL)
-                .append("> `ReaderOptions.builder().allowUnverifiedFormats(true)`, and you should")
+                .append("> `ReaderOptions.builder().allowUnverifiedFormats(true)`, and building one")
                 .append(NL)
-                .append("> still check the layout against your own institution's specification.")
+                .append("> requires").append(NL)
+                .append("> `ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)`. You")
+                .append(NL)
+                .append("> should still check the layout against your own institution's")
+                .append(NL)
+                .append("> specification.")
                 .append(NL).append(NL);
     }
 

@@ -21,6 +21,9 @@ implementing. An implementation that makes twenty undocumented judgement calls i
 | [0014](0014-leap-day-is-never-resolved-backwards.md) | A leap day is never resolved backwards | Accepted |
 | [0015](0015-customer-code-declared-as-text.md) | 顧客コード1/2 are declared `C`, against the standard's `N` | Accepted |
 | [0016](0016-descriptors-compiled-at-build-time.md) | Descriptors are compiled at build time, not parsed at runtime | Accepted |
+| [0017](0017-property-testing-without-jqwik.md) | Property testing without jqwik: seeded generators plus Jazzer | Accepted |
+| [0018](0018-golden-files-are-text-not-json.md) | Golden files are a text rendering, not JSON | Accepted |
+| [0019](0019-building-gates-on-verified.md) | Building a file gates on `verified`; writing one does not | Accepted |
 
 ## Template
 

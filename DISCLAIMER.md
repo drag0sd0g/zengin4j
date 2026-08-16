@@ -27,6 +27,21 @@ ReaderOptions.builder().allowUnverifiedFormats(true)
 That opt-in exists so that the decision to trust a provisional layout is
 recorded where a reviewer can see it, rather than assumed on your behalf.
 
+Building a file requires the same acknowledgement, separately:
+
+```java
+ZenginFileBuilder.forFormat(descriptor).allowUnverifiedFormats(true)
+```
+
+Both exist for the same reason, and the second matters more than the first. A
+wrong offset when reading gives you wrong data inside your own system, where
+your own checks may catch it. A wrong offset when writing sends a wrong payment
+instruction to a bank, where they will not.
+
+Writing a file you have just *read* needs no further opt-in: the bytes already
+existed and are reproduced exactly, so the round trip introduces no risk the
+read did not already carry.
+
 **A wrong byte offset in a payment file produces silently corrupted financial
 instructions.** Nothing downstream will flag it. Before using output from this
 library in production:
