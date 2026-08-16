@@ -1,0 +1,89 @@
+# 預金口座振替 (kouza furikae) — direct debit, 種別コード 91, 120 bytes.
+#
+# **One descriptor covers both the instruction file and the result file.**
+# The standard describes 預金口座振替（処理結果明細）as identical to the
+# instruction format except for listed items, and those items are *values, not
+# positions*: 振替結果コード is 0 throughout an instruction file and carries a
+# result in a returned one, and the trailer's 振替済/振替不能 totals are zero
+# until the bank fills them in. Both sources cited below say so in as many
+# words. Two descriptors sharing one layout would make every 91 file ambiguous
+# to detect while distinguishing nothing. See ADR-0020.
+#
+# **The direction is inverted from 総合振込, and the field names say so.**
+# In 総合振込 the header names the payer's own account and the data records name
+# the payees. Here the header names the account that *receives* the collected
+# funds (入金先), and each data record names an account to be *debited* (請求先).
+# Reusing 総合振込's originBank/beneficiary names would produce payments in the
+# wrong direction with no visible sign of it, so this descriptor uses
+# collection* for the header and payer* for the data records.
+#
+# Byte offsets do not appear in this file. They are computed from the cumulative
+# field lengths when the descriptor is loaded (R-F2).
+
+format:
+  id: kouza-furikae
+  name-ja: 預金口座振替
+  name-en: Direct Debit
+  type-code: "91"
+  record-length: 120
+  verified: false
+  sources:
+    - "全国銀行協会 — 「全銀協パーソナル・コンピュータ用標準通信プロトコル（ベーシック手順）適用業務およびレコード・フォーマット」令和元年12月, sections 15–16 預金口座振替（依頼明細・処理結果明細）. https://www.zenginkyo.or.jp/fileadmin/res/abstract/efforts/system/jba_protocol_pc.pdf retrieved 2026-08-15. Supports all four record types and the 振替結果コード list."
+    - "大分銀行 — 「口座振替ファイル（全銀協規定形式）」. https://www.dhbk.co.jp/business/efficiency/ib/pdf/koufuri_zenginkyou.pdf retrieved 2026-08-16. Supports all four record types field by field, with byte positions."
+    - "北洋システム開発 — 「全国銀行協会制定のレコードフォーマット」. https://www.hsd-hh.co.jp/daikin/doc/zenginrec_format.pdf retrieved 2026-08-16. Supports all four record types, and states that 振替結果コード is zero on request and set by the bank on return."
+  note: "Offsets, lengths and the 振替結果コード list corroborated by three independent sources including the JBA standard. Held at verified: false by D-002 — the standard gives 顧客番号 as N(20) and this descriptor declares C, for the reason recorded there — and by D-003 (one source states a wider permitted character set for names than 付録1 does). See docs/DISCREPANCIES.md."
+
+  records:
+
+    header:
+      discriminator: "1"
+      fields:
+        - { seq: 1,  id: dataKubun,               ja: データ区分,   en: Record Type,             type: N, length: 1,  const: "1", codelist: dataKubun }
+        - { seq: 2,  id: typeCode,                ja: 種別コード,   en: Business Type,           type: N, length: 2,  const: "91", codelist: typeCode }
+        - { seq: 3,  id: codeKubun,               ja: コード区分,   en: Character Code,          type: N, length: 1,  codelist: codeKubun, format: CODE-KUBUN }
+        - { seq: 4,  id: originatorCode,          ja: 委託者コード, en: Originator Code,         type: N, length: 10, required: true }
+        - { seq: 5,  id: originatorName,          ja: 委託者名,     en: Originator Name,         type: C, length: 40, charclass: PARTY_NAME }
+        - { seq: 6,  id: debitDate,               ja: 引落日,       en: Debit Date,              type: N, length: 4,  format: MMDD, required: true, note: "引落指定日, the date the payers' accounts are debited. Not a value date: no funds move to a payee on this date." }
+        - { seq: 7,  id: collectionBankCode,      ja: 取引銀行番号, en: Collection Bank Code,    type: N, length: 4,  required: true, note: "入金先金融機関コード — where the collected funds land. This is the originator's own bank, not a payer's." }
+        - { seq: 8,  id: collectionBankName,      ja: 取引銀行名,   en: Collection Bank Name,    type: C, length: 15, charclass: BANK_NAME }
+        - { seq: 9,  id: collectionBranchCode,    ja: 取引支店番号, en: Collection Branch Code,  type: N, length: 3,  required: true }
+        - { seq: 10, id: collectionBranchName,    ja: 取引支店名,   en: Collection Branch Name,  type: C, length: 15, charclass: BANK_NAME }
+        - { seq: 11, id: collectionAccountType,   ja: 預金種目,     en: Collection Account Type, type: N, length: 1,  codelist: accountType, codes: "1,2,9" }
+        - { seq: 12, id: collectionAccountNumber, ja: 口座番号,     en: Collection Account No.,  type: N, length: 7,  sensitive: true }
+        - { seq: 13, id: dummy,                   ja: ダミー,       en: Filler,                  type: C, length: 17, filler: true }
+
+    data:
+      discriminator: "2"
+      fields:
+        - { seq: 1,  id: dataKubun,          ja: データ区分,     en: Record Type,          type: N, length: 1,  const: "2", codelist: dataKubun }
+        - { seq: 2,  id: payerBankCode,      ja: 引落銀行番号,   en: Payer Bank Code,      type: N, length: 4,  required: true, note: "請求先金融機関コード — the account being debited. 9900 for ゆうちょ銀行." }
+        - { seq: 3,  id: payerBankName,      ja: 引落銀行名,     en: Payer Bank Name,      type: C, length: 15, charclass: BANK_NAME }
+        - { seq: 4,  id: payerBranchCode,    ja: 引落支店番号,   en: Payer Branch Code,    type: N, length: 3,  required: true }
+        - { seq: 5,  id: payerBranchName,    ja: 引落支店名,     en: Payer Branch Name,    type: C, length: 15, charclass: BANK_NAME }
+        - { seq: 6,  id: reserved,           ja: ダミー,         en: Reserved,             type: C, length: 4,  filler: true, note: "Unused. 総合振込 carries 手形交換所番号 in these four bytes; this format does not." }
+        - { seq: 7,  id: payerAccountType,   ja: 預金種目,       en: Payer Account Type,   type: N, length: 1,  codelist: accountType, codes: "1,2,3,9", required: true, note: "Admits 3 納税準備預金, which 総合振込 does not." }
+        - { seq: 8,  id: payerAccountNumber, ja: 口座番号,       en: Payer Account Number, type: N, length: 7,  sensitive: true, required: true }
+        - { seq: 9,  id: payerName,          ja: 預金者名,       en: Payer Name,           type: C, length: 30, charclass: PARTY_NAME, required: true }
+        - { seq: 10, id: debitAmount,        ja: 引落金額,       en: Debit Amount,         type: N, length: 10, format: AMOUNT, required: true }
+        - { seq: 11, id: newCode,            ja: 新規コード,     en: New Account Code,     type: N, length: 1,  codelist: newCode }
+        - { seq: 12, id: customerNumber,     ja: 顧客番号,       en: Customer Number,      type: C, length: 20, note: "The standard gives this as N(20) with no EDI overlay. Declared C to stay consistent with the same bytes in the other formats, where the overlay does exist and C is the only reading that survives it. See D-002." }
+        - { seq: 13, id: transferResult,     ja: 振替結果コード, en: Transfer Result,      type: N, length: 1,  codelist: transferResult, note: "Zero throughout an instruction file; set by the bank in a returned result file. This field, and the trailer's four result totals, are the whole difference between the two." }
+        - { seq: 14, id: dummy,              ja: ダミー,         en: Filler,               type: C, length: 8,  filler: true }
+
+    trailer:
+      discriminator: "8"
+      fields:
+        - { seq: 1, id: dataKubun,         ja: データ区分,     en: Record Type,       type: N, length: 1,  const: "8", codelist: dataKubun }
+        - { seq: 2, id: recordCount,       ja: 合計件数,       en: Record Count,      type: N, length: 6,  format: COUNT }
+        - { seq: 3, id: totalAmount,       ja: 合計金額,       en: Total Amount,      type: N, length: 12, format: AMOUNT }
+        - { seq: 4, id: collectedCount,    ja: 振替済件数,     en: Collected Count,   type: N, length: 6,  note: "Zero in an instruction file; filled in by the bank on return." }
+        - { seq: 5, id: collectedAmount,   ja: 振替済金額,     en: Collected Amount,  type: N, length: 12, note: "Zero in an instruction file; filled in by the bank on return." }
+        - { seq: 6, id: uncollectedCount,  ja: 振替不能件数,   en: Uncollected Count, type: N, length: 6,  note: "Zero in an instruction file; filled in by the bank on return." }
+        - { seq: 7, id: uncollectedAmount, ja: 振替不能金額,   en: Uncollected Amount, type: N, length: 12, note: "Zero in an instruction file; filled in by the bank on return." }
+        - { seq: 8, id: dummy,             ja: ダミー,         en: Filler,            type: C, length: 65, filler: true }
+
+    end:
+      discriminator: "9"
+      fields:
+        - { seq: 1, id: dataKubun, ja: データ区分, en: Record Type, type: N, length: 1,   const: "9", codelist: dataKubun }
+        - { seq: 2, id: dummy,     ja: ダミー,     en: Filler,      type: C, length: 119, filler: true }

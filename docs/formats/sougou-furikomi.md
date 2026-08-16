@@ -38,7 +38,7 @@
 - 十八親和銀行 — 「全銀フォーマット」. https://www.18shinwabank.co.jp/pdf/bb_format_zengin.pdf retrieved 2026-08-15. Supports the data record.
 - 三井住友銀行 — 「ファイルレイアウト（総合振込・全銀形式）」. https://www.smbc.co.jp/hojin/eb/web21/pdf/file-layout_01.pdf retrieved 2026-08-15. Supports the data record.
 
-> Offsets and lengths corroborated by six independent sources including the JBA standard. Held at verified: false by D-002 (顧客コード1/2 attribute) per R-0.2. See docs/DISCREPANCIES.md.
+> Offsets and lengths corroborated by six independent sources including the JBA standard. Held at verified: false by D-002 — settled against the standard, which describes 顧客コード1/2 as N(10) each with a C(20) EDI overlay when 識別表示 is Y; this descriptor declares C because the schema cannot express the condition (OQ-8, Epic 7). See docs/DISCREPANCIES.md.
 
 ## Records
 
@@ -54,13 +54,13 @@ sum exactly to the record length, which the build checks (R-F1).
 | 2 | `typeCode` | 種別コード | N | 2 | 1 | fixed `21`; code list `typeCode` |
 | 3 | `codeKubun` | コード区分 | N | 1 | 3 | format `CODE-KUBUN`; code list `codeKubun` |
 | 4 | `originatorCode` | 委託者コード | N | 10 | 4 | required |
-| 5 | `originatorName` | 委託者名 | C | 40 | 14 |  |
+| 5 | `originatorName` | 委託者名 | C | 40 | 14 | characters: account and party names, symbols `()-.` |
 | 6 | `valueDate` | 振込指定日 | N | 4 | 54 | format `MMDD` |
 | 7 | `originBankCode` | 仕向銀行番号 | N | 4 | 58 | required |
-| 8 | `originBankName` | 仕向銀行名 | C | 15 | 62 |  |
+| 8 | `originBankName` | 仕向銀行名 | C | 15 | 62 | characters: bank and branch names, symbols `-` |
 | 9 | `originBranchCode` | 仕向支店番号 | N | 3 | 77 | required |
-| 10 | `originBranchName` | 仕向支店名 | C | 15 | 80 |  |
-| 11 | `accountType` | 預金種目 | N | 1 | 95 | code list `accountType` |
+| 10 | `originBranchName` | 仕向支店名 | C | 15 | 80 | characters: bank and branch names, symbols `-` |
+| 11 | `accountType` | 預金種目 | N | 1 | 95 | code list `accountType`, narrowed to 1/2/9 |
 | 12 | `accountNumber` | 口座番号 | N | 7 | 96 | masked in diagnostics |
 | 13 | `dummy` | ダミー | C | 17 | 103 | filler |
 
@@ -70,13 +70,13 @@ sum exactly to the record length, which the build checks (R-F1).
 |---|---|---|---|---|---|---|
 | 1 | `dataKubun` | データ区分 | N | 1 | 0 | fixed `2`; code list `dataKubun` |
 | 2 | `beneficiaryBankCode` | 被仕向銀行番号 | N | 4 | 1 | required |
-| 3 | `beneficiaryBankName` | 被仕向銀行名 | C | 15 | 5 |  |
+| 3 | `beneficiaryBankName` | 被仕向銀行名 | C | 15 | 5 | characters: bank and branch names, symbols `-` |
 | 4 | `beneficiaryBranchCode` | 被仕向支店番号 | N | 3 | 20 | required |
-| 5 | `beneficiaryBranchName` | 被仕向支店名 | C | 15 | 23 |  |
+| 5 | `beneficiaryBranchName` | 被仕向支店名 | C | 15 | 23 | characters: bank and branch names, symbols `-` |
 | 6 | `clearingHouseCode` | 手形交換所番号 | N | 4 | 38 |  |
-| 7 | `accountType` | 預金種目 | N | 1 | 42 | code list `accountType` |
+| 7 | `accountType` | 預金種目 | N | 1 | 42 | code list `accountType`, narrowed to 1/2/4/9 |
 | 8 | `accountNumber` | 口座番号 | N | 7 | 43 | required; masked in diagnostics |
-| 9 | `beneficiaryName` | 受取人名 | C | 30 | 50 | required |
+| 9 | `beneficiaryName` | 受取人名 | C | 30 | 50 | characters: account and party names, symbols `()-.`; required |
 | 10 | `amount` | 振込金額 | N | 10 | 80 | format `AMOUNT`; required |
 | 11 | `newCode` | 新規コード | N | 1 | 90 | code list `newCode` |
 | 12 | `customerCode1` | 顧客コード1 | C | 10 | 91 | [D-002] N in the JBA standard, C here; also the first half of EDI情報 C(20) when 識別表示 is Y. |
@@ -149,13 +149,18 @@ confirmed and asserting that no other value exists would be a guess.
 
 **Verified** · 3 sources cited
 
-> The data record admits all four values. For the originator's own account in the header, the JBA document lists only 1, 2 and 9 — a narrower set that this shared list does not express; see OQ-9.
+> The master list, from 付録3 預金種目コード. The standard states that not every code is valid for every business, and that where a format enumerates a subset that subset governs — so a field narrows this list rather than the list being split. The narrowing each field applies is recorded on the field. See OQ-9.
 
 | Code | 名称 | Meaning | Verified | Notes |
 |---|---|---|---|---|
 | `1` | 普通預金 | Ordinary deposit | yes |  |
 | `2` | 当座預金 | Current account | yes |  |
+| `3` | 納税準備預金 | Tax reserve deposit | yes |  |
 | `4` | 貯蓄預金 | Savings deposit | yes |  |
+| `5` | 通知預金 | Deposit at notice | yes |  |
+| `6` | 定期預金 | Time deposit | yes |  |
+| `7` | 積立定期預金 | Instalment time deposit | yes |  |
+| `8` | 定期積金 | Instalment savings | yes |  |
 | `9` | その他 | Other | yes |  |
 
 ### 新規コード — New Account Code (`newCode`)

@@ -7,6 +7,8 @@ import io.zengin4j.core.error.FormatDescriptorException;
 import io.zengin4j.core.error.MalformedFileException;
 import io.zengin4j.core.error.UnsupportedEncodingVariantException;
 import io.zengin4j.core.error.UnsupportedFormatException;
+import io.zengin4j.core.charset.CharacterViolation;
+import io.zengin4j.core.error.CharacterSetViolationException;
 import io.zengin4j.core.error.UnverifiedFormatException;
 import io.zengin4j.core.error.ZenginIOException;
 import io.zengin4j.core.format.FieldDescriptor;
@@ -81,12 +83,14 @@ final class StreamingZenginReader implements ZenginReader {
      * out. At end of input this answers OQ-4: did the file end with one?
      */
     private boolean separatorSinceLastRecord;
+    private final CharacterPolicy characterPolicy;
 
     StreamingZenginReader(InputStream stream, ReaderOptions options) {
         this.stream = Objects.requireNonNull(stream, "stream");
         this.options = Objects.requireNonNull(options, "options");
         this.charset = options.charset();
         this.mode = options.mode();
+        this.characterPolicy = options.characterPolicy();
         this.buffer = new byte[BOOTSTRAP_BUFFER_BYTES];
         fill();
         handleByteOrderMark();
@@ -158,8 +162,37 @@ final class StreamingZenginReader implements ZenginReader {
                     recordNumber, generation);
         }
         RecordDescriptor matched = descriptor.forDiscriminator(buffer[start]).orElseThrow();
+        checkCharacters(matched, start, offset);
         return RecordView.wellFormed(buffer, start, recordLength, descriptor, matched, charset, offset,
                 recordNumber, generation);
+    }
+
+    /**
+     * R-C13. Only well-formed records are checked: a malformed one has no
+     * reliable field boundaries, so reporting a character offset within it
+     * would point at a field the record may not actually have.
+     *
+     * <p>The record is copied only when a violation is found, and only under
+     * REJECT — the exception outlives the buffer, which is recycled.
+     */
+    private void checkCharacters(RecordDescriptor matched, int start, long offset) {
+        if (characterPolicy == CharacterPolicy.IGNORE) {
+            return;
+        }
+        byte[] record = Arrays.copyOfRange(buffer, start, start + recordLength);
+        List<CharacterViolation> violations = RecordCharacters.validate(record, matched);
+        if (violations.isEmpty()) {
+            return;
+        }
+        if (characterPolicy == CharacterPolicy.REJECT) {
+            throw new CharacterSetViolationException(recordNumber, offset, violations);
+        }
+        for (CharacterViolation violation : violations) {
+            warn(ZenginWarning.CHARACTER_NOT_PERMITTED,
+                    "record " + recordNumber + ": " + violation.describeEn(),
+                    "レコード " + recordNumber + ": " + violation.describeJa(),
+                    offset + violation.offset());
+        }
     }
 
     @Override

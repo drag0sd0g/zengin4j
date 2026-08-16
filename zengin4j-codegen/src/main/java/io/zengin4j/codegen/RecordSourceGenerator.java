@@ -266,14 +266,28 @@ final class RecordSourceGenerator {
                 .append(';').append(NL)
                 .append("    }").append(NL).append(NL);
 
-        Optional<FieldDescriptor> valueDate = record.findByFormat(FieldFormat.MMDD);
+        Optional<FieldDescriptor> dated = record.findByFormat(FieldFormat.MMDD);
         out.append("    @Override").append(NL)
-                .append("    public Optional<MonthDay> valueDate() {").append(NL)
+                .append("    public Optional<MonthDay> effectiveDate() {").append(NL)
                 .append("        return ")
-                .append(valueDate.map(field -> "MonthDays.parse(" + Names.componentName(field) + ")")
+                .append(dated.map(field -> "MonthDays.parse(" + Names.componentName(field) + ")")
                         .orElse("Optional.empty()"))
                 .append(';').append(NL)
                 .append("    }").append(NL).append(NL);
+
+        // And the same date under the name this format actually uses, so code
+        // written against a concrete record reads in its own terms (R-D1, OQ-6).
+        dated.ifPresent(field -> out
+                .append("    /**").append(NL)
+                .append("     * Returns ").append(field.nameJa()).append(" (")
+                .append(field.nameEn()).append(") as a month and day.").append(NL)
+                .append("     *").append(NL)
+                .append("     * @return the month and day, or empty if unset or not a valid date")
+                .append(NL)
+                .append("     */").append(NL)
+                .append("    public Optional<MonthDay> ").append(field.id()).append("() {").append(NL)
+                .append("        return effectiveDate();").append(NL)
+                .append("    }").append(NL).append(NL));
 
         textAccessor(out, record, "originatorCode");
         textAccessor(out, record, "originatorName");
@@ -506,7 +520,7 @@ final class RecordSourceGenerator {
     private static void validate(FormatDescriptor format, RecordDescriptor record) {
         Set<String> reserved = new HashSet<>(ALWAYS_RESERVED);
         switch (record.kind()) {
-            case HEADER -> reserved.addAll(Set.of("codeKubun", "valueDate"));
+            case HEADER -> reserved.addAll(Set.of("codeKubun", "effectiveDate"));
             case END -> reserved.add("filler");
             default -> {
                 // no additional reservations

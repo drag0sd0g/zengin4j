@@ -35,6 +35,9 @@ public record ZenginWarning(String code, String messageEn, String messageJa, lon
     /** The file used more than one record separator convention. */
     public static final String MIXED_SEPARATORS = "W-MIXED-SEPARATORS";
 
+    /** A field carries a byte its character class does not permit (R-C13, R-C16). */
+    public static final String CHARACTER_NOT_PERMITTED = "W-CHARACTER-NOT-PERMITTED";
+
     private static final System.Logger LOGGER = System.getLogger("io.zengin4j");
 
     /**

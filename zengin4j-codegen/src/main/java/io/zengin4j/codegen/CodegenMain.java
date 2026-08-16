@@ -54,11 +54,17 @@ public final class CodegenMain {
 
         List<FormatDescriptor> descriptors = new ArrayList<>();
         Map<FormatDescriptor, String> sources = new LinkedHashMap<>();
+        // Read in file-name order, so a descriptor borrowing a layout with
+        // `same-layout-as` finds it already loaded. The ordering is stated in
+        // the error message when it does not.
+        Map<String, FormatDescriptor> byId = new LinkedHashMap<>();
         for (Path file : descriptorFiles) {
             String name = file.getFileName().toString();
-            FormatDescriptor descriptor = YamlDescriptorReader.readFormat(read(file), name, codeLists);
+            FormatDescriptor descriptor =
+                    YamlDescriptorReader.readFormat(read(file), name, codeLists, byId);
             descriptors.add(descriptor);
             sources.put(descriptor, name);
+            byId.put(descriptor.id().value(), descriptor);
         }
 
         System.out.println("zengin4j codegen: " + descriptors.size() + " descriptor(s), mode " + mode);

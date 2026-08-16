@@ -14,6 +14,9 @@ import org.junit.jupiter.api.Test;
  */
 class FormatRegistryTest {
 
+    /** 総合振込, 給与振込, 賞与振込 and 預金口座振替. Grows as Epic 8 adds the 200-byte formats. */
+    private static final int BUNDLED_FORMATS = 4;
+
     @Test
     void loadsTheBundledSougouFurikomiDescriptor() {
         FormatRegistry registry = FormatRegistry.defaults();
@@ -147,8 +150,8 @@ class FormatRegistryTest {
 
         FormatRegistry extended = original.withFormat(copy);
 
-        assertThat(original.all()).hasSize(1);
-        assertThat(extended.all()).hasSize(2);
+        assertThat(original.all()).hasSize(BUNDLED_FORMATS);
+        assertThat(extended.all()).hasSize(BUNDLED_FORMATS + 1);
         assertThat(original.byId(FormatId.of("variant-a"))).isEmpty();
         assertThat(extended.byId(FormatId.of("variant-a"))).isPresent();
     }
@@ -168,7 +171,8 @@ class FormatRegistryTest {
         Map<String, CodeList> lists = FormatRegistry.defaults().codeLists();
 
         assertThat(lists.keySet())
-                .containsExactly("dataKubun", "typeCode", "codeKubun", "accountType", "newCode", "transferCategory");
+                .containsExactly("dataKubun", "typeCode", "codeKubun", "accountType", "newCode",
+                        "transferCategory", "transferResult");
         assertThat(lists.values())
                 .allSatisfy(list -> assertThat(list.open())
                         .as("code list %s must stay open: verification confirms the listed values,"

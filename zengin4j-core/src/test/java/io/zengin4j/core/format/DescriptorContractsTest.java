@@ -236,6 +236,7 @@ class DescriptorContractsTest {
     private static FieldDescriptor field(int sequence, String id, int offset, int length,
             Optional<FieldFormat> format) {
         return new FieldDescriptor(sequence, id, "項目", "Field", FieldType.N, offset, length,
-                false, false, false, format, Optional.empty(), Optional.empty(), Optional.empty());
+                false, false, false, format, Optional.empty(), Optional.empty(), Optional.empty(),
+                FieldSpec.defaultCharacterClass(FieldType.N), List.of());
     }
 }

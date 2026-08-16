@@ -27,6 +27,7 @@ public final class ReaderOptions {
     private final ParseMode mode;
     private final int bufferRecords;
     private final ByteOrderMarkPolicy byteOrderMark;
+    private final CharacterPolicy characterPolicy;
     private final FormatRegistry registry;
     private final Consumer<ZenginWarning> warningListener;
 
@@ -38,6 +39,7 @@ public final class ReaderOptions {
         this.mode = builder.mode;
         this.bufferRecords = builder.bufferRecords;
         this.byteOrderMark = builder.byteOrderMark;
+        this.characterPolicy = builder.characterPolicy;
         this.registry = builder.registry == null ? FormatRegistry.defaults() : builder.registry;
         this.warningListener = builder.warningListener;
     }
@@ -78,6 +80,7 @@ public final class ReaderOptions {
         builder.mode = mode;
         builder.bufferRecords = bufferRecords;
         builder.byteOrderMark = byteOrderMark;
+        builder.characterPolicy = characterPolicy;
         builder.registry = registry;
         builder.warningListener = warningListener;
         return builder;
@@ -147,6 +150,15 @@ public final class ReaderOptions {
     }
 
     /**
+     * Returns what the reader does about characters a field may not carry.
+     *
+     * @return the policy, never {@code null}
+     */
+    public CharacterPolicy characterPolicy() {
+        return characterPolicy;
+    }
+
+    /**
      * Returns the registry format descriptors are looked up in.
      *
      * @return the registry
@@ -180,6 +192,7 @@ public final class ReaderOptions {
         private ParseMode mode = ParseMode.STRICT;
         private int bufferRecords = DEFAULT_BUFFER_RECORDS;
         private ByteOrderMarkPolicy byteOrderMark = ByteOrderMarkPolicy.REJECT;
+        private CharacterPolicy characterPolicy = CharacterPolicy.IGNORE;
         private FormatRegistry registry;
         private Consumer<ZenginWarning> warningListener = ZenginWarning::log;
 
@@ -265,6 +278,18 @@ public final class ReaderOptions {
                 throw new IllegalArgumentException("the buffer must hold at least one record, found " + value);
             }
             this.bufferRecords = value;
+            return this;
+        }
+
+        /**
+         * Sets what the reader does about a byte a field's character class does
+         * not permit (R-C13).
+         *
+         * @param value the policy; {@link CharacterPolicy#IGNORE} by default
+         * @return this builder
+         */
+        public Builder characterPolicy(CharacterPolicy value) {
+            this.characterPolicy = Objects.requireNonNull(value, "characterPolicy");
             return this;
         }
 

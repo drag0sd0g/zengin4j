@@ -23,3 +23,6 @@ out/
 # regression fixture rather than left in an ignored directory (ADR-0017).
 .cifuzz-corpus/
 .cifuzz-findings/
+
+# JMH writes per-run artefacts here; only results/ is committed
+benchmarks/build/

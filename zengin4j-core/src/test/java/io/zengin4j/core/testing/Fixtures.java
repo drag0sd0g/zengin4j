@@ -89,7 +89,7 @@ public final class Fixtures {
         Map<String, String> values = new LinkedHashMap<>();
         values.put("codeKubun", "0");
         values.put("originatorCode", "9900000001");
-        values.put("originatorName", "ﾃｽﾄｼｮｳｼﾞ");
+        values.put("originatorName", "ﾃｽﾄｼﾖｳｼﾞ");
         values.put("valueDate", "0930");
         values.put("originBankCode", "9999");
         values.put("originBankName", BANK_NAME);

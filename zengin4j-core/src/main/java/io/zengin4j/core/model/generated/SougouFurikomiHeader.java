@@ -167,8 +167,17 @@ public record SougouFurikomiHeader(
     }
 
     @Override
-    public Optional<MonthDay> valueDate() {
+    public Optional<MonthDay> effectiveDate() {
         return MonthDays.parse(valueDateRaw);
+    }
+
+    /**
+     * Returns 振込指定日 (Value Date) as a month and day.
+     *
+     * @return the month and day, or empty if unset or not a valid date
+     */
+    public Optional<MonthDay> valueDate() {
+        return effectiveDate();
     }
 
     /**

@@ -158,6 +158,125 @@ A research pass against published sources. No parsed output changed, so no versi
   exposes which operation was refused. A diagnostic that prescribes the wrong remedy costs more
   than one that says nothing.
 
+### Added — Epic 3, the 120-byte formats and the character sets
+
+- **Three more formats**, taking the bundled set to all four 120-byte layouts:
+  - **給与振込 (`11`)** and **賞与振込 (`12`)**. 給与振込 is *not* 総合振込 with three fields
+    renamed: its data record has **fourteen** fields, not sixteen, with 預金者名 where 総合振込 has
+    受取人名, 社員番号 and 所属コード where it has 顧客コード1/2, and nine bytes of filler where it
+    has 振込指定区分, 識別表示 and a seven-byte ダミー. The tails total the same either way, which is
+    exactly why deriving one from the other looks safe. Confirmed by three independent sources.
+  - **預金口座振替 (`91`)**, whose direction is inverted: the header names the account that
+    *receives* collected funds, and each data record names an account to be *debited*. The field
+    names say so — `collectionBankCode` and `debitDate` in the header, `payerBankCode` and
+    `debitAmount` in the data records — because reusing 総合振込's names would produce payments the
+    wrong way round with nothing visible to catch it.
+- **賞与振込 borrows its layout** through a new `same-layout-as` descriptor key rather than
+  repeating it. That is the one case where deriving is the *documented* reading: the standard says
+  賞与振込 uses the 給与振込 format with 種別コード 12. Only the 種別コード constant is rewritten;
+  everything else is copied, and offsets are recomputed rather than carried, so R-F2 holds for a
+  borrowed layout exactly as for a declared one.
+- **Per-field character sets (R-C16, R-C17).** `CharacterSet.validate` returns the byte offset of
+  every violation, not a verdict. The permitted set depends on what the field *is*: a branch name
+  admits one symbol, a party name four, an EDI payload eight, and a 給与振込 name **no Latin letters
+  at all** — a rule a 総合振込-shaped validator would never catch. Declared per field in the
+  descriptors and visible in the generated format documentation.
+- **The long vowel mark is not a permitted character.** `ｰ` (0xB0) is excluded from every class; a
+  long vowel is written `-` (0x2D). Three sources agree, one warning about the confusion explicitly.
+  This is the mistake that survives review — the glyphs are near-identical, the file looks correct,
+  and the bank rejects it. The violation names the fix.
+- **Strict mode (R-C13).** `ReaderOptions.characterPolicy` — `IGNORE` (default), `WARN`, or
+  `REJECT`. Orthogonal to `ParseMode`, which governs structure: a record can be structurally perfect
+  and still carry a character the bank will refuse.
+- **[`docs/encoding.md`](docs/encoding.md)** (R-C12): the byte ranges, the dakuten decomposition,
+  the permitted sets per field class, and the Shift_JIS/CP932 divergence. The useful finding is a
+  negative one — **every divergence is in the double-byte range, and no double-byte character is
+  permitted in any field, so a conformant file decodes identically under either.** The encoding
+  setting matters only for files that are already invalid. `EncodingMatrixTest` pins the divergence
+  table byte pair by byte pair so the document cannot drift.
+- **`accountType` carries the master list of nine codes** from 付録3, not the four 総合振込 happens
+  to use, and each field declares the subset it admits via a new `codes` descriptor attribute —
+  the model the standard itself uses (OQ-9). 預金口座振替 admits 納税準備預金; 給与振込 admits only
+  普通預金 and 当座預金.
+- **振替結果コード** as a first-class code list with English glosses — the functional analogue of an
+  ISO 20022 R-transaction reason code. Note code `4`: the standard says *no mandate on file*, which
+  is not the same as a closed account.
+- **JMH benchmarks in [`benchmarks/`](benchmarks/README.md)** (R-P1, R-P4), with hardware, JDK and
+  JVM flags recorded alongside every figure. Measured on an M5 Max under JDK 25: **3,227 MB/s**
+  streaming with a decode per record, **418 MB/s** fully materialised, against R-P1's 50 MB/s.
+  Input is in-memory, so these are the parser's cost with no I/O — stated because a number without
+  its conditions is not a measurement (P9).
+- **A 1 GB constant-memory check** (R-P2), running in CI on every push: 8,802,795 records streamed
+  under a 64 MB heap, 9 MB in use at the end. The constrained heap is the assertion, not a number
+  to interpret.
+- **A per-record allocation in the character check, found by the new R-P3 test.**
+  `RecordCharacters.isClean` and `validate` iterated the field list with an enhanced-for, which
+  allocates an iterator per call — once per record under `CharacterPolicy.WARN` or `REJECT`. It
+  passed on a fast developer machine, where escape analysis removes it, and failed on every CI
+  runner. Both now use indexed loops, and the tests pass under `-Xint` with the JIT disabled
+  entirely, which is what distinguishes "allocation-free" from "optimised away".
+- **R-P3 is now asserted rather than claimed.** `FieldAllocationTest` measures thread allocation
+  while reading the same file with one field decoded per record and with eight, and requires the
+  difference to be exactly zero bytes per additional field. The claim appeared in five places in
+  this codebase and was checked in none of them; it holds, and now it is checked. The field lookup
+  was also rewritten to avoid an `Optional` and a capturing lambda — HotSpot's escape analysis was
+  already removing both, so this changes no measurement, but R-P3 no longer depends on a
+  best-effort optimisation.
+
+### Changed — Epic 3
+
+- **`HeaderRecord.valueDate()` is now `effectiveDate()`** (breaking), closing OQ-6. 預金口座振替's
+  header date is 引落日 — the day payers are debited, when nothing reaches anybody — so calling it a
+  value date is wrong in the direction that matters. Each generated record additionally carries the
+  name its own format uses: `valueDate()` on a 総合振込 header, `debitDate()` on a 預金口座振替 one
+  ([ADR-0021](docs/adr/0021-the-shared-header-date-is-effective-date.md)).
+- **種別コード `91` resolves to one descriptor, not two**, closing OQ-1. The instruction and result
+  files have the *same layout* and differ only in values — 振替結果コード is zero on request and set
+  by the bank on return. Two descriptors would make every `91` file ambiguous while distinguishing
+  nothing. ADR-0007's guard is unchanged and still applies to runtime-registered descriptors and to
+  Epic 8's 振込入金通知 variants, which differ in positions
+  ([ADR-0020](docs/adr/0020-one-descriptor-for-type-code-91.md)).
+- **Fixtures corrected.** The character validation immediately found that this project's own
+  `ﾃｽﾄｼｮｳｼﾞ` contains the small kana `ｮ`, which the standard excludes; it is now `ﾃｽﾄｼﾖｳｼﾞ`. The
+  validator's first catch was our own test data.
+
+### Verified — source research, 2026-08-16
+
+- **給与振込 is now corroborated by seven independent sources**, which agree on every offset and
+  every length. Two corrections fell out of reading them: field 9 is **受取人名**, not 預金者名 as
+  the draft had it (three of four institution guides say so, and 三菱UFJ labels it 預金者名 while
+  describing its content as 受取人名); and 社員番号 / 所属コード are now declared `C`, consistent
+  with the same bytes in 総合振込.
+- **[D-002 is settled against the primary source, and was never a disagreement.](docs/DISCREPANCIES.md)**
+  Institution guides give 顧客コード1/2 as `N`, as `C`, and as "N or C" — the same split appears in
+  給与振込's 社員番号/所属コード and 預金口座振替's 顧客番号. The JBA standard describes the field
+  **twice, deliberately**: 顧客コード1 and 顧客コード2 are `N(10)` each, *and* the same twenty bytes
+  are 「※EDI 情報 `C(20)`」 when 識別表示 carries `Y`. Sources giving `N` describe the ordinary case,
+  sources giving `C` describe the overlay, and nobody was wrong.
+- **No format is flipped to `verified: true`, and the reason has changed.** It is no longer missing
+  or conflicting evidence — the offsets were never in doubt and the attribute question is now
+  answered. It is that these descriptors deliberately declare `C` where the standard says `N`,
+  because the schema states one attribute per field and cannot express "N unless 識別表示 is Y".
+  Setting a flag that means "confirmed against published sources" on a layout that knowingly differs
+  from them would be an overclaim. Closing it needs conditional fields — [OQ-8](docs/OPEN_QUESTIONS.md),
+  already scheduled for Epic 7 because the ISO 20022 mapping has to read that payload anyway.
+
+### Added — release engineering (M3)
+
+- **Publishing configuration** for `zengin4j-core` and `zengin4j-testkit` only — the two modules with
+  content. Group `io.github.drag0sd0g` (R-B3), signed artefacts with sources and javadoc jars
+  (R-B4), reproducible archives (R-B5), a CycloneDX SBOM per artefact (R-B6), Dependabot (R-B8) and
+  an OpenSSF Scorecard workflow (R-B9). Procedure in [RELEASING.md](RELEASING.md).
+- **Releasing is a manually-approved GitHub Action and nothing else.** The remote repository is
+  registered only under `-PcentralPublish`, which nothing outside the release workflow passes — so
+  no sequence of Gradle tasks on a developer machine can reach Maven Central. The workflow adds a
+  protected environment with required reviewers, an owner check and a typed version confirmation.
+  A published coordinate is permanent; making an accidental release merely unlikely is not enough.
+- **`check` now fails if `zengin4j-core`'s published POM declares any dependency.** The ArchUnit rule
+  checks the code; this checks the metadata a consumer actually resolves, where a dependency added
+  to the wrong configuration would appear without breaking a single import. The SBOM agrees:
+  **zero components for core**, exactly one for testkit.
+
 ### Known limitations
 
 - **Every bundled format descriptor is `verified: false`**, though not for want of evidence: the
@@ -165,8 +284,8 @@ A research pass against published sources. No parsed output changed, so no versi
   single unresolved field-attribute disagreement ([D-002](docs/DISCREPANCIES.md)) holds the flag.
   Reading still requires `allowUnverifiedFormats(true)`, and output must be validated against your
   institution's specification. See [DISCLAIMER.md](DISCLAIMER.md).
-- Only 総合振込 (`21`) is implemented. 給与振込, 賞与振込, 預金口座振替 and the 200-byte formats
-  follow in Epics 3 and 8.
+- **The 200-byte formats (振込入金通知, 入出金取引明細) are not implemented.** They carry 和暦 dates
+  and vary more between institutions than the 120-byte ones; Epic 8.
 - No validation layer, no CLI, no transliteration engine, no ISO 20022 mapping. Epics 4 to 7.
 - Over-length records are supported only through an explicit record-length override (OQ-3).
 - **A file that mixed separator conventions within itself cannot be written back byte-exactly.**
@@ -175,15 +294,24 @@ A research pass against published sources. No parsed output changed, so no versi
 - **The committed fuzzing corpus is one input.** Fuzzing has found exactly one thing so far, and it
   is committed and replayed on every build; the working corpus is local and untracked. The corpus
   grows as nightly runs find more.
-- The JMH benchmarks (R-P1) and the 1 GB constant-memory job (R-P2) are not yet set up; they belong
-  to Epic 3. No performance number is published, because none has been measured (P9).
+- **The testkit ships fixtures for 総合振込 only.** `SougouFurikomiFixtures` and `ZenginGenerator`
+  do not yet cover the three formats added here, so UC-6 fixture generation reaches one format of
+  four.
+- **R-C18's write-side character policies** (`REJECT` / `TRANSLITERATE` / `REPLACE`) are not
+  implemented. `TRANSLITERATE` needs the transliteration engine, so the requirement lands with it in
+  Epic 6.
+- **Character-set validation may over-report for your institution.** Where sources disagree on how
+  many symbols a name admits, the narrow reading is implemented — see
+  [D-003](docs/DISCREPANCIES.md). A finding may be a false positive; it is never a false negative.
+- **Character validation is off by default.** `CharacterPolicy.IGNORE` keeps reading a diagnostic
+  activity (R-E1). Judging content thoroughly is the validation layer's job, in Epic 4.
 
 ### Quality gates
 
 `./gradlew build` enforces, on every run: the Java 21 baseline, the tests, ≥ 90% line and ≥ 85%
 branch coverage on `core`, the ArchUnit module rules, descriptor consistency, and that the
 committed generated sources match the descriptors, and the committed fuzzing corpora replay. Current
-figures: 223 tests, 95.4% line and 89.9% branch coverage.
+figures: 268 tests, 95.7% line and 89.3% branch coverage.
 
 Mutating fuzz runs are not part of `check` — they are nightly, via `fuzzAll`. Replaying what
 fuzzing has already found is, because it is deterministic and costs about two seconds.

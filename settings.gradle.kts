@@ -18,3 +18,8 @@ include(
     "zengin4j-cli",
     "zengin4j-spring-boot-starter",
 )
+
+// Not a published module. Benchmarks live outside the module graph because
+// nothing depends on them and a measurement harness is not part of the
+// library (R-P4).
+include("benchmarks")

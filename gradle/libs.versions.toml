@@ -11,6 +11,8 @@ archunit = "1.5.0"
 # than by `check`: fuzzing is a nightly job, not a per-commit one.
 jazzer = "0.30.0"
 jacoco = "0.8.15"
+jmh = "1.37"
+cyclonedx = "2.4.1"
 pitest = "1.25.9"
 pitest-junit5 = "1.2.3"
 # Build-scoped only: used by zengin4j-codegen to read the descriptors and
@@ -29,4 +31,9 @@ jazzer-junit = { module = "com.code-intelligence:jazzer-junit", version.ref = "j
 # Gradle 9 (it reads reporting.baseDir, which was removed).
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 pitest-command-line = { module = "org.pitest:pitest-command-line", version.ref = "pitest" }
+jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
 pitest-junit5-plugin = { module = "org.pitest:pitest-junit5-plugin", version.ref = "pitest-junit5" }
+
+[plugins]
+cyclonedx = { id = "org.cyclonedx.bom", version.ref = "cyclonedx" }

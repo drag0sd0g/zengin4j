@@ -21,6 +21,9 @@ import java.util.Set;
 public final class GeneratedRecords {
 
     private static final Map<FormatId, RecordFactory> FACTORIES = Map.of(
+            KouzaFurikaeHeader.FORMAT_ID, KouzaFurikaeRecords.INSTANCE,
+            KyuyoFurikomiHeader.FORMAT_ID, KyuyoFurikomiRecords.INSTANCE,
+            ShoyoFurikomiHeader.FORMAT_ID, ShoyoFurikomiRecords.INSTANCE,
             SougouFurikomiHeader.FORMAT_ID, SougouFurikomiRecords.INSTANCE);
 
     private GeneratedRecords() {

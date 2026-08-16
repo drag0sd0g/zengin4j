@@ -89,7 +89,7 @@ class GeneratedRecordsTest {
         assertThat(header.valueDate()).contains(MonthDay.of(9, 30));
         assertThat(header.valueDateRaw()).isEqualTo("0930");
         assertThat(header.originatorCode()).isEqualTo("9900000001");
-        assertThat(header.originatorName()).isEqualTo("ﾃｽﾄｼｮｳｼﾞ");
+        assertThat(header.originatorName()).isEqualTo("ﾃｽﾄｼﾖｳｼﾞ");
     }
 
     @Test
@@ -151,7 +151,9 @@ class GeneratedRecordsTest {
 
     @Test
     void indexesEveryGeneratedFormat() {
-        assertThat(GeneratedRecords.formats()).containsExactly(FormatId.of("sougou-furikomi"));
+        assertThat(GeneratedRecords.formats()).containsExactlyInAnyOrder(
+                FormatId.of("sougou-furikomi"), FormatId.of("kyuyo-furikomi"),
+                FormatId.of("shoyo-furikomi"), FormatId.of("kouza-furikae"));
         assertThat(GeneratedRecords.forFormat(FormatId.of("sougou-furikomi"))).isPresent();
         assertThat(GeneratedRecords.forFormat(FormatId.of("not-generated"))).isEmpty();
     }
@@ -190,8 +192,8 @@ class GeneratedRecordsTest {
 
         GenericHeaderRecord header = (GenericHeaderRecord) batch.header();
         assertThat(header.codeKubun()).isEqualTo(CodeKubun.JIS);
-        assertThat(header.valueDate()).contains(MonthDay.of(9, 30));
-        assertThat(header.originatorName()).isEqualTo("ﾃｽﾄｼｮｳｼﾞ");
+        assertThat(header.effectiveDate()).contains(MonthDay.of(9, 30));
+        assertThat(header.originatorName()).isEqualTo("ﾃｽﾄｼﾖｳｼﾞ");
         assertThat(header.kind()).isEqualTo(io.zengin4j.core.format.RecordKind.HEADER);
 
         GenericEndRecord end = (GenericEndRecord) file.endRecord().orElseThrow();

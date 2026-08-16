@@ -112,12 +112,32 @@ public record RecordDescriptor(
      * @return the field, or empty if this record has no such field
      */
     public Optional<FieldDescriptor> find(String id) {
-        for (FieldDescriptor field : fields) {
+        return Optional.ofNullable(lookup(id));
+    }
+
+    /**
+     * Looks a field up, returning {@code null} when there is none.
+     *
+     * <p><strong>Allocation-free without relying on the JIT.</strong> This is
+     * the hot path: {@code view.asLong(view.field("amount"))} runs once per
+     * field per record, so millions of times over a large file. An indexed loop
+     * rather than an enhanced-for, which allocates an iterator; no
+     * {@link Optional} and no capturing lambda, both of which allocate.
+     *
+     * <p>In practice HotSpot's escape analysis removes all three once the path
+     * is hot — {@code FieldAllocationTest} measures zero bytes per field either
+     * way. This is written not to need it: escape analysis is a best-effort
+     * optimisation that stops applying when a method grows too large to inline,
+     * and R-P3 should not depend on one.
+     */
+    private FieldDescriptor lookup(String id) {
+        for (int i = 0; i < fields.size(); i++) {
+            FieldDescriptor field = fields.get(i);
             if (field.id().equals(id)) {
-                return Optional.of(field);
+                return field;
             }
         }
-        return Optional.empty();
+        return null;
     }
 
     /**
@@ -128,9 +148,15 @@ public record RecordDescriptor(
      * @throws FormatDescriptorException if this record has no such field
      */
     public FieldDescriptor field(String id) {
-        return find(id).orElseThrow(() -> FormatDescriptorException.forFormat(formatId.value(),
-                "record '" + kind.descriptorKey() + "' has no field '" + id + "'; declared fields: "
-                        + String.join(", ", fields.stream().map(FieldDescriptor::id).toList())));
+        FieldDescriptor found = lookup(id);
+        if (found == null) {
+            // Built only on the failing path, so the message costs nothing on
+            // the successful one.
+            throw FormatDescriptorException.forFormat(formatId.value(),
+                    "record '" + kind.descriptorKey() + "' has no field '" + id + "'; declared fields: "
+                            + String.join(", ", fields.stream().map(FieldDescriptor::id).toList()));
+        }
+        return found;
     }
 
     /**

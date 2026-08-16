@@ -125,6 +125,61 @@ offset. The descriptor uses the first column.
 | 振込指定日 | 取組日 | 振込日 |
 | 顧客コード1 / 2 | 顧客コード1 / 2 | 顧客番号1 / 2, お客様番号1 / 2 |
 
+### Character sets (付録1 使用文字一覧)
+
+1. **全国銀行協会** — 「全銀協パーソナル･コンピュータ用標準通信プロトコル(ベーシック手順)別冊
+   適用業務およびレコード・フォーマット」新旧対照表, 付録1 使用文字一覧.
+   <https://www.zenginkyo.or.jp/fileadmin/res/news/news311202_1.pdf>, retrieved 2026-08-16.
+   Gives 注1 (店舗名, one symbol) and 注2 (口座名等, four symbols), and shows the revision that
+   narrows the ｦ exclusion for named fields in five businesses. Recorded as D-003.
+
+2. **但馬信用金庫** — 「全銀仕様データレコード使用可能文字」.
+   <https://www.tanshin.co.jp/business/netbk/pdf/zengin_moji.pdf>, retrieved 2026-08-16.
+   The concrete character list, and the explicit warning that ハイフン `-` is not 長音 `ｰ`.
+
+3. **PCA** — 「全銀協使用可能文字」.
+   <https://pca.jp/area_support/manual/kk/Z1sanko/z1_zengin.html>, retrieved 2026-08-16.
+   Confirms 長音 is replaced with a hyphen, and gives the per-field symbol sets.
+
+### 預金口座振替 (種別コード 91)
+
+1. **大分銀行** — 「口座振替ファイル（全銀協規定形式）」.
+   <https://www.dhbk.co.jp/business/efficiency/ib/pdf/koufuri_zenginkyou.pdf>, retrieved 2026-08-16.
+   All four record types field by field with byte positions.
+
+2. **北洋システム開発** — 「全国銀行協会制定のレコードフォーマット」.
+   <https://www.hsd-hh.co.jp/daikin/doc/zenginrec_format.pdf>, retrieved 2026-08-16.
+   All four record types, and states that 振替結果コード is zero on request and set by the bank on
+   return — the evidence for ADR-0020.
+
+### 給与振込・賞与振込 (種別コード 11 / 12)
+
+1. **大分銀行** — 「給与・賞与振込ファイル（全銀協規定形式）」.
+   <https://www.dhbk.co.jp/business/efficiency/ib/pdf/kyuuyo_shouyo_zenginkyou.pdf>,
+   retrieved 2026-08-16. All four record types with byte positions; gives
+   社員番号/所属コード as `C`.
+
+2. **ろうきん** — 「給与・賞与振込 振込先ファイルフォーマット（全銀協規定形式）」.
+   <https://fb.rokin.jp/manual/pdf/format_kyuuyoshouyo1.pdf>, retrieved 2026-08-16.
+   All four record types; gives them as `N`.
+
+3. **三菱UFJ銀行** — 「給与・賞与振込 ファイルフォーマット」.
+   <https://bizstation.bk.mufg.jp/biz/help/pdf/form_4_1_2_20080512.pdf>, retrieved
+   2026-08-16. Labels field 9 預金者名 while describing its content as 受取人名.
+
+4. **きらぼし銀行** — 「《給与・賞与振込》振込依頼ファイル・フォーマット（全銀協規定形式）」.
+   <https://www.kiraboshibank.co.jp/>, retrieved 2026-08-16. All four record types.
+
+All four agree with the JBA standard §4 on every offset and length.
+
+### The 顧客コード attribute question (D-002)
+
+**全国銀行協会** — the same protocol document, read directly rather than through
+an institution's summary. §8 states 顧客コード1 and 顧客コード2 as `N(10)` each,
+and immediately gives the alternative reading 「※EDI 情報 `C(20)`」 for when
+項番15 識別表示 carries `Y`. §4 gives 社員番号/所属コード as `N(10)`; §15 gives
+預金口座振替's 顧客番号 as `N(20)`. Retrieved 2026-08-16. This settles D-002.
+
 ## Where to look next
 
 Per Appendix B of the build specification:

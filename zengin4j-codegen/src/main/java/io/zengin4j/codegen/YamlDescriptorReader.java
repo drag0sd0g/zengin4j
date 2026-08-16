@@ -1,10 +1,12 @@
 package io.zengin4j.codegen;
 
+import io.zengin4j.core.charset.CharacterClass;
 import io.zengin4j.core.format.CodeList;
 import io.zengin4j.core.format.CodeValue;
 import io.zengin4j.core.format.FieldFormat;
 import io.zengin4j.core.format.FieldSpec;
 import io.zengin4j.core.format.FieldType;
+import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.format.RecordDescriptor;
@@ -41,10 +43,11 @@ final class YamlDescriptorReader {
 
     private static final Set<String> DOCUMENT_KEYS = Set.of("format");
     private static final Set<String> FORMAT_KEYS = Set.of(
-            "id", "name-ja", "name-en", "type-code", "record-length", "verified", "sources", "note", "records");
+            "id", "name-ja", "name-en", "type-code", "record-length", "verified", "sources", "note", "records",
+            "same-layout-as");
     private static final Set<String> RECORD_KEYS = Set.of("discriminator", "fields", "note");
     private static final Set<String> FIELD_KEYS = Set.of(
-            "seq", "id", "ja", "en", "type", "length", "required", "filler", "sensitive",
+            "seq", "id", "ja", "en", "type", "length", "required", "filler", "sensitive", "charclass", "codes",
             "format", "const", "codelist", "note");
     private static final Set<String> CODE_LIST_DOCUMENT_KEYS = Set.of("code-lists");
     private static final Set<String> CODE_LIST_KEYS = Set.of(
@@ -95,6 +98,17 @@ final class YamlDescriptorReader {
     }
 
     static FormatDescriptor readFormat(String yaml, String origin, Map<String, CodeList> codeLists) {
+        return readFormat(yaml, origin, codeLists, Map.of());
+    }
+
+    /**
+     * Reads a descriptor, resolving {@code same-layout-as} against formats
+     * already read.
+     *
+     * @param known formats available to borrow a layout from, by id
+     */
+    static FormatDescriptor readFormat(
+            String yaml, String origin, Map<String, CodeList> codeLists, Map<String, FormatDescriptor> known) {
         Map<String, Object> document = asMapping(parse(yaml, origin), origin, "document root");
         rejectUnknownKeys(document, origin, "descriptor document", DOCUMENT_KEYS);
         Map<String, Object> format = requireMapping(document, "format", origin);
@@ -104,13 +118,23 @@ final class YamlDescriptorReader {
         int recordLength = requireInt(format, "record-length", origin);
         String typeCode = requireString(format, "type-code", origin);
 
-        Map<String, Object> recordsNode = requireMapping(format, "records", origin);
-        Map<RecordKind, RecordDescriptor> records = new EnumMap<>(RecordKind.class);
-        for (String key : recordsNode.keySet()) {
-            RecordKind kind = RecordKind.fromDescriptorKey(key).orElseThrow(() -> new CodegenException(
-                    origin + ": unknown record kind '" + key + "'; expected header, data, trailer or end"));
-            records.put(kind, readRecord(requireMapping(recordsNode, key, origin), id, kind, recordLength,
-                    typeCode, origin, codeLists));
+        Optional<String> borrowFrom = optionalString(format, "same-layout-as", origin);
+        Map<RecordKind, RecordDescriptor> records;
+        if (borrowFrom.isPresent()) {
+            if (format.containsKey("records")) {
+                throw new CodegenException(origin + ": declares both 'same-layout-as' and 'records';"
+                        + " a borrowed layout cannot also be written out, or the two would drift");
+            }
+            records = borrowLayout(borrowFrom.get(), id, typeCode, known, origin);
+        } else {
+            Map<String, Object> recordsNode = requireMapping(format, "records", origin);
+            records = new EnumMap<>(RecordKind.class);
+            for (String key : recordsNode.keySet()) {
+                RecordKind kind = RecordKind.fromDescriptorKey(key).orElseThrow(() -> new CodegenException(
+                        origin + ": unknown record kind '" + key + "'; expected header, data, trailer or end"));
+                records.put(kind, readRecord(requireMapping(recordsNode, key, origin), id, kind, recordLength,
+                        typeCode, origin, codeLists));
+            }
         }
 
         try {
@@ -127,6 +151,48 @@ final class YamlDescriptorReader {
         } catch (RuntimeException e) {
             throw new CodegenException(origin + ": " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Copies another format's records, rebinding them to this format's id and
+     * 種別コード.
+     *
+     * <p>For the case where the standard itself states that two businesses share
+     * a layout — 賞与振込 is 給与振込 with 種別コード 12, and it says so. Writing
+     * the layout twice would let the copies drift, and deriving a layout that
+     * the standard does <em>not</em> state to be shared is the mistake this
+     * project keeps finding in other implementations, so the mechanism is
+     * deliberately narrow: it borrows everything and changes only the two things
+     * that identify the format.
+     *
+     * <p>The 種別コード constant is rewritten, and nothing else is. A borrowed
+     * layout that needed any other change would be a different layout.
+     */
+    private static Map<RecordKind, RecordDescriptor> borrowLayout(
+            String sourceId, FormatId id, String typeCode,
+            Map<String, FormatDescriptor> known, String origin) {
+        FormatDescriptor source = known.get(sourceId);
+        if (source == null) {
+            throw new CodegenException(origin + ": 'same-layout-as' names unknown format '" + sourceId
+                    + "'; known: " + String.join(", ", known.keySet())
+                    + ". The borrowed format must sort before this one by file name.");
+        }
+        Map<RecordKind, RecordDescriptor> records = new EnumMap<>(RecordKind.class);
+        for (RecordKind kind : List.of(RecordKind.HEADER, RecordKind.DATA, RecordKind.TRAILER, RecordKind.END)) {
+            source.find(kind).ifPresent(record -> {
+                List<FieldSpec> specs = new ArrayList<>(record.fields().size());
+                for (FieldDescriptor field : record.fields()) {
+                    FieldSpec spec = field.toSpec();
+                    if (field.id().equals("typeCode")) {
+                        spec = spec.withConstant(typeCode);
+                    }
+                    specs.add(spec);
+                }
+                records.put(kind, RecordDescriptor.of(id, kind, record.discriminator(),
+                        record.recordLength(), specs));
+            });
+        }
+        return records;
     }
 
     private static RecordDescriptor readRecord(
@@ -227,6 +293,15 @@ final class YamlDescriptorReader {
                         + codeListRef.get() + "'; known lists: " + String.join(", ", codeLists.keySet()));
             }
             spec = spec.withCodeList(found);
+        }
+        Optional<String> charClass = optionalString(node, "charclass", origin);
+        if (charClass.isPresent()) {
+            spec = spec.withCharacterClass(toCharacterClass(charClass.get(), id, origin));
+        }
+        Optional<String> codes = optionalString(node, "codes", origin);
+        if (codes.isPresent()) {
+            spec = spec.withCodes(java.util.Arrays.stream(codes.get().split(","))
+                    .map(String::trim).filter(value -> !value.isEmpty()).toList());
         }
         Optional<String> note = optionalString(node, "note", origin);
         if (note.isPresent()) {
@@ -392,6 +467,17 @@ final class YamlDescriptorReader {
         }
         throw new CodegenException(origin + ": unknown field format '" + raw + "'; supported: "
                 + FieldFormat.supportedValues());
+    }
+
+    private static CharacterClass toCharacterClass(String raw, String fieldId, String origin) {
+        for (CharacterClass candidate : CharacterClass.values()) {
+            if (candidate.name().equalsIgnoreCase(raw)) {
+                return candidate;
+            }
+        }
+        throw new CodegenException(origin + ": field '" + fieldId + "' declares unknown character class '"
+                + raw + "'; supported: " + java.util.Arrays.stream(CharacterClass.values())
+                        .map(Enum::name).collect(java.util.stream.Collectors.joining(", ")));
     }
 
     private static byte toDiscriminator(String raw, RecordKind kind, String origin) {

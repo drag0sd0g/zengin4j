@@ -59,7 +59,7 @@ public final class BuildSougouFurikomi {
                 .allowUnverifiedFormats(true)
                 .header(header -> header
                         .set("originatorCode", "9900000001")
-                        .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
+                        .set("originatorName", "ﾃｽﾄｼﾖｳｼﾞ")
                         .set("valueDate", MonthDay.of(9, 30))
                         .set("originBankCode", "9999")
                         .set("originBranchCode", "998")

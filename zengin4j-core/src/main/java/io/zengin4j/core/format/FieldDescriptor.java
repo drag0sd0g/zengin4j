@@ -1,5 +1,7 @@
 package io.zengin4j.core.format;
 
+import io.zengin4j.core.charset.CharacterClass;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -29,6 +31,8 @@ import java.util.Optional;
  * @param constant  an optional fixed value the field always carries
  * @param codeList  an optional code list constraining the value
  * @param note      an optional remark, typically a {@code [VERIFY]} caveat
+ * @param charClass the character set this field's bytes must satisfy (R-C16)
+ * @param codes     the subset of the code list this field admits; empty means all
  * @since 0.1.0
  */
 public record FieldDescriptor(
@@ -45,7 +49,9 @@ public record FieldDescriptor(
         Optional<FieldFormat> format,
         Optional<String> constant,
         Optional<CodeList> codeList,
-        Optional<String> note) {
+        Optional<String> note,
+        CharacterClass charClass,
+        List<String> codes) {
 
     /**
      * Validates the components.
@@ -62,6 +68,8 @@ public record FieldDescriptor(
         Objects.requireNonNull(constant, "constant");
         Objects.requireNonNull(codeList, "codeList");
         Objects.requireNonNull(note, "note");
+        Objects.requireNonNull(charClass, "charClass");
+        codes = List.copyOf(codes);
         if (id.isBlank()) {
             throw new IllegalArgumentException("field id must not be blank");
         }
@@ -95,6 +103,22 @@ public record FieldDescriptor(
      *
      * @return {@code offset + length}
      */
+    /**
+     * Returns this field as a specification, without its offset.
+     *
+     * <p>The offset is dropped rather than carried, so a spec fed back through
+     * {@link RecordDescriptor#of} has its offset recomputed from the cumulative
+     * lengths like any other. R-F2 holds for a copied layout exactly as it does
+     * for a declared one.
+     *
+     * @return the specification, never {@code null}
+     * @since 0.1.0
+     */
+    public FieldSpec toSpec() {
+        return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
+                required, filler, sensitive, format, constant, codeList, note, charClass, codes);
+    }
+
     public int endOffset() {
         return offset + length;
     }

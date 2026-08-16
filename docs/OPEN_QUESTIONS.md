@@ -11,15 +11,15 @@ does, and a future reader deserves the evidence, not just the outcome.
 
 | | Question | State |
 |---|---|---|
-| OQ-1 | Disambiguating 種別コード `91` | **Reframed** — the two layouts are identical |
+| OQ-1 | Disambiguating 種別コード `91` | **Closed** — one descriptor ([ADR-0020](adr/0020-one-descriptor-for-type-code-91.md)) |
 | OQ-2 | Detection assumption for 200-byte formats | **Closed** — holds |
 | OQ-3 | Over-length records | Open (design) |
 | OQ-4 | Trailing separator | Closed — recorded by `FileFraming`, reproduced by the writer |
 | OQ-5 | Test range for bank codes | **Closed** — `9999` verified unassigned |
-| OQ-6 | `valueDate()` naming | Open (design) |
+| OQ-6 | `valueDate()` naming | **Closed** — `effectiveDate()` on the interface ([ADR-0021](adr/0021-the-shared-header-date-is-effective-date.md)) |
 | OQ-7 | Blank `N` field | Open (design) |
-| OQ-8 | 金融EDI情報 overlay | **Narrowed** — both ends now specified |
-| OQ-9 | 預金種目 narrower set | **Closed** — master list plus per-field narrowing |
+| OQ-8 | 金融EDI情報 overlay | **Confirmed against the standard** — and now the only thing holding four formats unverified |
+| OQ-9 | 預金種目 narrower set | **Closed** — master list of nine, narrowed per field, implemented in Epic 3 |
 | OQ-10 | Should writing gate on `verified` as reading does? | **Closed** — yes, on the builder ([ADR-0019](adr/0019-building-gates-on-verified.md)) |
 
 ---
@@ -30,6 +30,8 @@ Closing a question does not always remove work; sometimes it replaces a question
 index exists so that whoever picks up an epic sees those tasks without reading the whole document.
 
 ### Epic 3 — charset and the remaining 120-byte formats
+
+**Completed 2026-08-16.** Kept for the reasoning; each item below is now implemented.
 
 - **Character-set validation needs a per-field character class**, not one global permitted set. The
   permitted symbols differ by what the field *is*: one symbol for branch names, four for party
@@ -98,10 +100,17 @@ does not exist. If both `91` descriptors are the same layout, the reader can par
 knowing which it holds, and the instruction/result distinction becomes a *semantic* question for
 the caller or the validation layer — not a reason to refuse the file.
 
-**Still open:** whether to register one `91` descriptor or two. One is simpler and matches the
-standard; two would let the record types carry direction-explicit names, which §13.1 asks for in
-strong terms. Decide in Epic 3, and revisit ADR-0007 when doing so — it may need superseding rather
-than amending.
+**Closed 2026-08-16, in Epic 3: one descriptor.** Two more sources confirmed the layouts are
+identical — 大分銀行 gives both field by field with byte positions, and 北洋システム開発 states that
+振替結果コード is zero on request and set by the bank on return. Registering two would make every
+`91` file ambiguous while distinguishing nothing.
+
+Direction-explicit naming, which §13.1 asks for in strong terms, is delivered by the field names
+rather than by the format count: the header carries `collectionBankCode` and `debitDate`, the data
+records carry `payerBankCode` and `debitAmount`, and none of 総合振込's directional names appear.
+ADR-0007 is not superseded — its guard still applies to descriptors a consumer registers at
+runtime, and to 振込入金通知's two variants in Epic 8, which differ in *positions* rather than
+values. See [ADR-0020](adr/0020-one-descriptor-for-type-code-91.md).
 
 **Note:** the same shape appears again in 振込入金通知, which has two variants (フォーマットA and
 フォーマットB) sharing 種別コード `01` and differing in whether 12-digit amount fields are present.
@@ -194,17 +203,17 @@ demonstrably not in use by any Japanese institution, which is what P1 and R-L1 a
 
 ### OQ-6 — Does `HeaderRecord.valueDate()` generalise beyond 総合振込?
 
-The shared header interface (§11) exposes `valueDate()`. In 預金口座振替 the equivalent field is the
-引落日, and the institution named in the header is the collection destination rather than the
-originator.
+**Closed 2026-08-16, in Epic 3: no, and the interface was renamed.**
 
-**Implemented:** the interface follows §11, and the generated accessor maps to whichever field
-declares `format: MMDD`, whatever its id.
+Adding 預金口座振替 settled it. Its header date is 引落日 — the day the payers' accounts are
+debited. Nothing reaches anybody on that date, so calling it a value date is wrong, and wrong in
+the direction of a format whose whole hazard is direction.
 
-**Still open, and not researchable.** No published source has an opinion about what this library
-names its accessors. Decide in Epic 3, when 預金口座振替 makes the name concretely misleading — and
-note that the 200-byte formats will add 作成日 and 勘定日, neither of which is a "value date" in any
-sense, which strengthens the case for a neutral name.
+`HeaderRecord.effectiveDate()` now carries the shared concept under a name true of both, and each
+generated record also carries the name its own format uses: `valueDate()` on a 総合振込 header,
+`debitDate()` on a 預金口座振替 one. Code written against a concrete format reads in that format's
+terms (R-D1); code written against the interface gets a name that is honest about covering both.
+See [ADR-0021](adr/0021-the-shared-header-date-is-effective-date.md).
 
 ### OQ-7 — What does a blank `N` field mean?
 

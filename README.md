@@ -39,19 +39,21 @@ in Epic 7; see [Status](#status).
 
 ## Status
 
-This repository is at **Epic 2 — reading and writing 総合振込**. What works today:
+This repository is at **Epic 3 — the 120-byte formats and the character sets**. What works today:
 
 | | |
 |---|---|
-| ✅ | Reading 総合振込 (`21`) files: streaming, batch and whole-file APIs |
+| ✅ | All four 120-byte formats: 総合振込 (`21`), 給与振込 (`11`), 賞与振込 (`12`), 預金口座振替 (`91`) |
+| ✅ | Reading files: streaming, batch and whole-file APIs |
 | ✅ | Writing files back **byte for byte**, including framing the file arrived with |
 | ✅ | Building files, with each batch trailer's count and total computed from its payments |
 | ✅ | Format descriptors as data, with computed byte offsets and a build-time length check |
 | ✅ | Generated, format-shaped record types, committed and drift-checked |
+| ✅ | Per-field character sets, reporting the byte offset of every violation |
+| ✅ | Shift_JIS / CP932 / UTF-8, with the divergence documented and pinned by tests |
 | ✅ | Optional separators (none / CR / LF / CRLF, even mixed), byte order marks, EOF byte |
 | ✅ | Strict and lenient parsing, with malformed records surfaced as data rather than exceptions |
 | ✅ | Year inference for the yearless `MMDD` dates, as an explicit, named decision |
-| ⬜ | The remaining 120-byte formats and the character-set machinery — Epic 3 |
 | ⬜ | Validation with byte-level findings, JSON and SARIF — Epic 4 |
 | ⬜ | CLI — Epic 5 |
 | ⬜ | Half-width katakana transliteration and dakuten-safe truncation — Epic 6 |
@@ -106,7 +108,7 @@ with them by accident:
 ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
         .allowUnverifiedFormats(true)   // required in 0.1.0 — read DISCLAIMER.md first
         .header(h -> h.set("originatorCode", "9900000001")
-                      .set("originatorName", "ﾃｽﾄｼｮｳｼﾞ")
+                      .set("originatorName", "ﾃｽﾄｼﾖｳｼﾞ")
                       .set("valueDate", MonthDay.of(9, 30)))
         .payment(p -> p.set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ")
                        .set("accountNumber", "9876543")
@@ -129,7 +131,9 @@ assert Arrays.equals(ZenginWriters.toByteArray(parsed, WriterOptions.defaults())
 That is the point of retaining every record's raw bytes rather than re-encoding from decoded
 fields: reserved space and values nobody has verified yet survive the trip untouched.
 
-Runnable versions live in [`examples/`](examples/).
+Runnable versions live in [`examples/`](examples/), and the byte layout of every bundled
+format — generated from the descriptors the library actually uses — is in
+[`docs/formats/`](docs/formats/).
 
 ## What this library will and will not claim
 
@@ -198,6 +202,12 @@ committed fuzzing input that no longer behaves as it did when it was found.
 Fuzzing itself is not in the gate — it is non-deterministic by design, which is the opposite of
 what a per-commit check should be. Replaying what it has already found is, because that is
 deterministic and takes about two seconds.
+
+## Releasing
+
+Publishing is a manually-approved GitHub Action and cannot be run from a developer machine — see
+[RELEASING.md](RELEASING.md). `zengin4j-core` and `zengin4j-testkit` publish to
+`io.github.drag0sd0g`; the other modules are skeletons and deliberately do not.
 
 ## Licence
 

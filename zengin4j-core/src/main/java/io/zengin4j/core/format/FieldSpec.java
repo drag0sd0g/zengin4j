@@ -1,5 +1,7 @@
 package io.zengin4j.core.format;
 
+import io.zengin4j.core.charset.CharacterClass;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,6 +32,8 @@ import java.util.Optional;
  * @param constant  an optional fixed value the field always carries
  * @param codeList  an optional code list constraining the value
  * @param note      an optional remark
+ * @param charClass the character set the field's bytes must satisfy (R-C16)
+ * @param codes     the subset of the code list this field admits; empty means all
  * @since 0.1.0
  */
 public record FieldSpec(
@@ -45,7 +49,9 @@ public record FieldSpec(
         Optional<FieldFormat> format,
         Optional<String> constant,
         Optional<CodeList> codeList,
-        Optional<String> note) {
+        Optional<String> note,
+        CharacterClass charClass,
+        List<String> codes) {
 
     /**
      * Validates the components.
@@ -59,6 +65,8 @@ public record FieldSpec(
         Objects.requireNonNull(constant, "constant");
         Objects.requireNonNull(codeList, "codeList");
         Objects.requireNonNull(note, "note");
+        Objects.requireNonNull(charClass, "charClass");
+        codes = List.copyOf(codes);
     }
 
     /**
@@ -75,7 +83,8 @@ public record FieldSpec(
     public static FieldSpec of(
             int sequence, String id, String nameJa, String nameEn, FieldType type, int length) {
         return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
-                false, false, false, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+                false, false, false, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+                defaultCharacterClass(type), List.of());
     }
 
     /**
@@ -85,7 +94,7 @@ public record FieldSpec(
      */
     public FieldSpec withRequired() {
         return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
-                true, filler, sensitive, format, constant, codeList, note);
+                true, filler, sensitive, format, constant, codeList, note, charClass, codes);
     }
 
     /**
@@ -95,7 +104,7 @@ public record FieldSpec(
      */
     public FieldSpec withFiller() {
         return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
-                required, true, sensitive, format, constant, codeList, note);
+                required, true, sensitive, format, constant, codeList, note, charClass, codes);
     }
 
     /**
@@ -105,7 +114,7 @@ public record FieldSpec(
      */
     public FieldSpec withSensitive() {
         return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
-                required, filler, true, format, constant, codeList, note);
+                required, filler, true, format, constant, codeList, note, charClass, codes);
     }
 
     /**
@@ -116,7 +125,7 @@ public record FieldSpec(
      */
     public FieldSpec withFormat(FieldFormat value) {
         return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
-                required, filler, sensitive, Optional.of(value), constant, codeList, note);
+                required, filler, sensitive, Optional.of(value), constant, codeList, note, charClass, codes);
     }
 
     /**
@@ -127,7 +136,7 @@ public record FieldSpec(
      */
     public FieldSpec withConstant(String value) {
         return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
-                required, filler, sensitive, format, Optional.of(value), codeList, note);
+                required, filler, sensitive, format, Optional.of(value), codeList, note, charClass, codes);
     }
 
     /**
@@ -138,7 +147,7 @@ public record FieldSpec(
      */
     public FieldSpec withCodeList(CodeList value) {
         return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
-                required, filler, sensitive, format, constant, Optional.of(value), note);
+                required, filler, sensitive, format, constant, Optional.of(value), note, charClass, codes);
     }
 
     /**
@@ -149,7 +158,57 @@ public record FieldSpec(
      */
     public FieldSpec withNote(String value) {
         return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
-                required, filler, sensitive, format, constant, codeList, Optional.of(value));
+                required, filler, sensitive, format, constant, codeList, Optional.of(value), charClass, codes);
+    }
+
+    /**
+     * Returns a copy whose bytes must satisfy a character class (R-C16).
+     *
+     * <p>Declared per field rather than per format, because the standard
+     * narrows the permitted set by what the field <em>is</em>: a branch name
+     * admits one symbol, a party name four.
+     *
+     * @param value the character class
+     * @return the derived specification
+     */
+    public FieldSpec withCharacterClass(CharacterClass value) {
+        return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
+                required, filler, sensitive, format, constant, codeList, note,
+                Objects.requireNonNull(value, "characterClass"), codes);
+    }
+
+    /**
+     * Returns a copy admitting only part of its code list (OQ-9).
+     *
+     * <p>付録3 states the master list once and then says that not every code is
+     * valid for every business, and that where a format enumerates a subset the
+     * subset governs. So a field narrows the shared list rather than the list
+     * being split per format — which keeps one place to look up what a code
+     * means, and one place to record where it may appear.
+     *
+     * @param values the permitted codes; empty means the whole list
+     * @return the derived specification
+     */
+    public FieldSpec withCodes(List<String> values) {
+        return new FieldSpec(sequence, id, nameJa, nameEn, type, length,
+                required, filler, sensitive, format, constant, codeList, note, charClass,
+                List.copyOf(Objects.requireNonNull(values, "codes")));
+    }
+
+    /**
+     * The class a field takes when its descriptor does not declare one.
+     *
+     * <p>{@code N} means digits, which is a character rule and not merely a
+     * hint. {@code C} defaults to unrestricted rather than to a name class:
+     * guessing that an undeclared text field is a party name would invent a
+     * constraint the sources do not state for it, and a validator that invents
+     * constraints is worse than one that omits them.
+     *
+     * @param type the field type
+     * @return the default class for that type
+     */
+    public static CharacterClass defaultCharacterClass(FieldType type) {
+        return type == FieldType.N ? CharacterClass.NUMERIC : CharacterClass.UNRESTRICTED;
     }
 
     /**
@@ -160,6 +219,6 @@ public record FieldSpec(
      */
     FieldDescriptor at(int offset) {
         return new FieldDescriptor(sequence, id, nameJa, nameEn, type, offset, length,
-                required, filler, sensitive, format, constant, codeList, note);
+                required, filler, sensitive, format, constant, codeList, note, charClass, codes);
     }
 }

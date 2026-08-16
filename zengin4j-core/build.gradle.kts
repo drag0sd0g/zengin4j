@@ -202,3 +202,41 @@ tasks.register<JavaExec>("pitest") {
         listOf("--excludedClasses", excluded.sorted().joinToString(","))
     })
 }
+
+// R-M1, P3: zero runtime dependencies, asserted in the artefact that consumers
+// actually resolve.
+//
+// ArchUnit already forbids core from importing anything outside java.base, but
+// that checks the code. This checks the *published metadata*: a dependency
+// added to the wrong Gradle configuration would not break a single import and
+// would still appear in every consumer's dependency tree.
+val checkPomHasNoDependencies by tasks.registering {
+    group = "verification"
+    description = "Fails if the published POM declares any dependency (R-M1)."
+    dependsOn("generatePomFileForMavenPublication")
+
+    val pom = layout.buildDirectory.file("publications/maven/pom-default.xml")
+    inputs.file(pom)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        val text = pom.get().asFile.readText()
+        if (text.contains("<dependencies>")) {
+            val listed = Regex("<artifactId>(.*?)</artifactId>").findAll(text)
+                .map { it.groupValues[1] }
+                .drop(1)
+                .joinToString(", ")
+            throw GradleException(
+                "zengin4j-core's published POM declares dependencies ($listed). " +
+                    "R-M1 says core requires nothing but java.base, and the POM is what " +
+                    "a consumer resolves. Move the dependency to another module, or to a " +
+                    "test configuration."
+            )
+        }
+        logger.lifecycle("published POM declares no dependencies (R-M1)")
+    }
+}
+
+tasks.check {
+    dependsOn(checkPomHasNoDependencies)
+}

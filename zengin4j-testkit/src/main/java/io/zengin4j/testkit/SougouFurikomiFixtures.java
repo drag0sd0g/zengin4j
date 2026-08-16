@@ -85,8 +85,8 @@ public final class SougouFurikomiFixtures {
     /** Originator code. Invented. */
     public static final String ORIGINATOR_CODE = "9900000001";
 
-    /** Originator name: ﾃｽﾄｼｮｳｼﾞ. */
-    public static final String ORIGINATOR_NAME = "ﾃｽﾄｼｮｳｼﾞ";
+    /** Originator name: ﾃｽﾄｼﾖｳｼﾞ. */
+    public static final String ORIGINATOR_NAME = "ﾃｽﾄｼﾖｳｼﾞ";
 
     /** Value date, {@code MMDD}. */
     public static final String VALUE_DATE = "0930";

@@ -51,6 +51,18 @@ public non-sealed interface HeaderRecord extends ZenginRecord {
     /**
      * Returns the date carried in the header, without a year.
      *
+     * <p>Named for what the date <em>does</em> rather than for what any one
+     * format calls it, because the formats disagree. In 総合振込 it is 振込指定日,
+     * the day funds reach the payees; in 預金口座振替 it is 引落日, the day the
+     * payers' accounts are debited and nothing reaches anybody. Calling both a
+     * value date would be wrong for one of them, and wrong in the direction
+     * that matters (OQ-6).
+     *
+     * <p>Each generated record also carries an accessor under the name its own
+     * format uses — {@code valueDate()} on a 総合振込 header, {@code debitDate()}
+     * on a 預金口座振替 one — so code written against a concrete format reads in
+     * that format's own terms (R-D1).
+     *
      * <p>The field is four digits, {@code MMDD}. Use
      * {@link io.zengin4j.core.time.MonthDayResolver} to attach a year, and read
      * its documentation first: the two reasonable strategies disagree across
@@ -59,5 +71,5 @@ public non-sealed interface HeaderRecord extends ZenginRecord {
      * @return the month and day, or empty if the field is absent, unset or not
      *         a valid month and day
      */
-    Optional<MonthDay> valueDate();
+    Optional<MonthDay> effectiveDate();
 }
