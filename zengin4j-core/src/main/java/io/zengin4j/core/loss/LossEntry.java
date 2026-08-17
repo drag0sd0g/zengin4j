@@ -34,7 +34,6 @@ public record LossEntry(
         String resultingValue,
         String explanationEn,
         String explanationJa) {
-
     /**
      * Validates the components.
      */

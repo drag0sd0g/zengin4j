@@ -13,7 +13,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public final class GenericHeaderRecord extends GenericRecord implements HeaderRecord {
-
     private final CodeKubun codeKubun;
     private final String originatorCode;
     private final String originatorName;

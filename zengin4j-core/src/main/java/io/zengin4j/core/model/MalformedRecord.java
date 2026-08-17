@@ -27,7 +27,6 @@ public record MalformedRecord(
         long byteOffset,
         byte[] rawBytes,
         String reason) implements ZenginRecord {
-
     /**
      * Validates the components and copies the bytes defensively.
      */

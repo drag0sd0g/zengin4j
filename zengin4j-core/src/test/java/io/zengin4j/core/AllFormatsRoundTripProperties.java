@@ -40,7 +40,6 @@ import org.junit.jupiter.params.provider.MethodSource;
  * 総合振込" was not evidence about the rest.
  */
 class AllFormatsRoundTripProperties {
-
     private static final long SEED = 0x5A5A_2026L;
 
     private static final ReaderOptions OPTIONS = Fixtures.optionsBuilder()

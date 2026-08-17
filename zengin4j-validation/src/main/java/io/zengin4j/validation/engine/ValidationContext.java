@@ -21,7 +21,6 @@ import java.util.Optional;
  * @since 0.2.0
  */
 public final class ValidationContext {
-
     private final ZenginFile file;
     private final FormatDescriptor descriptor;
     private final MonthDayResolver dateResolver;

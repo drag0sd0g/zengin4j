@@ -12,7 +12,6 @@ import io.zengin4j.core.format.RecordKind;
  * @since 0.1.0
  */
 public non-sealed interface TrailerRecord extends ZenginRecord {
-
     @Override
     default RecordKind kind() {
         return RecordKind.TRAILER;

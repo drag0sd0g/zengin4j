@@ -20,7 +20,6 @@ import java.util.Optional;
  * Groups the record stream into batches, materialising as it goes.
  */
 final class MaterialisingBatchReader implements BatchReader {
-
     private final ZenginReader reader;
     private final ParseMode mode;
     private final List<MalformedRecord> unbatched = new ArrayList<>();
@@ -105,8 +104,6 @@ final class MaterialisingBatchReader implements BatchReader {
                     if (header == null) {
                         header = found;
                     } else {
-                        // Only reachable in lenient mode with a batch that has
-                        // no trailer; hand the header to the next batch.
                         carried = found;
                         return new Batch(header, data, Optional.empty(), malformed);
                     }

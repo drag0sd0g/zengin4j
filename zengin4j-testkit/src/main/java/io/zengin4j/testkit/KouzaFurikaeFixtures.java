@@ -28,7 +28,6 @@ import java.util.Map;
  * @since 0.3.0
  */
 public final class KouzaFurikaeFixtures extends AbstractFormatFixtures {
-
     /** Id of the format these fixtures produce. */
     public static final FormatId FORMAT = FormatId.of("kouza-furikae");
 
@@ -123,9 +122,6 @@ public final class KouzaFurikaeFixtures extends AbstractFormatFixtures {
         Map<String, String> values = new LinkedHashMap<>();
         values.put("recordCount", Integer.toString(recordCount));
         values.put("totalAmount", Long.toString(totalAmount));
-        // The four result counters stay zero. An instruction file has no
-        // outcome to report yet, and inventing one here would make every
-        // fixture look like a file that had already been through a bank.
         return values;
     }
 

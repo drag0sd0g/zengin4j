@@ -33,7 +33,6 @@ import org.junit.jupiter.params.provider.ValueSource;
  * wrong name.
  */
 class KanaTableTest {
-
     /**
      * The 45 katakana of the gojūon, in the order JIS X 0201 encodes them.
      *
@@ -53,8 +52,6 @@ class KanaTableTest {
         assertThat(narrowed).as("no narrowing for '%s'", fullWidth).isNotNull();
         return ZenginCharset.MS932.encode(narrowed);
     }
-
-    // ------------------------------------------------------------- the gojūon
 
     @Test
     void theGojuonNarrowsToConsecutiveBytesStartingAtTheDocumentedOne() {
@@ -77,8 +74,6 @@ class KanaTableTest {
     void woSitsAtItsOwnByte() {
         assertThat(narrowedBytes("ヲ")[0] & 0xFF).isEqualTo(0xA6);
     }
-
-    // ------------------------------------------------------------- voicing
 
     /**
      * Every voiced kana decomposes to its base plus {@code 0xDE} (R-K1).
@@ -246,8 +241,6 @@ class KanaTableTest {
         });
     }
 
-    // ------------------------------------------------------- shape invariants
-
     /**
      * Every narrowed form is one byte per character in JIS X 0201.
      *
@@ -326,8 +319,6 @@ class KanaTableTest {
         });
     }
 
-    // ------------------------------------------------------------- the ASCII
-
     @Test
     void fullWidthLatinAndDigitsNarrowToAscii() {
         assertThat(KanaTables.narrow("Ａ")).isEqualTo("A");
@@ -347,8 +338,6 @@ class KanaTableTest {
         assertThat(KanaTables.narrow("」")).isEqualTo("｣");
         assertThat(KanaTables.narrow("・")).isEqualTo("･");
     }
-
-    // ------------------------------------------------------------- widening
 
     /**
      * Widening inverts narrowing for every kana.
@@ -370,8 +359,6 @@ class KanaTableTest {
         semiVoiced().forEach((full, base) ->
                 assertThat(KanaTables.widen(KanaTables.narrow(full))).isEqualTo(full));
     }
-
-    // ------------------------------------------------------------- hiragana
 
     @Test
     void hiraganaMapsToKatakanaAcrossTheWholeRange() {

@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
  * report, and they then ignore the finding that mattered.
  */
 class RuleCatalogueTest {
-
     private static final SougouFurikomiFixtures KIT = Fixtures.TESTKIT;
 
     private ValidationReport validate(ZenginFile file) {
@@ -38,13 +37,8 @@ class RuleCatalogueTest {
         assertThat(report.isSubmittable()).isTrue();
     }
 
-    // -------------------------------------------------------- tier 1: V-1xx
-
     @Test
     void v101_reportsARecordOfTheWrongLength() {
-        // Unseparated, so the record boundaries are the record length and
-        // nothing else. Dropping two bytes leaves a genuinely short final
-        // record rather than merely a missing separator.
         byte[] good = KIT.file(1, SeparatorStyle.NONE, false);
         byte[] shortened = new byte[good.length - 2];
         System.arraycopy(good, 0, shortened, 0, shortened.length);
@@ -77,11 +71,8 @@ class RuleCatalogueTest {
         assertThat(report.findingsOf("V-104")).hasSize(1);
     }
 
-    // -------------------------------------------------------- tier 2: V-2xx
-
     @Test
     void v201_reportsANonDigitInANumericField() {
-        // 振込金額 at offset 80 of the data record, made non-numeric.
         byte[] data = KIT.data();
         data[80] = 'X';
         byte[] file = SyntheticRecords.file(
@@ -96,7 +87,6 @@ class RuleCatalogueTest {
 
     @Test
     void v202_reportsACharacterTheFieldMayNotCarry() {
-        // The long vowel mark in a party name: the mistake that looks correct.
         byte[] data = KIT.dataUnchecked("ﾔﾏﾀﾞｰﾀﾛｳ", SougouFurikomiFixtures.AMOUNT, "9876543");
         byte[] file = SyntheticRecords.file(
                 List.of(KIT.header(), data,
@@ -112,7 +102,6 @@ class RuleCatalogueTest {
     /** R-K7: a voicing mark after a kana that cannot take one. */
     @Test
     void v206_reportsAnIllegalVoicingMark() {
-        // ｱ followed by a dakuten — a byte pair no reader can pronounce.
         byte[] data = KIT.dataUnchecked("ｱﾞﾔﾏﾀﾞ", SougouFurikomiFixtures.AMOUNT, "9876543");
         byte[] file = SyntheticRecords.file(
                 List.of(KIT.header(), data,
@@ -132,8 +121,6 @@ class RuleCatalogueTest {
 
         assertThat(report.findingsOf("V-206")).isEmpty();
     }
-
-    // -------------------------------------------------------- tier 3: V-3xx
 
     @Test
     void v301_reportsATrailerTotalThatDisagreesWithItsBatch() {
@@ -163,7 +150,6 @@ class RuleCatalogueTest {
     /** V-304: a total that does not fit the trailer's N(12) field. */
     @Test
     void v304_reportsABatchTotalThatOutgrowsTheTrailerField() {
-        // 9,999,999,999 is the N(10) maximum; 200 of them exceed N(12).
         List<byte[]> records = new java.util.ArrayList<>();
         records.add(KIT.header());
         for (int i = 0; i < 200; i++) {
@@ -213,8 +199,6 @@ class RuleCatalogueTest {
         assertThat(report.findingsOf("V-306")).isEmpty();
     }
 
-    // -------------------------------------------------------- tier 6: V-6xx
-
     @Test
     void v602_warnsAboutAZeroAmount() {
         byte[] file = SyntheticRecords.file(
@@ -252,13 +236,11 @@ class RuleCatalogueTest {
         assertThat(report.findingsOf("V-604")).isNotEmpty();
     }
 
-    // --------------------------------------------------------------- R-E6
-
     /** Account numbers are masked in findings unless the caller opts out. */
     @Test
     void accountNumbersAreMaskedInFindingsByDefault() {
         byte[] data = KIT.data("ﾔﾏﾀﾞ ﾀﾛｳ", SougouFurikomiFixtures.AMOUNT, "9876543");
-        data[43] = 'X';   // 口座番号 at offset 43: make it non-numeric so V-201 fires
+        data[43] = 'X';
         byte[] file = SyntheticRecords.file(
                 List.of(KIT.header(), data,
                         KIT.trailer(1, SougouFurikomiFixtures.AMOUNT), KIT.end()),

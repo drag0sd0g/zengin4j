@@ -18,7 +18,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public record CodeValue(String code, String nameJa, String nameEn, boolean verified, Optional<String> note) {
-
     /**
      * Validates the components.
      */

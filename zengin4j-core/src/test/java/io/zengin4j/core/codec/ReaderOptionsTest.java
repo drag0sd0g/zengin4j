@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
  * The defaults matter: they are what a caller who reads no documentation gets.
  */
 class ReaderOptionsTest {
-
     @Test
     void defaultsAreTheConservativeChoices() {
         ReaderOptions options = ReaderOptions.defaults();
@@ -87,7 +86,6 @@ class ReaderOptionsTest {
         assertThat(warning.byteOffset()).isEqualTo(42);
         assertThatNullPointerException()
                 .isThrownBy(() -> new ZenginWarning(null, "en", "ja", 0));
-        // The default listener writes one line through System.Logger and returns.
         warning.log();
     }
 

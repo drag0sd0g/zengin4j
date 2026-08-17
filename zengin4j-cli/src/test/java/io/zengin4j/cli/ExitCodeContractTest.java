@@ -16,7 +16,6 @@ import org.junit.jupiter.api.io.TempDir;
  * whatever the code happens to return.
  */
 class ExitCodeContractTest {
-
     @TempDir
     Path directory;
 
@@ -40,7 +39,6 @@ class ExitCodeContractTest {
 
     @Test
     void warningsAloneExitOne() throws Exception {
-        // Two identical payments trip V-306, which is a warning by design.
         Path file = directory.resolve("duplicated.txt");
         Files.write(file, io.zengin4j.testkit.SougouFurikomiFixtures.create()
                 .file(2, io.zengin4j.core.model.SeparatorStyle.CRLF, false));
@@ -54,7 +52,6 @@ class ExitCodeContractTest {
     @Test
     void errorsExitTwo() throws Exception {
         Path file = Cli.generate(directory, "broken.txt", "--count=2");
-        // Truncating the last record makes it the wrong length: V-101, an error.
         byte[] bytes = Files.readAllBytes(file);
         Files.write(file, java.util.Arrays.copyOf(bytes, bytes.length - 40));
 

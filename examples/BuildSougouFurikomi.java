@@ -32,7 +32,6 @@ import java.util.Arrays;
  * {@code 9} (R-L1, P1).
  */
 public final class BuildSougouFurikomi {
-
     private BuildSougouFurikomi() {
     }
 
@@ -50,10 +49,6 @@ public final class BuildSougouFurikomi {
         System.out.println("== a well-formed file ==");
 
         ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
-                // Every descriptor in 0.1.0 is verified: false, and building a
-                // file places real values at those offsets. The opt-in is
-                // required so the decision is visible in your code, not ours.
-                // Read DISCLAIMER.md before doing this against a real bank.
                 .allowUnverifiedFormats(true)
                 .header(header -> header
                         .set("originatorCode", "9900000001")
@@ -72,9 +67,6 @@ public final class BuildSougouFurikomi {
                 .payment(payment -> payment
                         .set("beneficiaryBankCode", "9999")
                         .set("beneficiaryBranchCode", "999")
-                        // ｶﾞ is two characters and two bytes: the voicing mark is
-                        // its own code point. A fixture that never exercises one
-                        // never exercises the truncation hazard (§17).
                         .set("beneficiaryName", "ｶﾞｸﾌﾞﾁ ｼﾞﾛｳ")
                         .set("accountNumber", "9151178")
                         .set("amount", 2_500L))
@@ -89,7 +81,6 @@ public final class BuildSougouFurikomi {
         byte[] bytes = ZenginWriters.toByteArray(file, WriterOptions.defaults());
         System.out.printf("  %d bytes, CRLF-separated%n", bytes.length);
 
-        // What was built reads back as what was built (INV-2).
         ZenginFile reread = ZenginReaders.readFile(new ByteArrayInputStream(bytes), options());
         System.out.printf("  reads back as %d records, ¥%,d%n",
                 reread.totalRecords(), reread.batches().get(0).computedTotal());
@@ -107,7 +98,6 @@ public final class BuildSougouFurikomi {
                 .allowUnverifiedFormats(true)
                 .header(header -> header.set("originatorCode", "9900000001"))
                 .payment(payment -> payment.set("amount", 150_000L))
-                // Overriding the computed trailer is deliberate and explicit.
                 .trailer(trailer -> trailer.set("recordCount", 7L).set("totalAmount", 999_999L))
                 .build();
 
@@ -130,8 +120,6 @@ public final class BuildSougouFurikomi {
         byte[] second = ZenginWriters.toByteArray(fixture(descriptor), WriterOptions.defaults());
         System.out.println("  two builds produce identical bytes: " + Arrays.equals(first, second));
 
-        // The framing is yours to choose — some institutions want no separators
-        // at all, some want a trailing EOF byte.
         byte[] unseparated = ZenginWriters.toByteArray(
                 fixture(descriptor), WriterOptions.framing(FileFraming.none()));
         byte[] withEof = ZenginWriters.toByteArray(fixture(descriptor),
@@ -151,8 +139,6 @@ public final class BuildSougouFurikomi {
     private static ReaderOptions options() {
         return ReaderOptions.builder()
                 .registry(FormatRegistry.defaults())
-                // Every descriptor in 0.1.0 is verified: false. Read
-                // DISCLAIMER.md before setting this against a real file.
                 .allowUnverifiedFormats(true)
                 .build();
     }

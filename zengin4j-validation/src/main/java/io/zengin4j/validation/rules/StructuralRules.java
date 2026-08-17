@@ -26,7 +26,6 @@ import java.util.function.Consumer;
  * @since 0.2.0
  */
 public final class StructuralRules {
-
     private StructuralRules() {
     }
 
@@ -63,7 +62,6 @@ public final class StructuralRules {
 
     /** V-101. */
     static final class RecordLength extends AbstractRule {
-
         RecordLength() {
             super("V-101", Severity.ERROR, RuleScope.RECORD);
         }
@@ -87,7 +85,6 @@ public final class StructuralRules {
 
     /** V-102: the discriminator byte names a record kind this format declares. */
     static final class KnownDataKubun extends AbstractRule {
-
         KnownDataKubun() {
             super("V-102", Severity.ERROR, RuleScope.RECORD);
         }
@@ -131,7 +128,6 @@ public final class StructuralRules {
      * as a batch member.
      */
     static final class DataFollowsHeader extends AbstractRule {
-
         DataFollowsHeader() {
             super("V-103", Severity.ERROR, RuleScope.FILE);
         }
@@ -150,7 +146,6 @@ public final class StructuralRules {
 
     /** V-104. */
     static final class OneTrailerPerHeader extends AbstractRule {
-
         OneTrailerPerHeader() {
             super("V-104", Severity.ERROR, RuleScope.BATCH);
         }
@@ -172,14 +167,12 @@ public final class StructuralRules {
 
     /** V-105. */
     static final class EndRecordPresent extends AbstractRule {
-
         EndRecordPresent() {
             super("V-105", Severity.ERROR, RuleScope.FILE);
         }
 
         @Override
         public void check(ValidationContext context, Consumer<Finding> out) {
-            // A format that declares no end record cannot be missing one.
             if (context.descriptor().find(RecordKind.END).isEmpty()) {
                 return;
             }
@@ -191,7 +184,6 @@ public final class StructuralRules {
 
     /** V-106. */
     static final class NothingAfterEnd extends AbstractRule {
-
         NothingAfterEnd() {
             super("V-106", Severity.ERROR, RuleScope.FILE);
         }
@@ -219,7 +211,6 @@ public final class StructuralRules {
 
     /** V-107. */
     static final class FileNotEmpty extends AbstractRule {
-
         FileNotEmpty() {
             super("V-107", Severity.ERROR, RuleScope.FILE);
         }

@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
  * padding conventions (§12.8).
  */
 class FieldCodecTest {
-
     @Test
     void decodesZonedDecimal() {
         byte[] buffer = "0000150000".getBytes(StandardCharsets.US_ASCII);

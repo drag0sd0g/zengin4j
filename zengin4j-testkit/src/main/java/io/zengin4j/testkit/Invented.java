@@ -15,7 +15,6 @@ package io.zengin4j.testkit;
  * @since 0.3.0
  */
 final class Invented {
-
     /** Counterparty bank code. No institution uses it. */
     static final String BANK_CODE = "9999";
 

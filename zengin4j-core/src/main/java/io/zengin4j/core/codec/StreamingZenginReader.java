@@ -37,7 +37,6 @@ import java.util.Optional;
  * keep it.
  */
 final class StreamingZenginReader implements ZenginReader {
-
     /**
      * Format detection reads the first three bytes: データ区分 then 種別コード.
      *
@@ -220,8 +219,6 @@ final class StreamingZenginReader implements ZenginReader {
         }
     }
 
-    // ------------------------------------------------------------- start-up
-
     private void handleByteOrderMark() {
         if (!RecordFramer.startsWithByteOrderMark(buffer, position, limit)) {
             return;
@@ -320,8 +317,6 @@ final class StreamingZenginReader implements ZenginReader {
             throw new UnsupportedEncodingVariantException(value, raw, absoluteOffset() + codeKubun.offset());
         }
     }
-
-    // ------------------------------------------------------------- framing
 
     private String classify(byte discriminator) {
         Optional<RecordDescriptor> matched = descriptor.forDiscriminator(discriminator);
@@ -455,8 +450,6 @@ final class StreamingZenginReader implements ZenginReader {
         finished = true;
     }
 
-    // -------------------------------------------------------------- buffer
-
     private int available() {
         return limit - position;
     }
@@ -477,7 +470,6 @@ final class StreamingZenginReader implements ZenginReader {
             consumedBeforeBuffer += position;
             limit -= position;
             position = 0;
-            // Compaction moves every retained view's bytes out from under it.
             generation.advance();
         }
         while (limit < buffer.length && !streamExhausted) {
@@ -490,8 +482,6 @@ final class StreamingZenginReader implements ZenginReader {
             if (read < 0) {
                 streamExhausted = true;
             } else if (read == 0) {
-                // A well-behaved stream cannot do this with a non-empty target,
-                // but the loop must terminate regardless (INV-3).
                 break;
             } else {
                 limit += read;

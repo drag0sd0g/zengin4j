@@ -25,7 +25,6 @@ import java.util.Objects;
  * @since 0.1.0
  */
 public enum ZenginCharset {
-
     /**
      * Shift_JIS as standardised, without the Microsoft extensions.
      */
@@ -54,9 +53,6 @@ public enum ZenginCharset {
         try {
             resolved = Charset.forName(charsetName);
         } catch (RuntimeException e) {
-            // Resolution is attempted once, at class initialisation, and the
-            // failure is replayed on use. Throwing here would surface as an
-            // ExceptionInInitializerError with no useful message.
             failure = e;
         }
         this.charset = resolved;

@@ -19,7 +19,6 @@ import java.util.Locale;
  * @since 0.3.0
  */
 public final class Json {
-
     private final StringBuilder out = new StringBuilder();
     private int depth;
     private boolean needsComma;

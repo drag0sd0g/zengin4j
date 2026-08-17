@@ -17,14 +17,12 @@ package io.zengin4j.core.charset;
  * @since 0.4.0
  */
 public final class VoicingMarks {
-
     /** {@code ﾞ}, the voiced mark. */
     public static final int DAKUTEN = 0xDE;
 
     /** {@code ﾟ}, the semi-voiced mark. */
     public static final int HANDAKUTEN = 0xDF;
 
-    // The four rows that have voiced forms, plus ｳ for ｳﾞ.
     private static final int KA_FIRST = 0xB6;
     private static final int KA_LAST = 0xBA;
     private static final int SA_FIRST = 0xBB;

@@ -19,7 +19,6 @@ package io.zengin4j.core.codec;
  * @since 0.1.0
  */
 public enum CharacterPolicy {
-
     /**
      * Do not check. The default: content is not the reader's business.
      */

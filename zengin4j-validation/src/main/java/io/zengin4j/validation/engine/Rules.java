@@ -19,7 +19,6 @@ import java.util.List;
  * @since 0.2.0
  */
 public final class Rules {
-
     private Rules() {
     }
 

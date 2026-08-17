@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
  * without wiring it fails the build with a message saying what to add.
  */
 class FuzzTargetsAreWiredTest {
-
     /** Classes carrying {@code @FuzzTest} methods. Add new ones here. */
     private static final List<Class<?>> FUZZ_CLASSES = List.of(ReaderFuzzTest.class);
 

@@ -15,13 +15,11 @@
  * @since 0.3.0
  */
 module io.zengin4j.cli {
-
     requires io.zengin4j.core;
     requires io.zengin4j.validation;
     requires io.zengin4j.testkit;
     requires info.picocli;
 
-    // picocli reflects over the command classes to bind options to fields.
     opens io.zengin4j.cli to info.picocli;
     opens io.zengin4j.cli.command to info.picocli;
 

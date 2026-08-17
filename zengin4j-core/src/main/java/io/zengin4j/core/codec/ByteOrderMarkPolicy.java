@@ -11,7 +11,6 @@ package io.zengin4j.core.codec;
  * @since 0.1.0
  */
 public enum ByteOrderMarkPolicy {
-
     /**
      * Fail with a located diagnostic. The default: the mark's presence
      * suggests the file has been through tooling that may also have changed

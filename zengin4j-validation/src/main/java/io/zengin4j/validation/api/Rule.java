@@ -22,7 +22,6 @@ import java.util.function.Consumer;
  * @since 0.2.0
  */
 public interface Rule {
-
     /**
      * The stable identifier, for example {@code V-301}.
      *

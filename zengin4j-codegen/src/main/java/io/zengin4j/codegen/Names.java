@@ -22,7 +22,6 @@ import io.zengin4j.core.format.RecordKind;
  * {@code MonthDay}.
  */
 final class Names {
-
     private Names() {
     }
 

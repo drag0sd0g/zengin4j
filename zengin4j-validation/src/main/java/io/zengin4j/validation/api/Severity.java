@@ -15,7 +15,6 @@ package io.zengin4j.validation.api;
  * @since 0.2.0
  */
 public enum Severity {
-
     /**
      * The file will be rejected, or will do something wrong if accepted.
      *

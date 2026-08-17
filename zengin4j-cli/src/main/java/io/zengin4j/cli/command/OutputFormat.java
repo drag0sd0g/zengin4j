@@ -10,7 +10,6 @@ package io.zengin4j.cli.command;
  * @since 0.3.0
  */
 public enum OutputFormat {
-
     /** For a person, in their terminal. */
     TEXT,
 

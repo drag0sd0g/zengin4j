@@ -11,7 +11,6 @@ package io.zengin4j.core.kana;
  * @since 0.4.0
  */
 public enum TruncationPolicy {
-
     /**
      * Refuse, and say by how much it overflowed. The default.
      *

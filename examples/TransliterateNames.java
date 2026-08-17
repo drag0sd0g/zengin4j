@@ -33,7 +33,6 @@ import java.util.Map;
  * <p><strong>Every name here is invented</strong> (R-L1).
  */
 public final class TransliterateNames {
-
     private TransliterateNames() {
     }
 

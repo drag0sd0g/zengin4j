@@ -42,7 +42,6 @@ import org.junit.jupiter.api.Test;
  * difference.
  */
 class FieldAllocationTest {
-
     /**
      * Allowed drift between the two measurements, in bytes.
      *
@@ -67,16 +66,11 @@ class FieldAllocationTest {
 
         byte[] file = manyRecords(PAYMENTS);
 
-        // Warm up: let the JIT compile the read path and settle, so its own
-        // allocation does not land inside either measurement.
         for (int i = 0; i < 20; i++) {
             decodeFields(file, 1);
             decodeFields(file, FIELDS_PER_RECORD);
         }
 
-        // Same file, same iteration, different numbers of fields read. The
-        // difference isolates field access from everything else the reader does,
-        // which is what R-P3 is actually about.
         long few = allocatedBy(() -> {
             for (int i = 0; i < PASSES; i++) {
                 decodeFields(file, 1);
@@ -122,8 +116,6 @@ class FieldAllocationTest {
                 .as("checking a clean record 100,000 times allocated %d bytes", allocated)
                 .isLessThan(TOLERANCE_BYTES);
     }
-
-    // ------------------------------------------------------------------ helpers
 
     private static final String[] NUMERIC_FIELDS = {
         "amount", "beneficiaryBankCode", "beneficiaryBranchCode", "accountNumber",

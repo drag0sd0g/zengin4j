@@ -17,7 +17,6 @@ import io.zengin4j.validation.api.Severity;
  * @since 0.2.0
  */
 abstract class AbstractRule implements Rule {
-
     private final String id;
     private final Severity severity;
     private final RuleScope scope;

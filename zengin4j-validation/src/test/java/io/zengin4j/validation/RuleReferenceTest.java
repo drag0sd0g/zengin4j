@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
  * checked is documentation that stays true.
  */
 class RuleReferenceTest {
-
     private static final Path REFERENCE = Path.of("..", "docs", "validation-rules.md");
 
     private static final Pattern ROW =

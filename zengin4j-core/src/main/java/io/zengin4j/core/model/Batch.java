@@ -26,7 +26,6 @@ public record Batch(
         List<DataRecord> data,
         Optional<TrailerRecord> trailer,
         List<MalformedRecord> malformed) {
-
     /**
      * Validates and defensively copies the components.
      */

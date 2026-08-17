@@ -20,7 +20,6 @@ import java.util.Objects;
  * @since 0.2.0
  */
 public final class ValidationReport {
-
     private final List<Finding> findings;
     private final Map<Severity, Integer> counts;
     private final List<Rule> rules;

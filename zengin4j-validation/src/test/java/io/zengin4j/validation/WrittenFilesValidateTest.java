@@ -50,21 +50,20 @@ import org.junit.jupiter.params.provider.MethodSource;
  * are visible — {@code core} writes, and {@code core} cannot see the rules.
  */
 class WrittenFilesValidateTest {
-
     /** Names covering every conversion the engine performs. */
     private static final List<String> NAMES = List.of(
-            "ﾔﾏﾀﾞ ﾀﾛｳ",        // already conformant
-            "ガクブチ ジロウ",   // full width, voiced
-            "キャノン",          // a small kana
-            "ヨーコ",            // a long vowel
-            "サッポロ",          // a small tsu
-            "ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ",      // semi-voiced, already narrow
-            "ＡＢＣ",            // full-width Latin
-            "abc",               // lowercase
-            "ヴｧｲｵﾘﾝ",          // mixed width, vu, small kana
-            "ﾔﾏﾀﾞ*ﾀﾛｳ",        // a symbol no class permits
-            "ﾀﾛｳﾀﾛｳﾀﾛｳﾀﾛｳﾀﾛｳﾀﾛｳﾀﾛｳ",   // long enough to need shortening
-            "ガクブチガクブチガクブチガクブチガクブチ");  // long and voiced
+            "ﾔﾏﾀﾞ ﾀﾛｳ",
+            "ガクブチ ジロウ",
+            "キャノン",
+            "ヨーコ",
+            "サッポロ",
+            "ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ",
+            "ＡＢＣ",
+            "abc",
+            "ヴｧｲｵﾘﾝ",
+            "ﾔﾏﾀﾞ*ﾀﾛｳ",
+            "ﾀﾛｳﾀﾛｳﾀﾛｳﾀﾛｳﾀﾛｳﾀﾛｳﾀﾛｳ",
+            "ガクブチガクブチガクブチガクブチガクブチ");
 
     static List<FormatId> formats() {
         return FormatFixtures.supported();
@@ -95,7 +94,6 @@ class WrittenFilesValidateTest {
                                 ZenginCharset.MS932, dataValues(id, name), options,
                                 new LossCollector());
                     } catch (RuntimeException refused) {
-                        // Refusing is always allowed. Writing badly is not.
                         continue;
                     }
 

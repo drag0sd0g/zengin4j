@@ -14,7 +14,6 @@
  * @since 0.1.0
  */
 module io.zengin4j.core {
-
     exports io.zengin4j.core.annotation;
     exports io.zengin4j.core.charset;
     exports io.zengin4j.core.codec;

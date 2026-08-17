@@ -7,7 +7,6 @@ package io.zengin4j.codegen;
  * hand-transcribed byte layout from reaching a payment file (R-F1).
  */
 final class CodegenException extends RuntimeException {
-
     CodegenException(String message) {
         super(message);
     }

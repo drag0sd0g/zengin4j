@@ -34,7 +34,6 @@ import org.junit.jupiter.params.provider.MethodSource;
  * against the strictest field it could land in.
  */
 class GeneratorNamesTest {
-
     /** Enough payments that all eight names are drawn with overwhelming probability. */
     private static final int ENOUGH_TO_DRAW_EVERY_NAME = 200;
 

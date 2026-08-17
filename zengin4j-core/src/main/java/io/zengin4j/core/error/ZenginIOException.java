@@ -12,7 +12,6 @@ import java.io.IOException;
  * @since 0.1.0
  */
 public final class ZenginIOException extends ZenginException {
-
     /**
      * Wraps an I/O failure.
      *

@@ -41,7 +41,6 @@ import java.util.Random;
  * {@code 999}, accounts beginning {@code 9}.
  */
 public final class RandomZenginFiles {
-
     /** Names chosen to exercise voiced and semi-voiced marks, which are separate bytes (§17). */
     private static final List<String> NAMES = List.of(
             "ﾔﾏﾀﾞ ﾀﾛｳ", "ﾃｽﾄ ﾊﾅｺ", "ｻﾝﾌﾟﾙ ｲﾁﾛｳ", "ｶﾞｸﾌﾞﾁ ｼﾞﾛｳ", "ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ",
@@ -146,8 +145,6 @@ public final class RandomZenginFiles {
     private static FileFraming framing(Random random) {
         SeparatorStyle separator = SEPARATORS.get(random.nextInt(SEPARATORS.size()));
         boolean trailing = separator != SeparatorStyle.NONE && random.nextBoolean();
-        // Byte order marks are rare in the wild and rare here; the reader must
-        // be told to strip them, so a property using this must say so.
         boolean mark = random.nextInt(8) == 0;
         boolean eof = random.nextInt(4) == 0;
         return new FileFraming(mark, separator, trailing, eof);
@@ -174,9 +171,6 @@ public final class RandomZenginFiles {
             long amount) {
         Map<String, String> values = new LinkedHashMap<>();
         for (FieldDescriptor field : record.fields()) {
-            // Constants and filler are the encoder's business; setting them
-            // here would be asserting that this code and the encoder agree
-            // about what it already guarantees.
             if (field.constant().isPresent() || field.filler()) {
                 continue;
             }
@@ -195,10 +189,6 @@ public final class RandomZenginFiles {
             return java.util.Optional.of(monthDay(random));
         }
         if (field.format().filter(f -> f == FieldFormat.CODE_KUBUN).isPresent()) {
-            // Always JIS. The other value in the list is EBCDIC, and the reader
-            // rejects such a file by name rather than decoding it (ADR-0010) —
-            // so drawing it at random would generate a file the library is
-            // designed to refuse, and INV-1 speaks only of *valid* files.
             return java.util.Optional.of("0");
         }
         if (field.codeList().isPresent()) {
@@ -211,11 +201,8 @@ public final class RandomZenginFiles {
                     : java.util.Optional.of(pick(random, permitted));
         }
         if (field.type() == FieldType.N) {
-            // Leading 9 keeps every generated identifier inside the invented
-            // range (R-L1), whatever the field turns out to be.
             return java.util.Optional.of("9" + digits(random, field.length() - 1));
         }
-        // Text: a name that fits, sometimes empty where the field permits it.
         if (!field.required() && random.nextInt(4) == 0) {
             return java.util.Optional.of("");
         }
@@ -294,7 +281,6 @@ public final class RandomZenginFiles {
      */
     public record RandomFile(
             byte[] bytes, FileFraming framing, int batches, int payments, long total, int records) {
-
         @Override
         public String toString() {
             return "file[" + bytes.length + " bytes, " + records + " records, " + batches + " batch(es), "

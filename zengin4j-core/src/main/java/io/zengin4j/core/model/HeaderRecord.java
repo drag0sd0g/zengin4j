@@ -18,7 +18,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public non-sealed interface HeaderRecord extends ZenginRecord {
-
     @Override
     default RecordKind kind() {
         return RecordKind.HEADER;

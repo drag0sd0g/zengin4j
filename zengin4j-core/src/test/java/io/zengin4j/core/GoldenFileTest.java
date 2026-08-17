@@ -44,7 +44,6 @@ import org.junit.jupiter.api.Test;
  * read is worse than no golden at all.
  */
 class GoldenFileTest {
-
     /**
      * The corpus lives under {@code input/} because the identifier scan cannot
      * read a fixed-length file: fields abut with no separator, so every digit
@@ -86,9 +85,6 @@ class GoldenFileTest {
         }
         String expected = new String(resource(EXPECTED), StandardCharsets.UTF_8);
 
-        // Checked separately so this failure names itself. A checkout that
-        // rewrote the line endings otherwise fails the comparison below with a
-        // diff of invisible characters, on Windows and nowhere else (R-T18).
         assertThat(expected)
                 .as("the committed rendering reached the test with CRLF line endings, so git"
                         + " rewrote it on checkout — which .gitattributes exists to prevent")
@@ -162,8 +158,6 @@ class GoldenFileTest {
         return RandomZenginFiles.bytes(new Random(GOLDEN_SEED), descriptor).bytes();
     }
 
-    // --------------------------------------------------------------- rendering
-
     /**
      * Renders a parsed file one field per line. Stable, diffable, and it never
      * prints a value the record does not carry.
@@ -214,8 +208,6 @@ class GoldenFileTest {
     private static String pad(String id) {
         return id.length() >= 24 ? id : id + " ".repeat(24 - id.length());
     }
-
-    // ---------------------------------------------------------------- fixtures
 
     private static boolean regenerating() {
         return Boolean.getBoolean("zengin4j.golden.regenerate");

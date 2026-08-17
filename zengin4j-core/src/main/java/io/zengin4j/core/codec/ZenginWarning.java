@@ -22,7 +22,6 @@ import java.util.Objects;
  * @since 0.1.0
  */
 public record ZenginWarning(String code, String messageEn, String messageJa, long byteOffset) {
-
     /** A UTF-8 byte order mark was found at the start of the file and skipped. */
     public static final String BYTE_ORDER_MARK_STRIPPED = "W-BOM-STRIPPED";
 

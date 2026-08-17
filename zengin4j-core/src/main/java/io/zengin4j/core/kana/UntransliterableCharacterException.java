@@ -27,7 +27,6 @@ import java.util.Objects;
  * @since 0.4.0
  */
 public final class UntransliterableCharacterException extends ZenginException {
-
     private static final long serialVersionUID = 1L;
 
     /** How many offending characters to name before summarising the rest. */

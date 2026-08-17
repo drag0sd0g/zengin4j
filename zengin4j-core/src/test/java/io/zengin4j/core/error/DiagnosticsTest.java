@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
  * and enough context to act on (R-E3).
  */
 class DiagnosticsTest {
-
     /** R-E6: showing all four digits of a four-digit value would not be masking. */
     @Test
     void masksIdentifiersToTheirLastFourCharacters() {

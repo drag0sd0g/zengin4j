@@ -13,7 +13,6 @@ import io.zengin4j.core.error.ZenginException;
  * @since 0.4.0
  */
 public final class FieldTooSmallException extends ZenginException {
-
     private static final long serialVersionUID = 1L;
 
     private final int maxBytes;

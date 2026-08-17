@@ -22,7 +22,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public final class WriterOptions {
-
     private static final WriterOptions REPRODUCING = new WriterOptions(Optional.empty());
 
     private final Optional<FileFraming> framing;

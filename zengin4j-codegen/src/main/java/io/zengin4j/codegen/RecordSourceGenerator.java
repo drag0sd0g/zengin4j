@@ -23,7 +23,6 @@ import java.util.TreeSet;
  * from the descriptors.
  */
 final class RecordSourceGenerator {
-
     static final String PACKAGE = "io.zengin4j.core.model.generated";
     static final String GENERATOR = "io.zengin4j.codegen.RecordSourceGenerator";
 
@@ -133,8 +132,6 @@ final class RecordSourceGenerator {
                 + "package " + PACKAGE + ";" + NL;
         return file("package-info", content);
     }
-
-    // ------------------------------------------------------------ record class
 
     private String recordClass(FormatDescriptor format, RecordDescriptor record, String source) {
         String typeName = Names.typeName(format.id(), record.kind());
@@ -275,8 +272,6 @@ final class RecordSourceGenerator {
                 .append(';').append(NL)
                 .append("    }").append(NL).append(NL);
 
-        // And the same date under the name this format actually uses, so code
-        // written against a concrete record reads in its own terms (R-D1, OQ-6).
         dated.ifPresent(field -> out
                 .append("    /**").append(NL)
                 .append("     * Returns ").append(field.nameJa()).append(" (")
@@ -295,7 +290,6 @@ final class RecordSourceGenerator {
 
     private void textAccessor(StringBuilder out, RecordDescriptor record, String accessor) {
         if (record.find(accessor).isPresent()) {
-            // The record component of the same name already satisfies the role.
             return;
         }
         out.append("    @Override").append(NL)
@@ -368,8 +362,6 @@ final class RecordSourceGenerator {
         out.append(NL).append("                + \"]\";").append(NL)
                 .append("    }").append(NL).append(NL);
     }
-
-    // ----------------------------------------------------------- factory class
 
     private String factoryClass(FormatDescriptor format, String source) {
         String typeName = Names.factoryTypeName(format.id());
@@ -457,8 +449,6 @@ final class RecordSourceGenerator {
         return kind.name().toLowerCase(java.util.Locale.ROOT);
     }
 
-    // ---------------------------------------------------------------- helpers
-
     private static List<RecordKind> orderedKinds(FormatDescriptor format) {
         List<RecordKind> kinds = new ArrayList<>();
         for (RecordKind kind : List.of(RecordKind.HEADER, RecordKind.DATA, RecordKind.TRAILER, RecordKind.END)) {
@@ -523,7 +513,6 @@ final class RecordSourceGenerator {
             case HEADER -> reserved.addAll(Set.of("codeKubun", "effectiveDate"));
             case END -> reserved.add("filler");
             default -> {
-                // no additional reservations
             }
         }
         for (FieldDescriptor field : record.fields()) {
@@ -543,7 +532,6 @@ final class RecordSourceGenerator {
                 requireFormat(format, record, FieldFormat.AMOUNT, "TrailerRecord.totalAmount()");
             }
             default -> {
-                // header and end have no field a descriptor must supply
             }
         }
         switch (record.kind()) {
@@ -557,7 +545,6 @@ final class RecordSourceGenerator {
                 requireType(format, record, "totalAmount", "long");
             }
             default -> {
-                // end records carry no typed role accessors
             }
         }
     }

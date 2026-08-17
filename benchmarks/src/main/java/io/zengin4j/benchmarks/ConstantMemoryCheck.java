@@ -31,7 +31,6 @@ import java.time.Duration;
  * is the property under test.
  */
 public final class ConstantMemoryCheck {
-
     private static final int DEFAULT_BYTES = 1024 * 1024 * 1024;
 
     private ConstantMemoryCheck() {
@@ -68,8 +67,6 @@ public final class ConstantMemoryCheck {
                 RecordView view = reader.next();
                 records++;
                 if (view.kind() == RecordKind.DATA) {
-                    // Decoded, not merely skipped: the point is that reading
-                    // values does not retain them either (R-P3).
                     total += view.asLong(view.field("amount"));
                     payments++;
                 }
@@ -109,7 +106,6 @@ public final class ConstantMemoryCheck {
      * property the reader is being tested for.
      */
     private static final class GeneratedFileStream extends InputStream {
-
         private static final int PAYMENTS_PER_BATCH = 2000;
         private static final byte[] SEPARATOR = {'\r', '\n'};
 

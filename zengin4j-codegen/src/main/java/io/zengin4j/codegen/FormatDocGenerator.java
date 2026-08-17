@@ -22,7 +22,6 @@ import java.util.Map;
  * layout is a confirmed one.
  */
 final class FormatDocGenerator {
-
     private static final String NL = "\n";
 
     private final Path docsRoot;

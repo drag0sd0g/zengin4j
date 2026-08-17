@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
  * API is not really implemented.
  */
 class BuilderEncodingPolicyTest {
-
     private static final FormatDescriptor SOUGOU = FormatRegistry.defaults()
             .byId(FormatId.of("sougou-furikomi")).orElseThrow();
 
@@ -53,8 +52,6 @@ class BuilderEncodingPolicyTest {
                 .decode(record.rawBytes(), field.offset(), field.length()).strip();
     }
 
-    // ---------------------------------------------------------------- default
-
     @Test
     void theBuilderStillRefusesByDefault() {
         assertThatIllegalArgumentException()
@@ -65,8 +62,6 @@ class BuilderEncodingPolicyTest {
                         .build())
                 .withMessageContaining("cannot be written");
     }
-
-    // --------------------------------------------------------- TRANSLITERATE
 
     @Test
     void theBuilderCanBeToldToTransliterate() {
@@ -142,8 +137,6 @@ class BuilderEncodingPolicyTest {
         assertThat(loss.build().atLeast(LossSeverity.MATERIAL)).isNotEmpty();
     }
 
-    // --------------------------------------------------------------- REPLACE
-
     @Test
     void theBuilderCanBeToldToReplace() {
         LossCollector loss = new LossCollector();
@@ -159,8 +152,6 @@ class BuilderEncodingPolicyTest {
         assertThat(nameOf(file, SOUGOU)).isEqualTo("ﾔﾏﾀﾞ ﾀﾛｳ");
         assertThat(loss.build().entries()).isNotEmpty();
     }
-
-    // ----------------------------------------------------------- the promise
 
     /**
      * Whatever policy the builder is given, the file it produces is writable.
@@ -197,8 +188,6 @@ class BuilderEncodingPolicyTest {
             }
         }
     }
-
-    // ------------------------------------------------------------- the shape
 
     /**
      * The collector is not optional.

@@ -15,7 +15,6 @@ import io.zengin4j.core.model.ZenginRecord;
  */
 @FunctionalInterface
 public interface RecordFactory {
-
     /**
      * Materialises the record the view is positioned on.
      *

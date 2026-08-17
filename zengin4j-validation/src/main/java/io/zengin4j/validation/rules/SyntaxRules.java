@@ -31,7 +31,6 @@ import java.util.function.Consumer;
  * @since 0.2.0
  */
 public final class SyntaxRules {
-
     private SyntaxRules() {
     }
 
@@ -87,8 +86,6 @@ public final class SyntaxRules {
         if (bytes.length < context.descriptor().recordLength()) {
             return null;
         }
-        // By discriminator rather than by kind: a MalformedRecord reports its
-        // kind as MALFORMED, which no descriptor declares.
         RecordDescriptor layout = context.descriptor().forDiscriminator(bytes[0]).orElse(null);
         return layout == null || bytes.length < layout.recordLength() ? null : layout;
     }
@@ -105,7 +102,6 @@ public final class SyntaxRules {
 
     /** V-201. */
     static final class NumericFieldsHoldDigits extends AbstractRule {
-
         NumericFieldsHoldDigits() {
             super("V-201", Severity.ERROR, RuleScope.FIELD);
         }
@@ -135,7 +131,6 @@ public final class SyntaxRules {
 
     /** V-202. */
     static final class CharactersArePermitted extends AbstractRule {
-
         CharactersArePermitted() {
             super("V-202", Severity.ERROR, RuleScope.FIELD);
         }
@@ -149,10 +144,6 @@ public final class SyntaxRules {
                 List<CharacterViolation> violations = CharacterSet.validateField(
                         bytes, field.offset(), field.length(), field.charClass());
                 for (CharacterViolation violation : violations) {
-                    // Built directly rather than through Messages.format: the
-                    // violation already carries its own bilingual description,
-                    // including the correction, and the bundle's pattern would
-                    // otherwise wrap the English one into the Japanese message.
                     out.accept(finding()
                             .at(record.recordNumber(), record.byteOffset())
                             .field(field.id(), violation.offset())
@@ -174,7 +165,6 @@ public final class SyntaxRules {
      * that re-encoding would silently normalise away.
      */
     static final class PaddingIsCorrect extends AbstractRule {
-
         PaddingIsCorrect() {
             super("V-203", Severity.WARNING, RuleScope.FIELD);
         }
@@ -190,9 +180,6 @@ public final class SyntaxRules {
                     return;
                 }
                 boolean numeric = field.type() == FieldType.N;
-                // N is right-aligned and zero-padded, so a leading space is
-                // wrong. C is left-aligned and space-padded, so a leading space
-                // means the value was pushed right.
                 boolean misaligned = numeric
                         ? value.charAt(0) == ' '
                         : value.charAt(0) == ' ' && !value.isBlank();
@@ -214,7 +201,6 @@ public final class SyntaxRules {
 
     /** V-204. */
     static final class ConstantsHold extends AbstractRule {
-
         ConstantsHold() {
             super("V-204", Severity.ERROR, RuleScope.FIELD);
         }
@@ -242,7 +228,6 @@ public final class SyntaxRules {
      * codes beyond what any one format needs.
      */
     static final class CodeListMembership extends AbstractRule {
-
         CodeListMembership() {
             super("V-205", Severity.WARNING, RuleScope.FIELD);
         }
@@ -288,7 +273,6 @@ public final class SyntaxRules {
      * that no Japanese reader can pronounce and no institution will accept.
      */
     static final class VoicingMarksAreLegal extends AbstractRule {
-
         VoicingMarksAreLegal() {
             super("V-206", Severity.ERROR, RuleScope.FIELD);
         }

@@ -21,7 +21,6 @@ import java.util.List;
  * ranges real institutions use (R-L1, P1).
  */
 final class Fixtures {
-
     static final SougouFurikomiFixtures TESTKIT = SougouFurikomiFixtures.create();
 
     private Fixtures() {
@@ -46,10 +45,6 @@ final class Fixtures {
         try {
             return ZenginValidator.defaults().validate(read(bytes));
         } catch (io.zengin4j.core.error.ZenginException unreadable) {
-            // The reader may refuse bytes that are not a file at all. That is
-            // the reader's contract, not the validator's; this helper exists to
-            // prove the *validator* never throws, so an unreadable input is
-            // reported as an empty report rather than propagated.
             return new ValidationReport(List.of());
         }
     }
@@ -109,13 +104,10 @@ final class Fixtures {
         inputs.add("not a zengin file at all".getBytes(StandardCharsets.UTF_8));
         inputs.add(new byte[120]);
         inputs.add(TESTKIT.file());
-        // A header and nothing else: no data, no trailer, no end record.
         inputs.add(TESTKIT.header());
-        // A truncated record.
         byte[] truncated = new byte[60];
         System.arraycopy(TESTKIT.header(), 0, truncated, 0, 60);
         inputs.add(truncated);
-        // Every byte value, in a record-length block.
         byte[] everyByte = new byte[240];
         for (int i = 0; i < everyByte.length; i++) {
             everyByte[i] = (byte) i;

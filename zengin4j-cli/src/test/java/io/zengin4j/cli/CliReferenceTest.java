@@ -31,7 +31,6 @@ import picocli.CommandLine;
  * trusted — the same treatment {@code docs/validation-rules.md} gets.
  */
 class CliReferenceTest {
-
     private static final Path REFERENCE = Path.of("..", "docs", "cli.md");
 
     private static final Pattern OPTION = Pattern.compile("--[a-z][a-z-]+");

@@ -22,7 +22,6 @@ import java.util.Objects;
  * @since 0.4.0
  */
 public final class TransliterationOptions {
-
     private static final TransliterationOptions DEFAULTS = builder().build();
 
     private final CharacterClass characterClass;
@@ -126,15 +125,11 @@ public final class TransliterationOptions {
      * @since 0.4.0
      */
     public static final class Builder {
-
         private CharacterClass characterClass = CharacterClass.PARTY_NAME;
         private ZenginCharset charset = ZenginCharset.defaultCharset();
         private TruncationPolicy truncation = TruncationPolicy.REJECT_IF_TOO_LONG;
         private HiraganaPolicy hiragana = HiraganaPolicy.REJECT;
         private UnmappableCharacterPolicy unmappable = UnmappableCharacterPolicy.REJECT;
-        // A hyphen, because it is the only marker the name classes agree on.
-        // '*' is permitted by none of them, '.' only by party names — and a
-        // marker the field refuses turns a shortened name into a rejected file.
         private String truncationMarker = "-";
 
         private Builder() {

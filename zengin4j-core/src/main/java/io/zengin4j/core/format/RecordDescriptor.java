@@ -25,7 +25,6 @@ public record RecordDescriptor(
         byte discriminator,
         int recordLength,
         List<FieldDescriptor> fields) {
-
     /**
      * Validates the layout.
      *
@@ -150,8 +149,6 @@ public record RecordDescriptor(
     public FieldDescriptor field(String id) {
         FieldDescriptor found = lookup(id);
         if (found == null) {
-            // Built only on the failing path, so the message costs nothing on
-            // the successful one.
             throw FormatDescriptorException.forFormat(formatId.value(),
                     "record '" + kind.descriptorKey() + "' has no field '" + id + "'; declared fields: "
                             + String.join(", ", fields.stream().map(FieldDescriptor::id).toList()));

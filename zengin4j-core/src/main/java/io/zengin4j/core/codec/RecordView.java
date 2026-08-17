@@ -38,7 +38,6 @@ import java.util.OptionalLong;
  * @since 0.1.0
  */
 public final class RecordView {
-
     private final byte[] buffer;
     private final int offset;
     private final int length;

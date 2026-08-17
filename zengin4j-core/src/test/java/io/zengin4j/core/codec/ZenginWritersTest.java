@@ -25,7 +25,6 @@ import org.junit.jupiter.api.io.TempDir;
  * (R-D5).
  */
 class ZenginWritersTest {
-
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
     private final ReaderOptions options = Fixtures.optionsBuilder()
@@ -114,7 +113,6 @@ class ZenginWritersTest {
      */
     @Test
     void writesRecordsFromTheirRawBytesRatherThanReEncodingThem() {
-        // Put a byte in the header's filler that no accessor models.
         byte[] header = Fixtures.patch(Fixtures.header(descriptor), 110, "XYZ");
         byte[] source = Fixtures.join(Fixtures.CRLF, header, Fixtures.data(descriptor),
                 Fixtures.trailer(descriptor, 1, Fixtures.AMOUNT), Fixtures.end(descriptor));

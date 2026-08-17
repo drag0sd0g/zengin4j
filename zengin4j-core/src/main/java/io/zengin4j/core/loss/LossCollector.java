@@ -18,7 +18,6 @@ import java.util.Objects;
  * @since 0.4.0
  */
 public final class LossCollector {
-
     private final List<LossEntry> entries = new ArrayList<>();
 
     /**

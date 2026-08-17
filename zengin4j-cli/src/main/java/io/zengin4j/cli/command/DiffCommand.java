@@ -44,7 +44,6 @@ import picocli.CommandLine;
         mixinStandardHelpOptions = true,
         description = "Reports what changed between two files, field by field.")
 public final class DiffCommand implements Callable<Integer> {
-
     @CommandLine.Parameters(index = "0", paramLabel = "BEFORE", description = "The earlier file.")
     Path before;
 
@@ -103,8 +102,6 @@ public final class DiffCommand implements Callable<Integer> {
         try {
             pairs = RecordAlignment.align(bytesOf(left), bytesOf(right));
         } catch (RecordAlignment.TooLargeToAlignException tooLarge) {
-            // Reported rather than thrown, so it cannot reach the top-level
-            // handler and be mistaken for a defect. It is a stated limit.
             err.println(tooLarge.getMessage());
             return ExitCode.ERRORS.value();
         }
@@ -116,8 +113,6 @@ public final class DiffCommand implements Callable<Integer> {
         } else {
             text(out, left, pairs, changed);
         }
-        // Exit 1 when the files differ, matching what every diff tool does and
-        // what a script comparing a generated file to a committed one expects.
         return changed ? ExitCode.WARNINGS.value() : ExitCode.OK.value();
     }
 
@@ -134,8 +129,6 @@ public final class DiffCommand implements Callable<Integer> {
         records.sort(java.util.Comparator.comparingInt(ZenginRecord::recordNumber));
         return records.stream().map(ZenginRecord::rawBytes).toList();
     }
-
-    // ------------------------------------------------------------------ text
 
     private void text(PrintWriter out, ZenginFile left, List<RecordAlignment.Pair> pairs,
             boolean changed) {
@@ -203,9 +196,6 @@ public final class DiffCommand implements Callable<Integer> {
     private List<FieldChange> fieldChanges(ZenginFile file, byte[] left, byte[] right) {
         RecordDescriptor layout = file.descriptor().forDiscriminator(left[0]).orElse(null);
         if (layout == null || left[0] != right[0]) {
-            // Different record kinds at the same position: there is no
-            // field-level comparison to make, so say so rather than align
-            // 受取人名 against 合計金額.
             return List.of(new FieldChange("(record kind)", "データ区分", 0,
                     String.valueOf((char) left[0]), String.valueOf((char) right[0])));
         }
@@ -227,8 +217,6 @@ public final class DiffCommand implements Callable<Integer> {
         }
         return changes;
     }
-
-    // ------------------------------------------------------------------ json
 
     private String json(ZenginFile left, List<RecordAlignment.Pair> pairs, boolean changed) {
         Json json = new Json();

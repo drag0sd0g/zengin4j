@@ -18,7 +18,6 @@ import java.util.Objects;
  * @since 0.4.0
  */
 public final class LossReport {
-
     private static final LossReport EMPTY = new LossReport(List.of());
 
     private final List<LossEntry> entries;

@@ -6,7 +6,6 @@ package io.zengin4j.core.error;
  * @since 0.1.0
  */
 public final class Diagnostics {
-
     /** Number of trailing characters left visible when masking (R-E6). */
     public static final int VISIBLE_TRAILING_CHARS = 4;
 

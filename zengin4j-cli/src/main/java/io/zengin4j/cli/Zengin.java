@@ -56,7 +56,6 @@ import picocli.CommandLine;
             "No command prints a full account number unless --unsafe-print is given.",
         })
 public final class Zengin implements Callable<Integer> {
-
     @CommandLine.Spec
     CommandLine.Model.CommandSpec spec;
 
@@ -103,30 +102,8 @@ public final class Zengin implements Callable<Integer> {
         CommandLine commandLine = new CommandLine(new Zengin())
                 .setOut(out)
                 .setErr(err)
-                // No ANSI colour, ever. picocli's AUTO mode decided the Windows
-                // CI runners were a colour terminal and wrote escape codes into
-                // the usage text, where they are invisible to a person and very
-                // visible to anything reading the output.
-                //
-                // The obvious alternative — detect a terminal — is not portable
-                // across this project's own matrix. `System.console() != null`
-                // means "not redirected" on JDK 21, but JDK 22 changed it to
-                // return a Console even when redirected, with the real check
-                // moving to Console.isTerminal(); this module compiles with
-                // --release 21 and cannot call that. A heuristic that answers
-                // differently on JDK 21 and JDK 25 is the platform-dependence
-                // this library exists to pin down.
-                //
-                // And on the merits it is the right default anyway. This tool's
-                // output is a diagnostic dump that gets piped to files, diffed,
-                // and pasted into tickets and CI logs; escape codes are noise in
-                // all of those, and the field table carries its structure in the
-                // alignment rather than in colour. If colour is ever wanted, an
-                // explicit --color flag is the honest way to ask for it.
                 .setColorScheme(CommandLine.Help.defaultColorScheme(CommandLine.Help.Ansi.OFF))
                 .setCaseInsensitiveEnumValuesAllowed(true)
-                // Without this, a mistyped option produces a stack trace and a
-                // usage error is indistinguishable from a crash.
                 .setParameterExceptionHandler((exception, parsed) -> {
                     CommandLine failing = exception.getCommandLine();
                     failing.getErr().println(exception.getMessage());
@@ -143,11 +120,6 @@ public final class Zengin implements Callable<Integer> {
         try {
             return commandLine.execute(args);
         } catch (Throwable fatal) {
-            // picocli's handler catches Exception, not Error. Without this an
-            // OutOfMemoryError escapes uncaught, the JVM exits 1, and 1 already
-            // means "the files differ" — so a crashed `zengin diff` would tell a
-            // script the comparison had succeeded and found changes. Reporting
-            // an internal failure as an error is a smaller lie than that.
             err.println("internal error: " + describe(fatal)
                     + "\nThis is a defect in zengin4j, not in your file. "
                     + "Please report it at https://github.com/drag0sd0g/zengin4j/issues");
@@ -163,10 +135,6 @@ public final class Zengin implements Callable<Integer> {
      * normal use, so the message is the message.
      */
     private static String describe(Throwable exception) {
-        // The library's remedy is a Java API call, which is the right advice
-        // for a caller writing code and useless advice at a shell prompt. R-E3
-        // asks a diagnostic to say how to fix it, so the fix is restated in the
-        // terms the reader actually has (R-CLI6).
         if (exception instanceof UnverifiedFormatException unverified) {
             return "format '" + unverified.formatId() + "' has a byte layout that no two"
                     + " independent published sources confirm, so reading it may silently misread"
@@ -180,8 +148,6 @@ public final class Zengin implements Callable<Integer> {
             return CliMessages.forTheCommandLine(zengin.messageEn());
         }
         if (exception instanceof java.nio.file.NoSuchFileException missing) {
-            // getMessage() on this one is the bare path, which printed alone
-            // reads like a success line rather than a failure.
             return "no such file or directory: " + missing.getFile();
         }
         if (exception instanceof java.nio.file.AccessDeniedException denied) {
@@ -205,8 +171,6 @@ public final class Zengin implements Callable<Integer> {
             return ExitCode.IO.value();
         }
         if (exception instanceof IllegalArgumentException) {
-            // A format id nobody has, a seed that is not a number: the command
-            // line parsed, but what it asked for cannot be done.
             return ExitCode.USAGE.value();
         }
         return ExitCode.ERRORS.value();
@@ -226,7 +190,6 @@ public final class Zengin implements Callable<Integer> {
 
     /** Reports the version from the jar manifest, falling back for a source build. */
     static final class Version implements CommandLine.IVersionProvider {
-
         @Override
         public String[] getVersion() {
             Package pkg = Zengin.class.getPackage();

@@ -34,7 +34,6 @@ import picocli.CommandLine;
         mixinStandardHelpOptions = true,
         description = "Checks a file against the rule set and reports what is wrong with it.")
 public final class ValidateCommand implements Callable<Integer> {
-
     @CommandLine.Parameters(index = "0", paramLabel = "FILE", description = "The file to check.")
     Path file;
 
@@ -102,11 +101,6 @@ public final class ValidateCommand implements Callable<Integer> {
         ValidationReport report = builder.build()
                 .validate(file, reading.toReaderOptions(err));
 
-        // Translated on the way out, not only in the exception handler: this
-        // command never throws for a bad file — a file that cannot be read
-        // becomes a V-100 finding and goes to stdout as part of the report
-        // (R-V1). That path carries the library's Java remedy with it, and the
-        // exception handler never sees it.
         switch (outFormat) {
             case TEXT -> out.print(CliMessages.forTheCommandLine(report.toText(locale())));
             case JSON -> out.print(CliMessages.forTheCommandLine(report.toJson()));

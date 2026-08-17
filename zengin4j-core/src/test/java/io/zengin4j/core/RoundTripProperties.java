@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
  * schedule is worse than no property test: it teaches the team to re-run CI.
  */
 class RoundTripProperties {
-
     private static final long SEED = 0x5A5A_2026L;
 
     private static final FormatDescriptor DESCRIPTOR = Fixtures.descriptor();
@@ -161,7 +160,6 @@ class RoundTripProperties {
                     assertThat(none).hasSize(records * Fixtures.RECORD_LENGTH);
                     assertThat(crlf).hasSize(records * (Fixtures.RECORD_LENGTH + 2));
 
-                    // Both remain readable, and carry the same records.
                     assertThat(ZenginReaders.readFile(new ByteArrayInputStream(none), OPTIONS).allData())
                             .isEqualTo(parsed.allData());
                 });

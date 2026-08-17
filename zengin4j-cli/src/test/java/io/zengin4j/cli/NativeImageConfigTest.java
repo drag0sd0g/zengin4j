@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test;
  * about picocli's own resources, so it is the half that needs guarding.
  */
 class NativeImageConfigTest {
-
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static final Path RESOURCE_CONFIG = Path.of("src", "main", "resources", "META-INF",

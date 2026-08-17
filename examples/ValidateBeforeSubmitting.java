@@ -33,7 +33,6 @@ import java.util.Locale;
  * <p>Every identifier here is invented (R-L1, P1).
  */
 public final class ValidateBeforeSubmitting {
-
     private ValidateBeforeSubmitting() {
     }
 
@@ -42,14 +41,9 @@ public final class ValidateBeforeSubmitting {
 
         ZenginFile file = deliberatelyFlawedFile(kit);
 
-        // A validator with everything switched on. The calendar and the
-        // reference data are optional (R-V5, R-V6) — without them the V-4xx and
-        // V-5xx rules simply do not run, and everything else is unaffected.
         ZenginValidator validator = ZenginValidator.builder()
                 .withCalendar(JapaneseBankCalendar.bundled())
                 .withReferenceData(referenceData())
-                // MMDD carries no year. Which year you attach decides whether a
-                // date is a holiday, so it is an explicit choice.
                 .withDateResolver(MonthDayResolver.forwardLooking(LocalDate.of(2026, 8, 17)))
                 .build();
 
@@ -68,8 +62,6 @@ public final class ValidateBeforeSubmitting {
         System.out.println("  " + report.counts().get(Severity.ERROR) + " error(s) block it; "
                 + report.counts().get(Severity.WARNING) + " warning(s) do not.");
 
-        // Errors stop the file. Warnings are for a person to look at — a report
-        // that blocked on them is a report people learn to override.
         for (Finding finding : report.findings(Severity.WARNING)) {
             System.out.println("  worth checking: " + finding.toLine(Locale.ENGLISH));
         }
@@ -82,7 +74,6 @@ public final class ValidateBeforeSubmitting {
         System.out.println("  SARIF renders natively as annotations in GitHub, GitLab and Azure");
         System.out.println("  DevOps, so a validation run in CI lands on the file itself.");
 
-        // Suppression, for the rule your institution disagrees with (R-V3).
         ValidationReport relaxed = ZenginValidator.builder()
                 .withCalendar(JapaneseBankCalendar.bundled())
                 .withDateResolver(MonthDayResolver.forwardLooking(LocalDate.of(2026, 8, 17)))
@@ -109,7 +100,6 @@ public final class ValidateBeforeSubmitting {
      */
     private static ZenginFile deliberatelyFlawedFile(SougouFurikomiFixtures kit) {
         byte[] header = kit.header();
-        // 振込指定日 at offset 54: 2026-08-22 is a Saturday.
         System.arraycopy("0822".getBytes(java.nio.charset.StandardCharsets.US_ASCII), 0,
                 header, 54, 4);
 

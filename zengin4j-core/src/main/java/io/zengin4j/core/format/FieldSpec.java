@@ -52,7 +52,6 @@ public record FieldSpec(
         Optional<String> note,
         CharacterClass charClass,
         List<String> codes) {
-
     /**
      * Validates the components.
      */

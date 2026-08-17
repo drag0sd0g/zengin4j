@@ -18,7 +18,6 @@ import java.time.LocalDate;
  * @since 0.2.0
  */
 public final class BeyondCalendarHorizonException extends RuntimeException {
-
     private static final long serialVersionUID = 1L;
 
     private final transient LocalDate requested;

@@ -11,7 +11,6 @@ package io.zengin4j.core.codec;
  * @since 0.4.0
  */
 public enum CharacterWritePolicy {
-
     /**
      * Refuse, naming the characters. The default.
      *

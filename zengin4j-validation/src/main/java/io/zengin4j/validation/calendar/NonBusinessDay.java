@@ -14,10 +14,8 @@ import java.util.Optional;
  * @since 0.2.0
  */
 public record NonBusinessDay(Kind kind, Optional<String> name) {
-
     /** Categories of non-business day. */
     public enum Kind {
-
         /** Funds move. */
         BUSINESS_DAY,
 

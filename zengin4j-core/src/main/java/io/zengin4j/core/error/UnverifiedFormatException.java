@@ -19,14 +19,12 @@ package io.zengin4j.core.error;
  * @since 0.1.0
  */
 public final class UnverifiedFormatException extends ZenginException {
-
     /**
      * Which operation was refused, so the message can name the right opt-in.
      *
      * @since 0.1.0
      */
     public enum Operation {
-
         /** Parsing bytes into records. */
         READING("parsing it may silently misread financial instructions",
                 "ReaderOptions.builder().allowUnverifiedFormats(true)",

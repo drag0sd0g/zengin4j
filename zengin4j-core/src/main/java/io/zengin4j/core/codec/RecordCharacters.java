@@ -21,7 +21,6 @@ import java.util.Objects;
  * @since 0.1.0
  */
 public final class RecordCharacters {
-
     private RecordCharacters() {
     }
 
@@ -36,6 +35,11 @@ public final class RecordCharacters {
      * space-padded and every class permits a space, so padding never registers.
      * A field padded with something other than a space is a genuine finding.
      *
+     * <p><strong>The field loop is indexed rather than enhanced-for, and must
+     * stay that way</strong> (R-P3). This runs once per record, so an iterator
+     * per call is an allocation per call; written the tidier way it failed the
+     * allocation gate on four CI jobs at once.
+     *
      * @param record     the record's bytes; must be at least the record length
      * @param descriptor the record's layout
      * @return the violations in ascending offset order, empty if clean
@@ -48,8 +52,6 @@ public final class RecordCharacters {
 
         List<FieldDescriptor> fields = descriptor.fields();
         List<CharacterViolation> violations = null;
-        // Indexed rather than enhanced-for: this runs per record, and an
-        // iterator per call is an allocation per call (R-P3).
         for (int i = 0; i < fields.size(); i++) {
             FieldDescriptor field = fields.get(i);
             if (field.charClass() == CharacterClass.UNRESTRICTED) {
@@ -79,9 +81,6 @@ public final class RecordCharacters {
         Objects.requireNonNull(descriptor, "descriptor");
 
         List<FieldDescriptor> fields = descriptor.fields();
-        // Indexed for the same reason as above. This is the check the reader
-        // runs on every record under CharacterPolicy.WARN or REJECT, so an
-        // iterator here is an allocation per record.
         for (int i = 0; i < fields.size(); i++) {
             FieldDescriptor field = fields.get(i);
             if (field.charClass() != CharacterClass.UNRESTRICTED

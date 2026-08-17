@@ -37,7 +37,6 @@ import picocli.CommandLine;
         mixinStandardHelpOptions = true,
         description = "Describes a format's byte layout, or one field of it.")
 public final class ExplainCommand implements Callable<Integer> {
-
     @CommandLine.Option(
             names = "--format",
             paramLabel = "ID",
@@ -78,9 +77,6 @@ public final class ExplainCommand implements Callable<Integer> {
         }
         if (format == null) {
             if (field != null) {
-                // Silently listing the formats instead would answer a question
-                // nobody asked, and leave the reader thinking their field does
-                // not exist.
                 err.println("--field needs --format: the same field id means different things in "
                         + "different formats. Try `zengin explain --format=ID --field=" + field
                         + "`, or run `zengin explain` for the list of formats.");

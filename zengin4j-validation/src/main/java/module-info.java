@@ -14,7 +14,6 @@
  * @since 0.2.0
  */
 module io.zengin4j.validation {
-
     requires transitive io.zengin4j.core;
 
     exports io.zengin4j.validation;

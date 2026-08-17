@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
  * validator rejects.
  */
 class WritePolicyTest {
-
     private static final RecordDescriptor DATA = FormatRegistry.defaults()
             .byId(FormatId.of("sougou-furikomi")).orElseThrow()
             .record(RecordKind.DATA);
@@ -50,12 +49,8 @@ class WritePolicyTest {
         return ZenginCharset.MS932.decode(frame, field.offset(), field.length()).strip();
     }
 
-    // ---------------------------------------------------------------- REJECT
-
     @Test
     void theDefaultRefusesAFullWidthName() {
-        // Full-width katakana is two bytes in MS932 and not a permitted
-        // character, so this is refused on both counts.
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> RecordEncoder.encode(DATA, ZenginCharset.MS932,
                         withName("ヤマダ タロウ")));
@@ -76,8 +71,6 @@ class WritePolicyTest {
             assertThat(loss.isLossless()).as("%s should have nothing to record", policy).isTrue();
         }
     }
-
-    // --------------------------------------------------------- TRANSLITERATE
 
     @Test
     void transliterateConvertsAFullWidthNameAndSaysWhatItDid() {
@@ -151,8 +144,6 @@ class WritePolicyTest {
         assertThat(fieldOf(frame, PAYROLL_DATA, "beneficiaryName")).isEqualTo("ﾖｺ");
         assertThat(loss.build().bySeverity(LossSeverity.MATERIAL)).isNotEmpty();
     }
-
-    // --------------------------------------------------------------- REPLACE
 
     @Test
     void replaceSubstitutesTheConfiguredByteAndRecordsIt() {
@@ -236,7 +227,6 @@ class WritePolicyTest {
                         frame = RecordEncoder.encode(record, ZenginCharset.MS932, values,
                                 options, new LossCollector());
                     } catch (RuntimeException refused) {
-                        // Refusing is always a valid outcome; writing badly is not.
                         continue;
                     }
 
@@ -246,7 +236,6 @@ class WritePolicyTest {
                                     policy, input, record.formatId())
                             .isEmpty();
 
-                    // And no stranded voicing mark, which the class check cannot see.
                     for (int i = field.offset(); i < field.endOffset(); i++) {
                         int mark = frame[i] & 0xFF;
                         if (!io.zengin4j.core.charset.VoicingMarks.isMark(mark)) {
@@ -296,8 +285,6 @@ class WritePolicyTest {
         assertThat(CharacterSet.validate(frame, field.offset(), field.length(), field.charClass()))
                 .isEmpty();
     }
-
-    // ---------------------------------------------------------------- shape
 
     /**
      * Truncation is measured in the encoding the record is written in.

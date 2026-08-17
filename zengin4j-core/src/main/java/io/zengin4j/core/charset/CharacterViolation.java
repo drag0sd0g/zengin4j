@@ -11,7 +11,6 @@ import java.util.Objects;
  * @since 0.1.0
  */
 public record CharacterViolation(int offset, byte value, CharacterClass permitted) {
-
     /**
      * Validates the components.
      *

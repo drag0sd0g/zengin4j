@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
  * Milestone M1 and the framing requirements of issues 1.6 and 1.8.
  */
 class StreamingZenginReaderTest {
-
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
     /** M1: parse a synthetic 総合振込 file end to end. */
@@ -101,7 +100,6 @@ class StreamingZenginReaderTest {
         try (ZenginReader reader = open(Fixtures.file(descriptor))) {
             reader.next();
             RecordView data = reader.next();
-            // The field is 30 bytes; the name occupies eight of them.
             assertThat(data.asPaddedString(data.field("beneficiaryName")))
                     .isEqualTo(Fixtures.BENEFICIARY + " ".repeat(22));
         }
@@ -546,7 +544,6 @@ class StreamingZenginReaderTest {
 
     /** Hands out a few bytes at a time, so buffer refills happen mid-record. */
     private static final class DribblingStream extends InputStream {
-
         private final byte[] source;
         private final int chunk;
         private int position;

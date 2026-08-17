@@ -40,7 +40,6 @@ import java.util.Objects;
  * @since 0.1.0
  */
 public final class ZenginWriters {
-
     private ZenginWriters() {
     }
 
@@ -178,7 +177,6 @@ public final class ZenginWriters {
         records.sort(Comparator.comparingInt(ZenginRecord::recordNumber));
         return records;
     }
-
 
     /**
      * Returns the bytes a separator style writes, for callers assembling files

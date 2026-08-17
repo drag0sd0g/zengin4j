@@ -23,7 +23,6 @@ import org.junit.jupiter.api.io.TempDir;
  * R-MEM5: the convenient API materialises by default.
  */
 class BatchReaderTest {
-
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
     @Test
@@ -46,8 +45,6 @@ class BatchReaderTest {
             assertThat(reader.endRecord()).isPresent();
             assertThat(reader.unbatched()).isEmpty();
             assertThat(reader.framing().separator()).isEqualTo(SeparatorStyle.CRLF);
-            // The only warning is the one every 0.1.0 read raises: the layout
-            // is provisional and the caller opted in (R-0.3).
             assertThat(reader.warnings()).extracting(ZenginWarning::code)
                     .containsExactly(ZenginWarning.UNVERIFIED_FORMAT);
         }

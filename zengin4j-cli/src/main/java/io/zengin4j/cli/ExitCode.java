@@ -24,7 +24,6 @@ package io.zengin4j.cli;
  * @since 0.3.0
  */
 public enum ExitCode {
-
     /** Nothing to report. */
     OK(0),
 

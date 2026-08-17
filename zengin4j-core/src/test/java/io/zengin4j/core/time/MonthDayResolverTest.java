@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
  * §11.2 and §19.4: the year the file does not carry.
  */
 class MonthDayResolverTest {
-
     private static final LocalDate LATE_DECEMBER = LocalDate.of(2026, 12, 28);
     private static final LocalDate EARLY_JANUARY = LocalDate.of(2027, 1, 5);
 

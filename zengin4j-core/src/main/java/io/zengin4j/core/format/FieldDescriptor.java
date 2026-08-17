@@ -52,7 +52,6 @@ public record FieldDescriptor(
         Optional<String> note,
         CharacterClass charClass,
         List<String> codes) {
-
     /**
      * Validates the components.
      *

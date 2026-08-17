@@ -15,7 +15,6 @@ import java.util.List;
  * @since 0.1.0
  */
 public final class AmbiguousFormatException extends ZenginException {
-
     private final String typeCode;
     private final List<String> candidates;
 

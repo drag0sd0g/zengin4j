@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
  * rule that fires on clean files is how a report stops being read.
  */
 class RuleEdgeCaseTest {
-
     private static final SougouFurikomiFixtures KIT = Fixtures.TESTKIT;
 
     private ValidationReport validate(byte[] file) {
@@ -35,8 +34,6 @@ class RuleEdgeCaseTest {
                         KIT.trailer(1, SougouFurikomiFixtures.AMOUNT), KIT.end()),
                 SeparatorStyle.CRLF, false);
     }
-
-    // ------------------------------------------------------------ V-601
 
     /**
      * A name ending on a kana that takes a voicing mark, filling the field
@@ -74,8 +71,6 @@ class RuleEdgeCaseTest {
 
         assertThat(report.findingsOf("V-601")).isEmpty();
     }
-
-    // ------------------------------------------------------------ V-206
 
     /** A handakuten may follow only ﾊ-ﾎ; after ｶ it is illegal. */
     @Test
@@ -115,8 +110,6 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-206").get(0).messageEn()).contains("start of the field");
     }
 
-    // ------------------------------------------------------------ V-203
-
     /** A text field pushed right rather than left is padded on the wrong side. */
     @Test
     void v203_warnsAboutAMisalignedTextField() {
@@ -133,8 +126,6 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-203")).isEmpty();
     }
 
-    // ------------------------------------------------------------ V-102
-
     /** A record whose first byte names no record kind. */
     @Test
     void v102_reportsAnUnknownDataKubun() {
@@ -147,13 +138,11 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-102").get(0).messageEn()).contains("'5'");
     }
 
-    // ------------------------------------------------------------ V-205
-
     /** A code the list does not carry — a warning, because the lists are open. */
     @Test
     void v205_warnsAboutAValueOutsideItsCodeList() {
         byte[] data = KIT.data();
-        data[42] = '7';   // 預金種目, narrowed to 1/2/4/9 for 総合振込
+        data[42] = '7';
 
         ValidationReport report = validate(fileWith(data));
 
@@ -161,13 +150,11 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-205").get(0).severity()).isEqualTo(Severity.WARNING);
     }
 
-    // ------------------------------------------------------------ V-305
-
     @Test
     void v305_reportsTwoHeadersWithDifferentBusinessTypes() {
         byte[] second = KIT.header();
         second[1] = '1';
-        second[2] = '1';   // 種別コード 11 in a file whose first header says 21
+        second[2] = '1';
 
         byte[] file = SyntheticRecords.file(
                 List.of(KIT.header(), KIT.data(),
@@ -195,12 +182,9 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-305")).isEmpty();
     }
 
-    // ------------------------------------------------------------ V-605
-
     @Test
     void v605_reportsOnceWhenNoRecordUsesCustomerCodes() {
         byte[] data = KIT.data();
-        // 顧客コード1 at 91 and 2 at 101, blanked.
         java.util.Arrays.fill(data, 91, 111, (byte) ' ');
 
         ValidationReport report = validate(fileWith(data));
@@ -215,8 +199,6 @@ class RuleEdgeCaseTest {
 
         assertThat(report.findingsOf("V-605")).isEmpty();
     }
-
-    // ------------------------------------------------- engine and report
 
     /** Fail-fast stops after tier 1, so later tiers do not describe misalignment. */
     @Test
@@ -300,7 +282,7 @@ class RuleEdgeCaseTest {
     @Test
     void fillerIsNeverPoliced() {
         byte[] data = KIT.data();
-        java.util.Arrays.fill(data, 113, 120, (byte) 'a');   // ダミー, lowercase
+        java.util.Arrays.fill(data, 113, 120, (byte) 'a');
 
         ValidationReport report = validate(fileWith(data));
 

@@ -33,7 +33,6 @@ import java.util.ResourceBundle;
  * @since 0.2.0
  */
 public final class Messages {
-
     private static final ResourceBundle ENGLISH = load("messages.properties");
     private static final ResourceBundle JAPANESE = load("messages_ja.properties");
 
@@ -109,8 +108,6 @@ public final class Messages {
         if (arguments.length == 0) {
             return pattern;
         }
-        // Locale-specific: number grouping differs, and an amount rendered with
-        // the wrong separators in a payment finding is a small lie.
         return new MessageFormat(pattern, locale).format(arguments);
     }
 
@@ -122,7 +119,6 @@ public final class Messages {
      * @since 0.2.0
      */
     public record Bilingual(String en, String ja) {
-
         /**
          * Validates the components.
          */

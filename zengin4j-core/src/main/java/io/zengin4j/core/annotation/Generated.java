@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 public @interface Generated {
-
     /**
      * Returns the name of the generator that produced the annotated type.
      *

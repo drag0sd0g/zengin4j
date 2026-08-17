@@ -17,7 +17,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public final class RecordFramer {
-
     /** {@code 0x1A}, accepted as a trailing end-of-file marker (R-C8). */
     public static final byte EOF_BYTE = 0x1A;
 

@@ -8,7 +8,6 @@ package io.zengin4j.core.codec;
  * well-located failure instead of silently reading the wrong record's bytes.
  */
 final class ViewGeneration {
-
     private int value;
 
     int current() {

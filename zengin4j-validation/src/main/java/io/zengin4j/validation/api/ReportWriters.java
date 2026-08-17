@@ -21,7 +21,6 @@ import java.util.Objects;
  * @since 0.2.0
  */
 public final class ReportWriters {
-
     /** SARIF 2.1.0, which is what every consumer implements. */
     private static final String SARIF_VERSION = "2.1.0";
     private static final String SARIF_SCHEMA =
@@ -88,10 +87,6 @@ public final class ReportWriters {
                 json.name("tool").object(() -> json.name("driver").object(() -> {
                     json.field("name", "zengin4j");
                     json.field("informationUri", "https://github.com/drag0sd0g/zengin4j");
-                    // Every id a rule can emit, not just its own. A result
-                    // referencing a ruleId the document does not declare is a
-                    // SARIF document a consumer is entitled to reject, and the
-                    // composite rules emit several ids each.
                     json.name("rules").array(() -> {
                         for (String id : declaredIds(rules)) {
                             json.object(() -> {
@@ -114,11 +109,6 @@ public final class ReportWriters {
                                     json.name("physicalLocation").object(() -> {
                                         json.name("artifactLocation").object(() ->
                                                 json.field("uri", uri));
-                                        // A fixed-length file has one record per
-                                        // line when separators are present, so
-                                        // record number is the line a reviewer
-                                        // sees. byteOffset carries the exact
-                                        // position for tools that want it.
                                         json.name("region").object(() -> {
                                             finding.recordNumber().ifPresent(number ->
                                                     json.field("startLine", number));
@@ -146,8 +136,6 @@ public final class ReportWriters {
     }
 
     private static String describe(String id, List<Rule> rules) {
-        // A composite rule's own description covers its primary id; the others
-        // have their own entry in the message bundle.
         try {
             return Messages.description(id);
         } catch (java.util.MissingResourceException absent) {
@@ -175,7 +163,6 @@ public final class ReportWriters {
      * lambdas that mirror the document.
      */
     private static final class Json {
-
         private final StringBuilder out = new StringBuilder();
         private int depth;
         private boolean needsComma;

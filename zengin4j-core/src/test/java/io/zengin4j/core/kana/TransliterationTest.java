@@ -22,14 +22,11 @@ import org.junit.jupiter.params.provider.ValueSource;
  * @see TruncationTest for the dakuten hazard (R-T11, INV-4)
  */
 class TransliterationTest {
-
     private static final TransliterationOptions PARTY = TransliterationOptions.builder()
             .characterClass(CharacterClass.PARTY_NAME).build();
 
     private static final TransliterationOptions PAYROLL = TransliterationOptions.builder()
             .characterClass(CharacterClass.PAYROLL_NAME).build();
-
-    // -------------------------------------------------------------- narrowing
 
     @Test
     void katakanaBecomesHalfWidth() {
@@ -73,8 +70,6 @@ class TransliterationTest {
         assertThat(KanaTransliterator.toHalfWidth("ﾀﾛｳ").text()).isEqualTo("ﾀﾛｳ");
         assertThat(KanaTransliterator.toHalfWidth("ﾀﾛｳ").isLossless()).isTrue();
     }
-
-    // ------------------------------------------------- the corrections to R-K2
 
     /**
      * R-K2 says to map ー to ｰ. This library's own validator disagrees.
@@ -126,8 +121,6 @@ class TransliterationTest {
                 .as("'%s' became '%s'", small, result.text())
                 .isTrue();
     }
-
-    // --------------------------------------------------------- the field class
 
     /**
      * The same name transliterates differently depending on the field.
@@ -185,8 +178,6 @@ class TransliterationTest {
         }
     }
 
-    // ------------------------------------------------------------- refusals
-
     /** R-K6: a kanji's reading is ambiguous, so it is refused rather than guessed. */
     @Test
     void kanjiIsRefusedAndTheCharactersAreNamed() {
@@ -240,8 +231,6 @@ class TransliterationTest {
                 .withMessageContaining("kanji");
     }
 
-    // --------------------------------------------------------------- widening
-
     @Test
     void halfWidthWidensBackForDisplay() {
         assertThat(KanaTransliterator.toFullWidth("ｶﾞｸﾌﾞﾁ").text()).isEqualTo("ガクブチ");
@@ -268,8 +257,6 @@ class TransliterationTest {
         assertThat(KanaTransliterator.toFullWidth("ABC").isLossless()).isFalse();
         assertThat(KanaTransliterator.toFullWidth("").isLossless()).isTrue();
     }
-
-    // ------------------------------------------------------------- the shape
 
     @Test
     void emptyTextIsNotAnError() {

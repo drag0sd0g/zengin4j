@@ -27,7 +27,6 @@ import org.junit.jupiter.params.provider.ValueSource;
  * happily while some other code path prints the value.
  */
 class MaskingTest {
-
     /** The account number the fixtures put in the data record. Invented (R-L1). */
     private static final String ACCOUNT = SougouFurikomiFixtures.BENEFICIARY_ACCOUNT;
 
@@ -58,8 +57,6 @@ class MaskingTest {
     void inspectDoesNotPrintTheAccountNumberAsHexEither() {
         Cli result = Cli.run("inspect", file.toString(), "--annotate", "--allow-unverified");
 
-        // 9876543 as ASCII hex. Masking the decoded value while printing the
-        // bytes it came from would be theatre.
         assertThat(result.all()).doesNotContain("39 38 37 36 35 34 33");
         assertThat(result.out()).contains("(masked)");
     }

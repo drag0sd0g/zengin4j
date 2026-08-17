@@ -10,7 +10,6 @@ package io.zengin4j.core.loss;
  * @since 0.4.0
  */
 public enum LossSeverity {
-
     /**
      * Cosmetic, with no effect on reconciliation.
      *

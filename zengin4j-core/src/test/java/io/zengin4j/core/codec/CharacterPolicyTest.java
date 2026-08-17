@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
  * Issue 3.1: strict mode over the permitted character set (R-C13).
  */
 class CharacterPolicyTest {
-
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
     /**
@@ -60,7 +59,6 @@ class CharacterPolicyTest {
         ZenginFile file = ZenginReaders.readFile(
                 new ByteArrayInputStream(fileWithProlongedSoundMark()), options(CharacterPolicy.WARN));
 
-        // Reading still succeeds and returns every record.
         assertThat(file.totalRecords()).isEqualTo(4);
 
         List<ZenginWarning> warnings = collected.stream()
@@ -68,9 +66,6 @@ class CharacterPolicyTest {
                 .toList();
         assertThat(warnings).hasSize(1);
         assertThat(warnings.get(0).messageEn()).contains("long vowel mark").contains("0x2D");
-        // 受取人名 starts at offset 50 of the data record. ﾔﾏﾀﾞｰ is five bytes —
-        // the dakuten is its own byte — so the ｰ sits at 50 + 4. The data record
-        // is the second in the file, each record plus CRLF being 122 bytes.
         assertThat(warnings.get(0).byteOffset()).isEqualTo(122 + 50 + 4);
     }
 

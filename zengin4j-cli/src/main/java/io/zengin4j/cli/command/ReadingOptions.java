@@ -18,7 +18,6 @@ import picocli.CommandLine;
  * @since 0.3.0
  */
 public final class ReadingOptions {
-
     @CommandLine.Option(
             names = "--format",
             paramLabel = "ID",

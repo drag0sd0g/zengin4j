@@ -14,7 +14,6 @@ import java.nio.file.Path;
  * whose edge cases go untested, because each case costs a JVM start.
  */
 record Cli(int status, String out, String err) {
-
     static Cli run(String... args) {
         StringWriter outBuffer = new StringWriter();
         StringWriter errBuffer = new StringWriter();

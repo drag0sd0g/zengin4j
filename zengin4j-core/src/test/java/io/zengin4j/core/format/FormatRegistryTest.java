@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
  * contract of R-T1.
  */
 class FormatRegistryTest {
-
     /** 総合振込, 給与振込, 賞与振込 and 預金口座振替. Grows as Epic 8 adds the 200-byte formats. */
     private static final int BUNDLED_FORMATS = 4;
 
@@ -112,8 +111,6 @@ class FormatRegistryTest {
         assertThat(accountType.byCode("1").orElseThrow().nameEn()).isEqualTo("Ordinary deposit");
         assertThat(accountType.accepts("7")).as("open lists admit unknown values").isTrue();
 
-        // 4:貯蓄預金 was flagged unconfirmed in the source specification and is
-        // now corroborated by the JBA standard and two institution guides.
         assertThat(accountType.verified()).isTrue();
         assertThat(accountType.sources())
                 .hasSizeGreaterThanOrEqualTo(FormatDescriptor.REQUIRED_SOURCES_FOR_VERIFICATION);

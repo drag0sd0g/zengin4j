@@ -19,7 +19,6 @@ import org.junit.jupiter.api.io.TempDir;
  * the one place the failure is expensive — the same reasoning as ADR-0022.
  */
 class JsonOutputTest {
-
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @TempDir

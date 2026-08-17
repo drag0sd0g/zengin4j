@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
  * The domain model's own contracts (§11).
  */
 class ModelTest {
-
     private final FormatDescriptor format = Fixtures.descriptor();
     private final RecordDescriptor dataDescriptor = format.record(RecordKind.DATA);
 

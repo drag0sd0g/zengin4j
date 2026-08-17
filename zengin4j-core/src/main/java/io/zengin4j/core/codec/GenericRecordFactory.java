@@ -26,7 +26,6 @@ import java.util.Optional;
  * {@code long amount()} has no value that means "there wasn't one".
  */
 final class GenericRecordFactory implements RecordFactory {
-
     static final GenericRecordFactory INSTANCE = new GenericRecordFactory();
 
     private GenericRecordFactory() {

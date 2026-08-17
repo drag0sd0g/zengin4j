@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
  * through the published reader.
  */
 class SougouFurikomiFixturesTest {
-
     private final SougouFurikomiFixtures fixtures = SougouFurikomiFixtures.create();
 
     @Test
@@ -95,7 +94,6 @@ class SougouFurikomiFixturesTest {
         assertThat(file.allData()).hasSize(15);
         assertThat(file.framing().separator()).isEqualTo(SeparatorStyle.LF);
         assertThat(file.framing().trailingEofByte()).isTrue();
-        // The trailer the generator wrote agrees with what the records add up to.
         assertThat(file.batches().get(0).trailer().orElseThrow().totalAmount())
                 .isEqualTo(file.batches().get(0).computedTotal());
     }

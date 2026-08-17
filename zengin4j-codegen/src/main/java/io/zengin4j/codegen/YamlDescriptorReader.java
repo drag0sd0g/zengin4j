@@ -40,7 +40,6 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
  * cited sources (R-0.1).
  */
 final class YamlDescriptorReader {
-
     private static final Set<String> DOCUMENT_KEYS = Set.of("format");
     private static final Set<String> FORMAT_KEYS = Set.of(
             "id", "name-ja", "name-en", "type-code", "record-length", "verified", "sources", "note", "records",
@@ -203,7 +202,6 @@ final class YamlDescriptorReader {
             String typeCode,
             String origin,
             Map<String, CodeList> codeLists) {
-
         rejectUnknownKeys(node, origin, "record '" + kind.descriptorKey() + "'", RECORD_KEYS);
         byte discriminator = toDiscriminator(requireString(node, "discriminator", origin), kind, origin);
 
@@ -247,7 +245,6 @@ final class YamlDescriptorReader {
 
     private static FieldSpec readField(
             Map<String, Object> node, int expectedSequence, String origin, Map<String, CodeList> codeLists) {
-
         rejectUnknownKeys(node, origin, "field", FIELD_KEYS);
         int sequence = requireInt(node, "seq", origin);
         String id = requireString(node, "id", origin);
@@ -310,12 +307,8 @@ final class YamlDescriptorReader {
         return spec;
     }
 
-    // ------------------------------------------------------------- plumbing
-
     private static Object parse(String yaml, String origin) {
         LoaderOptions options = new LoaderOptions();
-        // Parity with the reader this replaced: a repeated key is a mistake,
-        // not a last-one-wins override.
         options.setAllowDuplicateKeys(false);
         options.setProcessComments(false);
         try {

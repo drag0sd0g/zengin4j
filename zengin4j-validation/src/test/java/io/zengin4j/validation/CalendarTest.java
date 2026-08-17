@@ -24,10 +24,7 @@ import org.junit.jupiter.api.Test;
  * on, and 2 January is closed without being a holiday at all.
  */
 class CalendarTest {
-
     private final JapaneseBankCalendar calendar = JapaneseBankCalendar.bundled();
-
-    // ------------------------------------------------------------ the data
 
     /**
      * The two holidays no algorithm should be trusted with. Their dates come
@@ -41,7 +38,6 @@ class CalendarTest {
         assertThat(calendar.holidayName(LocalDate.of(2027, 3, 21))).contains("春分の日");
         assertThat(calendar.holidayName(LocalDate.of(2027, 9, 23))).contains("秋分の日");
 
-        // They genuinely move: 2026 and 2027's vernal equinoxes are different days.
         assertThat(LocalDate.of(2026, 3, 20).getDayOfMonth())
                 .isNotEqualTo(LocalDate.of(2027, 3, 21).getDayOfMonth());
     }
@@ -60,7 +56,6 @@ class CalendarTest {
     /** 国民の休日: the weekday caught between two holidays. */
     @Test
     void knowsBridgeHolidays() {
-        // 2026-09-21 敬老の日, 2026-09-23 秋分の日, so the 22nd is closed.
         assertThat(calendar.classify(LocalDate.of(2026, 9, 22)).kind())
                 .isEqualTo(NonBusinessDay.Kind.PUBLIC_HOLIDAY);
     }
@@ -94,13 +89,9 @@ class CalendarTest {
 
     @Test
     void findsTheNextBusinessDayAcrossAHolidayWeekend() {
-        // 2026-05-03 憲法記念日 is a Sunday; 4th and 5th are holidays, 6th is
-        // the substitute. The next open day is Thursday the 7th.
         assertThat(calendar.nextBusinessDay(LocalDate.of(2026, 5, 3)))
                 .isEqualTo(LocalDate.of(2026, 5, 7));
     }
-
-    // ------------------------------------------------------------- R-V7
 
     @Test
     void refusesToAnswerPastItsHorizon() {
@@ -115,8 +106,6 @@ class CalendarTest {
                             .contains("announced in advance rather than computed");
                 });
     }
-
-    // ------------------------------------------------------- the V-5xx rules
 
     private ValidationReport validateWithValueDate(int month, int day, LocalDate today) {
         byte[] header = KIT_HEADER(month, day);
@@ -228,7 +217,6 @@ class CalendarTest {
 
         assertThat(suppressed.findingsOf("V-502")).isEmpty();
 
-        // And the sibling still fires on a weekend date.
         ValidationReport weekend = ZenginValidator.builder()
                 .withCalendar(calendar)
                 .withDateResolver(MonthDayResolver.forwardLooking(LocalDate.of(2026, 8, 1)))

@@ -15,7 +15,6 @@ import java.util.function.Supplier;
  * the formats the same way every time.
  */
 final class Fixtures {
-
     private static final Map<FormatId, Supplier<FormatFixtures>> BY_ID = registry();
 
     private Fixtures() {

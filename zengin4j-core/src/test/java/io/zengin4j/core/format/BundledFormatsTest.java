@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
  * the failure mode §13.1 warns about twice.
  */
 class BundledFormatsTest {
-
     private final FormatRegistry registry = FormatRegistry.defaults();
 
     private FormatDescriptor format(String id) {
@@ -35,8 +34,6 @@ class BundledFormatsTest {
         });
     }
 
-    // ------------------------------------------------------------ 給与振込 (3.4)
-
     /**
      * The whole reason 給与振込 has its own descriptor: fourteen data fields, not
      * sixteen. Deriving it from 総合振込 would read filler as a 振込指定区分 and an
@@ -50,12 +47,9 @@ class BundledFormatsTest {
         assertThat(payroll.fields()).hasSize(14);
         assertThat(bulk.fields()).hasSize(16);
 
-        // The two agree byte for byte up to the tail, which is what makes the
-        // difference easy to miss.
         assertThat(payroll.field("amount").offset()).isEqualTo(bulk.field("amount").offset()).isEqualTo(80);
         assertThat(payroll.field("newCode").offset()).isEqualTo(bulk.field("newCode").offset()).isEqualTo(90);
 
-        // And then they do not.
         assertThat(payroll.find("transferCategory")).isEmpty();
         assertThat(payroll.find("identification")).isEmpty();
         assertThat(payroll.find("customerCode1")).isEmpty();
@@ -79,7 +73,6 @@ class BundledFormatsTest {
         assertThat(name.charClass()).isEqualTo(CharacterClass.PAYROLL_NAME);
         assertThat(name.charClass().permits('A')).isFalse();
 
-        // The same bytes in 総合振込 hold 受取人名 too, and do permit them.
         FieldDescriptor payee = format("sougou-furikomi").record(RecordKind.DATA).field("beneficiaryName");
         assertThat(payee.offset()).isEqualTo(name.offset());
         assertThat(payee.charClass().permits('A')).isTrue();
@@ -134,8 +127,6 @@ class BundledFormatsTest {
                 assertThat(b.length()).as("%s.%s length", kind, a.id()).isEqualTo(a.length());
                 assertThat(b.type()).isEqualTo(a.type());
                 assertThat(b.charClass()).isEqualTo(a.charClass());
-                // The 種別コード constant is the one thing that differs, and it is
-                // rewritten rather than inherited.
                 if (a.id().equals("typeCode")) {
                     assertThat(b.constant()).contains("12");
                     assertThat(a.constant()).contains("11");
@@ -145,8 +136,6 @@ class BundledFormatsTest {
             }
         }
     }
-
-    // ---------------------------------------------------------- 預金口座振替 (3.5)
 
     /**
      * OQ-1: one descriptor, because the instruction and result files have the
@@ -158,8 +147,6 @@ class BundledFormatsTest {
         assertThat(registry.byTypeCode("91")).hasSize(1);
         assertThat(registry.byTypeCode("91").get(0).id()).isEqualTo(FormatId.of("kouza-furikae"));
 
-        // The field that carries the difference is present in both, and is a
-        // value rather than a position.
         FieldDescriptor result = format("kouza-furikae").record(RecordKind.DATA).field("transferResult");
         assertThat(result.offset()).isEqualTo(111);
         assertThat(result.codeList()).isPresent();
@@ -187,7 +174,6 @@ class BundledFormatsTest {
         assertThat(data.find("payerName")).isPresent();
         assertThat(data.find("debitAmount")).isPresent();
 
-        // None of 総合振込's directional names appear, in either record.
         for (String borrowed : List.of("originBankCode", "originBranchCode", "beneficiaryBankCode",
                 "beneficiaryName", "valueDate", "amount")) {
             assertThat(header.find(borrowed)).as("header must not reuse '%s'", borrowed).isEmpty();
@@ -210,7 +196,6 @@ class BundledFormatsTest {
         assertThat(trailer.field("dummy").offset()).isEqualTo(55);
         assertThat(trailer.field("dummy").length()).isEqualTo(65);
 
-        // 総合振込's trailer is three fields and one big filler.
         assertThat(format("sougou-furikomi").record(RecordKind.TRAILER).fields()).hasSize(4);
     }
 
@@ -235,8 +220,6 @@ class BundledFormatsTest {
                 .isEqualTo(38);
     }
 
-    // ------------------------------------------------------------------- OQ-9
-
     /** The master list carries all nine codes; fields narrow it. */
     @Test
     void accountTypeIsTheMasterListNarrowedPerField() {
@@ -246,8 +229,6 @@ class BundledFormatsTest {
         assertThat(accountType.byCode("3").orElseThrow().nameEn()).isEqualTo("Tax reserve deposit");
         assertThat(accountType.byCode("6").orElseThrow().nameEn()).isEqualTo("Time deposit");
 
-        // Every field referencing it narrows it, and no narrowing names a code
-        // the master list does not have.
         for (FormatDescriptor descriptor : registry.all()) {
             for (RecordKind kind : List.of(RecordKind.HEADER, RecordKind.DATA)) {
                 descriptor.find(kind).ifPresent(record -> record.fields().stream()

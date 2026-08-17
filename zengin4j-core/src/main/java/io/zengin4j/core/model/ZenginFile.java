@@ -29,7 +29,6 @@ public record ZenginFile(
         Optional<EndRecord> endRecord,
         List<MalformedRecord> unbatched,
         FileFraming framing) {
-
     /**
      * Validates and defensively copies the components.
      */

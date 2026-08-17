@@ -28,7 +28,6 @@ import java.util.Map;
  * <p>Every value is invented (R-L1, P1).
  */
 public final class Fixtures {
-
     public static final FormatId SOUGOU_FURIKOMI = FormatId.of("sougou-furikomi");
     public static final int RECORD_LENGTH = 120;
     public static final byte[] CRLF = {'\r', '\n'};
@@ -66,7 +65,6 @@ public final class Fixtures {
                 .registry(registry())
                 .allowUnverifiedFormats(true)
                 .warningListener(warning -> {
-                    // expected in tests; the reader still collects them
                 });
     }
 

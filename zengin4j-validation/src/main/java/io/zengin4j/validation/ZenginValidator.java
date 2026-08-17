@@ -53,7 +53,6 @@ import java.util.Set;
  * @since 0.2.0
  */
 public final class ZenginValidator {
-
     private final RuleEngine engine;
     private final Optional<BusinessCalendar> calendar;
     private final Optional<ReferenceDataProvider> referenceData;
@@ -121,9 +120,6 @@ public final class ZenginValidator {
         try {
             file = ZenginReaders.readFile(path, options);
         } catch (ZenginException unreadable) {
-            // Formatted twice rather than with Bilingual.into(...): the argument
-            // itself differs by language, since the exception carries its own
-            // English and Japanese text (R-E4).
             return new ValidationReport(List.of(Finding.of(Severity.ERROR, "V-100")
                     .message(Messages.format("V-100.message", unreadable.messageEn()).en(),
                             Messages.format("V-100.message", unreadable.messageJa()).ja())
@@ -147,7 +143,6 @@ public final class ZenginValidator {
      * @since 0.2.0
      */
     public static final class Builder {
-
         private final List<Rule> rules = new ArrayList<>(Rules.bundled());
         private final Set<String> suppressed = new HashSet<>();
         private final Map<String, Severity> overrides = new HashMap<>();

@@ -29,7 +29,6 @@ import java.util.function.Consumer;
  * @since 0.2.0
  */
 public final class ReferenceDataRules {
-
     /** Field-id pairs of (bank, branch), across the formats this library ships. */
     private static final List<String[]> BANK_BRANCH_PAIRS = List.of(
             new String[] {"beneficiaryBankCode", "beneficiaryBranchCode"},
@@ -81,7 +80,6 @@ public final class ReferenceDataRules {
      * follows.
      */
     static final class NamesMatchReferenceData extends AbstractRule {
-
         NamesMatchReferenceData() {
             super("V-403", Severity.WARNING, RuleScope.FIELD);
         }
@@ -134,7 +132,6 @@ public final class ReferenceDataRules {
 
     /** V-401. */
     static final class BankExists extends AbstractRule {
-
         BankExists() {
             super("V-401", Severity.ERROR, RuleScope.FIELD);
         }
@@ -168,7 +165,6 @@ public final class ReferenceDataRules {
      * second report would be less useful than the first.
      */
     static final class BranchExists extends AbstractRule {
-
         BranchExists() {
             super("V-402", Severity.ERROR, RuleScope.FIELD);
         }

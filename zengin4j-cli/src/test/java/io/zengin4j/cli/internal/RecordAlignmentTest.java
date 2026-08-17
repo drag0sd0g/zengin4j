@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
  * implementation is at its worst exactly there.
  */
 class RecordAlignmentTest {
-
     private static List<byte[]> records(String... lines) {
         return java.util.Arrays.stream(lines)
                 .map(line -> line.getBytes(StandardCharsets.ISO_8859_1))
@@ -117,8 +116,6 @@ class RecordAlignmentTest {
         assertThat(removed.rightNumber()).as("it is in neither position of the second file")
                 .isZero();
     }
-
-    // ------------------------------------------------------------------ size
 
     /**
      * A big file with one edit costs almost nothing.

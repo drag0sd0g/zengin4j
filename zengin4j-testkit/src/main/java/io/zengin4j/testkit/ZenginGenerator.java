@@ -28,7 +28,6 @@ import java.util.Random;
  * @since 0.1.0
  */
 public final class ZenginGenerator {
-
     /**
      * Names drawn on by the generator.
      *
@@ -108,7 +107,6 @@ public final class ZenginGenerator {
      * @since 0.1.0
      */
     public static final class Builder {
-
         private FormatFixtures fixtures = SougouFurikomiFixtures.create();
         private long seed = 42L;
         private int payments = 10;

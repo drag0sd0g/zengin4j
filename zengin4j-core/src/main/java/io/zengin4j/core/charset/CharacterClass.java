@@ -34,7 +34,6 @@ import java.util.Arrays;
  * @since 0.1.0
  */
 public enum CharacterClass {
-
     /**
      * 店舗名 — bank and branch names. Kana, voicing marks, uppercase Latin,
      * digits, space, and <strong>one</strong> symbol: {@code -}.
@@ -85,9 +84,6 @@ public enum CharacterClass {
      */
     UNRESTRICTED("制限なし", "unrestricted", true, "");
 
-    // JIS X 0201 single-byte katakana. Small kana (0xA7-0xAF) and the
-    // prolonged sound mark ｰ (0xB0) sit between ｦ and ｱ and are excluded from
-    // every class, which is why the run of permitted kana starts at 0xB1.
     private static final int WO = 0xA6;
     private static final int KANA_FIRST = 0xB1;
     private static final int KANA_LAST = 0xDD;
@@ -149,9 +145,6 @@ public enum CharacterClass {
         return (permitted[value >>> 6] & (1L << (value & 63))) != 0;
     }
 
-    // Overridden by the constants that differ. Kept package-private: these are
-    // the knobs the table is built from, not part of the published surface.
-
     boolean permitsKana() {
         return true;
     }
@@ -165,8 +158,6 @@ public enum CharacterClass {
     }
 
     static {
-        // Built after construction so the overridable predicates above are
-        // dispatched on fully-initialised constants.
         for (CharacterClass value : values()) {
             value.buildTable();
         }

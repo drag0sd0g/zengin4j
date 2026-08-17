@@ -16,12 +16,9 @@ import org.junit.jupiter.api.Test;
  * table it is testing proves nothing.
  */
 class CharacterSetTest {
-
     private static byte[] ms932(String text) {
         return ZenginCharset.MS932.encode(text);
     }
-
-    // ------------------------------------------------------------ the base set
 
     @Test
     void permitsFullSizeKanaVoicingMarksDigitsAndUppercaseLatin() {
@@ -29,7 +26,6 @@ class CharacterSetTest {
             assertThat(CharacterSet.validate(ms932("ﾔﾏﾀﾞ ﾀﾛｳ"), permitted)).isEmpty();
             assertThat(CharacterSet.validate(ms932("ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ"), permitted)).isEmpty();
             assertThat(CharacterSet.validate(ms932("ABC123"), permitted)).isEmpty();
-            // ｱ through ﾝ, the whole run.
             assertThat(CharacterSet.validate(kanaRun(), permitted)).isEmpty();
         }
     }
@@ -66,7 +62,6 @@ class CharacterSetTest {
             if (permitted == CharacterClass.UNRESTRICTED) {
                 continue;
             }
-            // ｧ ｨ ｩ ｪ ｫ ｬ ｭ ｮ ｯ — 0xA7 through 0xAF.
             for (int code = 0xA7; code <= 0xAF; code++) {
                 assertThat(permitted.permits(code))
                         .as("%s permits 0x%02X", permitted, code)
@@ -84,8 +79,6 @@ class CharacterSetTest {
         assertThat(CharacterSet.validate(ms932("abc"), CharacterClass.PARTY_NAME).get(0).describeEn())
                 .contains("lowercase Latin");
     }
-
-    // ------------------------------------------------- the per-class narrowing
 
     /** 注1: a branch name permits exactly one symbol. */
     @Test
@@ -119,7 +112,6 @@ class CharacterSetTest {
         assertThat(CharacterSet.validate(ms932("123"), CharacterClass.PAYROLL_NAME)).isEmpty();
 
         assertThat(CharacterSet.validate(ms932("ABC"), CharacterClass.PAYROLL_NAME)).hasSize(3);
-        // And the same bytes are fine in a 総合振込 party name, which is the point.
         assertThat(CharacterSet.validate(ms932("ABC"), CharacterClass.PARTY_NAME)).isEmpty();
     }
 
@@ -133,7 +125,6 @@ class CharacterSetTest {
 
         assertThat(CharacterSet.validate(ms932("ｱ｢ｲ｣/\\().-1A"), CharacterClass.EDI_INFORMATION))
                 .isEmpty();
-        // Never a comma, in any class.
         assertThat(CharacterSet.validate(ms932(","), CharacterClass.EDI_INFORMATION)).hasSize(1);
     }
 
@@ -154,8 +145,6 @@ class CharacterSetTest {
         }
         assertThat(CharacterSet.validate(everything, CharacterClass.UNRESTRICTED)).isEmpty();
     }
-
-    // ---------------------------------------------------------- the API itself
 
     /** R-C17: offsets, not a verdict. */
     @Test

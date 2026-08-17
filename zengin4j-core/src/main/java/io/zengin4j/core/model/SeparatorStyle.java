@@ -12,7 +12,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public enum SeparatorStyle {
-
     /** Records run together with nothing between them. */
     NONE(new byte[0]),
 

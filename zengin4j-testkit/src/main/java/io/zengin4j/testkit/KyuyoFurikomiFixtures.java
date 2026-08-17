@@ -30,7 +30,6 @@ import java.util.Map;
  * @since 0.3.0
  */
 public final class KyuyoFurikomiFixtures extends AbstractFormatFixtures {
-
     /** Id of the 給与振込 format. */
     public static final FormatId KYUYO = FormatId.of("kyuyo-furikomi");
 

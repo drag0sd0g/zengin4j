@@ -24,7 +24,6 @@ import java.util.Objects;
  * @since 0.4.0
  */
 public record Transliteration(String text, LossReport loss) {
-
     /**
      * Validates the components.
      */

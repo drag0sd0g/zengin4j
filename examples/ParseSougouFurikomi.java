@@ -27,7 +27,6 @@ import java.time.LocalDate;
  * committed to this repository (R-L1, P1).
  */
 public final class ParseSougouFurikomi {
-
     private ParseSougouFurikomi() {
     }
 
@@ -35,15 +34,10 @@ public final class ParseSougouFurikomi {
         SougouFurikomiFixtures fixtures = SougouFurikomiFixtures.create();
         byte[] file = fixtures.file(3, io.zengin4j.core.model.SeparatorStyle.CRLF, false);
 
-        // Build the registry once. It is immutable and thread-safe, and
-        // ReaderOptions.defaults() would otherwise reload it on every call.
         FormatRegistry registry = FormatRegistry.defaults();
 
         ReaderOptions options = ReaderOptions.builder()
                 .registry(registry)
-                // Every descriptor in 0.1.0 is verified: false. Without this the
-                // reader refuses to guess at a provisional byte layout. Read
-                // DISCLAIMER.md before setting it against a real file.
                 .allowUnverifiedFormats(true)
                 .warningListener(warning -> System.out.println("[warn] " + warning.messageEn()))
                 .build();
@@ -57,8 +51,6 @@ public final class ParseSougouFurikomi {
         System.out.println("== whole file ==");
         ZenginFile parsed = ZenginReaders.readFile(new ByteArrayInputStream(file), options);
 
-        // MMDD carries no year. Attaching one is an explicit, named decision:
-        // FORWARD_LOOKING is right for instruction files, NEAREST for results.
         MonthDayResolver resolver = MonthDayResolver.forwardLooking(LocalDate.now());
 
         for (Batch batch : parsed.batches()) {
@@ -73,7 +65,6 @@ public final class ParseSougouFurikomi {
                     valueDate);
 
             for (DataRecord record : batch.data()) {
-                // The record is format-shaped: exactly the fields 総合振込 has.
                 SougouFurikomiData payment = (SougouFurikomiData) record;
                 System.out.printf("    %-20s %s/%s  ¥%,d%n",
                         payment.beneficiaryName(),
@@ -83,9 +74,6 @@ public final class ParseSougouFurikomi {
             }
         }
 
-        // What the trailer claims, against what the records actually contain.
-        // Reconciling the two is the validation layer's job (Epic 4); core just
-        // gives you both numbers.
         parsed.batches().forEach(batch -> batch.trailer().ifPresent(trailer ->
                 System.out.printf("  trailer says %d records / ¥%,d; records add up to %d / ¥%,d%n",
                         trailer.recordCount(), trailer.totalAmount(),
@@ -102,12 +90,9 @@ public final class ParseSougouFurikomi {
             while (reader.hasNext()) {
                 RecordView view = reader.next();
                 if (view.kind() == RecordKind.DATA) {
-                    // Decodes straight from the buffer: no String, no boxing.
                     total += view.asLong(view.field("amount"));
                     payments++;
                 }
-                // NOTE: `view` is a window onto a recycled buffer and stops being
-                // valid at the next next(). Call view.materialize() to keep one.
             }
         }
 

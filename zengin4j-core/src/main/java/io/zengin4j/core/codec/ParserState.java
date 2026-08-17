@@ -11,7 +11,6 @@ import java.util.Optional;
  * validation rule, not a parsing rule (R-C1).
  */
 enum ParserState {
-
     /** Nothing read yet, or the file has only just begun. */
     EXPECT_HEADER("a header record (データ区分 '1')"),
 

@@ -11,7 +11,6 @@ package io.zengin4j.core.kana;
  * @since 0.4.0
  */
 public enum HiraganaPolicy {
-
     /** Refuse, naming the characters. The default. */
     REJECT,
 

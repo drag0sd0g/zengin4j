@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
  * build that compiles it into the library.
  */
 class YamlDescriptorReaderTest {
-
     private static final Map<String, CodeList> CODE_LISTS = Map.of(
             "accountType", new CodeList("accountType", "預金種目", "Account Type", false, true,
                     List.of(), List.of(), Optional.empty()));

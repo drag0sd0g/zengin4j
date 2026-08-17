@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
  * @since 0.1.0
  */
 public final class CharacterSetViolationException extends ZenginException {
-
     private final int recordNumber;
     private final transient List<CharacterViolation> violations;
 

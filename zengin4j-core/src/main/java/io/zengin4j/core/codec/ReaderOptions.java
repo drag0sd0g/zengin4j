@@ -16,7 +16,6 @@ import java.util.function.Consumer;
  * @since 0.1.0
  */
 public final class ReaderOptions {
-
     /** Default number of records the read buffer holds (R-MEM1). */
     public static final int DEFAULT_BUFFER_RECORDS = 512;
 
@@ -184,7 +183,6 @@ public final class ReaderOptions {
      * @since 0.1.0
      */
     public static final class Builder {
-
         private ZenginCharset charset = ZenginCharset.defaultCharset();
         private boolean allowUnverifiedFormats;
         private Optional<FormatId> format = Optional.empty();

@@ -44,7 +44,6 @@ public record FormatDescriptor(
         List<String> sources,
         Optional<String> note,
         Map<RecordKind, RecordDescriptor> records) {
-
     /** Minimum number of independent sources required to claim verification (R-0.1). */
     public static final int REQUIRED_SOURCES_FOR_VERIFICATION = 2;
 

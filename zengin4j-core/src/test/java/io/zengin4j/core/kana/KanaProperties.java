@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test;
  * team to re-run CI, which is worse than not having it.
  */
 class KanaProperties {
-
     private static final long SEED = 0x4E4A_2026L;
 
     /** Kana chosen so roughly half of any generated name carries a voicing mark. */
@@ -44,8 +43,6 @@ class KanaProperties {
         String text = name.toString();
         byte[] bytes = ZenginCharset.MS932.encode(
                 KanaTransliterator.toHalfWidth(text).text());
-        // Widths from one byte to a little past the end, so both the truncating
-        // and the fits-already paths are exercised.
         return new Case(text, bytes, 1 + random.nextInt(bytes.length + 2));
     }
 
@@ -114,7 +111,6 @@ class KanaProperties {
     void everythingProducedIsWritableIntoTheFieldItWasMadeFor() {
         for (CharacterClass characterClass : List.of(CharacterClass.PARTY_NAME,
                 CharacterClass.BANK_NAME, CharacterClass.PAYROLL_NAME)) {
-
             TransliterationOptions options = TransliterationOptions.builder()
                     .characterClass(characterClass)
                     .unmappable(UnmappableCharacterPolicy.DROP)

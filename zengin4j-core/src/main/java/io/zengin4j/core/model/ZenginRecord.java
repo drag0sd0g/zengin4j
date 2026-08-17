@@ -23,7 +23,6 @@ import io.zengin4j.core.format.RecordKind;
  */
 public sealed interface ZenginRecord
         permits HeaderRecord, DataRecord, TrailerRecord, EndRecord, MalformedRecord {
-
     /**
      * Returns the format this record belongs to.
      *

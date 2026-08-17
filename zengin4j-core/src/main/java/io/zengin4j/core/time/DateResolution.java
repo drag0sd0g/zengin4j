@@ -30,7 +30,6 @@ public record DateResolution(
         Optional<LocalDate> date,
         List<Integer> candidateYears,
         Optional<UnresolvedReason> reason) {
-
     /**
      * Validates and defensively copies the components.
      */
@@ -76,7 +75,6 @@ public record DateResolution(
      * @since 0.1.0
      */
     public enum UnresolvedReason {
-
         /**
          * The value is 29 February and no candidate year is a leap year. The
          * library reports this rather than silently moving the date to the

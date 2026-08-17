@@ -33,7 +33,6 @@ import java.util.Set;
  * @since 0.2.0
  */
 public final class RuleEngine {
-
     /**
      * Reported when a rule throws. Not a rule id that any rule owns: it names
      * the engine, because the defect is in the rule set rather than in the file.
@@ -71,9 +70,6 @@ public final class RuleEngine {
         Objects.requireNonNull(context, "context");
         List<Finding> collected = new ArrayList<>();
 
-        // Grouped by tier so fail-fast can stop after structural errors: if the
-        // records are not where the layout says, every later tier is reading
-        // the wrong bytes and its findings would be noise about noise.
         Map<String, List<Rule>> byTier = new LinkedHashMap<>();
         for (Rule rule : rules) {
             byTier.computeIfAbsent(tierOf(rule), tier -> new ArrayList<>()).add(rule);
@@ -81,10 +77,6 @@ public final class RuleEngine {
 
         for (Map.Entry<String, List<Rule>> tier : byTier.entrySet()) {
             for (Rule rule : tier.getValue()) {
-                // Skipped only when every id it could emit is suppressed. A
-                // composite rule with one id suppressed still runs, and the
-                // suppressed findings are dropped below — otherwise turning off
-                // "value date is a holiday" would also turn off "is a weekend".
                 if (suppressed.containsAll(rule.emits())) {
                     continue;
                 }

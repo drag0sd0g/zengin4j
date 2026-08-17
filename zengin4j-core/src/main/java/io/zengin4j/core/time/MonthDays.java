@@ -11,7 +11,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public final class MonthDays {
-
     /** Length in bytes of an {@code MMDD} field. */
     public static final int FIELD_LENGTH = 4;
 
@@ -44,8 +43,6 @@ public final class MonthDays {
         int month = (raw.charAt(0) - '0') * 10 + (raw.charAt(1) - '0');
         int day = (raw.charAt(2) - '0') * 10 + (raw.charAt(3) - '0');
         try {
-            // MonthDay.of accepts 29 February; whether a given year has one is
-            // a resolution question, not a parsing question (R-D12).
             return Optional.of(MonthDay.of(month, day));
         } catch (DateTimeException e) {
             return Optional.empty();

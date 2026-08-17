@@ -41,7 +41,6 @@ import java.util.Objects;
  * @since 0.4.0
  */
 public final class KanaTransliterator {
-
     /** {@code ﾞ}, which modifies the kana before it (§16.1). */
     public static final char DAKUTEN = 0xFF9E;
 
@@ -53,8 +52,6 @@ public final class KanaTransliterator {
 
     private KanaTransliterator() {
     }
-
-    // ------------------------------------------------------------ narrowing
 
     /**
      * Converts text to half-width, for the default field class.
@@ -139,7 +136,6 @@ public final class KanaTransliterator {
 
     private static Transliteration truncated(String text, int maxBytes,
             String marker, TransliterationOptions options, LossCollector loss) {
-
         byte[] markerBytes = options.charset().encode(marker);
         if (markerBytes.length >= maxBytes) {
             throw new FieldTooSmallException(text, maxBytes);
@@ -185,16 +181,10 @@ public final class KanaTransliterator {
             kept++;
         }
 
-        // If the first character left behind is a voicing mark, the one before
-        // it is the kana it modifies — and keeping that alone is the rename.
         if (kept < text.length() && kept > 0 && isVoicingMark(text.charAt(kept))) {
             kept--;
         }
         if (kept <= 0) {
-            // The field width the caller asked for, not the budget left after
-            // the marker: being told a 2-byte field cannot hold 1 byte is a
-            // diagnostic about this method's arithmetic rather than about the
-            // field (R-E3).
             throw new FieldTooSmallException(text, fieldWidth);
         }
         return text.substring(0, kept);
@@ -227,8 +217,6 @@ public final class KanaTransliterator {
                         : " Choose a marker the field admits."));
     }
 
-    // ----------------------------------------------------------- truncation
-
     /**
      * Shortens half-width bytes without severing a voicing mark from its kana
      * (R-K3, §16.3).
@@ -242,6 +230,12 @@ public final class KanaTransliterator {
      * character. In UTF-8 a half-width kana is three bytes and the byte
      * arithmetic here would be wrong, which is why the string-level methods
      * measure with the configured charset and this one does not guess.
+     *
+     * <p><strong>A leading voicing mark is refused before the length is even
+     * considered</strong>, which is a deliberate departure from §16.3's
+     * reference implementation: that checks it only on the truncating path, so
+     * a short input beginning with a stray mark passes and a long one does not.
+     * The input is equally damaged either way.
      *
      * @param bytes    the half-width bytes
      * @param maxBytes the field width
@@ -257,10 +251,6 @@ public final class KanaTransliterator {
             throw new IllegalArgumentException("maxBytes must be positive, found " + maxBytes);
         }
 
-        // Checked before the length test, not after. §16.3's reference
-        // implementation checks it only on the truncating path, so a short
-        // input beginning with a stray mark passes and a long one does not —
-        // and the input is equally damaged either way.
         if (bytes.length > 0 && isVoicingMark(bytes[0])) {
             throw new OrphanedVoicingMarkException(describe(bytes));
         }
@@ -270,9 +260,6 @@ public final class KanaTransliterator {
 
         int cut = maxBytes;
         if (isVoicingMark(bytes[cut])) {
-            // The byte at the cut is a mark, so the kana it modifies is the
-            // last one we were going to keep. Keeping the base without its mark
-            // is the silent rename; drop them together.
             cut--;
         }
         if (cut <= 0) {
@@ -301,8 +288,6 @@ public final class KanaTransliterator {
         return c == DAKUTEN || c == HANDAKUTEN;
     }
 
-    // -------------------------------------------------------------- widening
-
     /**
      * Converts half-width text back to full width, for display (R-K8).
      *
@@ -320,8 +305,6 @@ public final class KanaTransliterator {
         StringBuilder out = new StringBuilder(text.length());
 
         for (int i = 0; i < text.length(); ) {
-            // Greedy: a base followed by a mark is one character, and matching
-            // the base alone would drop the voicing.
             if (i + 1 < text.length() && isVoicingMark(text.charAt(i + 1))) {
                 String pair = text.substring(i, i + 2);
                 String widened = KanaTables.widen(pair);
@@ -351,8 +334,6 @@ public final class KanaTransliterator {
         }
         return new Transliteration(result, loss.build());
     }
-
-    // ---------------------------------------------------------------- passes
 
     /** Substitution, hiragana and narrowing, in one walk. */
     private static String narrow(String text, TransliterationOptions options, LossCollector loss) {
@@ -398,8 +379,6 @@ public final class KanaTransliterator {
             narrowedAnything |= appendNarrowed(out, character);
         }
 
-        // Kanji first: it is the refusal the caller can do least about, and
-        // reporting it alongside a hiragana complaint would bury it.
         if (!kanji.isEmpty()) {
             throw UntransliterableCharacterException.kanji(kanji, text);
         }
@@ -407,14 +386,6 @@ public final class KanaTransliterator {
             throw UntransliterableCharacterException.hiragana(hiragana, text);
         }
 
-        // One entry for the whole conversion rather than one per character. A
-        // thirty-character name would otherwise produce thirty entries saying
-        // the same thing, and the report a person reads before sending a file
-        // has to stay readable to be read.
-        // Likewise one entry for the narrowing, not one per kana. Narrowing is
-        // the operation the caller asked for, and タ to ﾀ loses nothing that can
-        // be recovered from the half-width form; it is recorded because P5 says
-        // to record it, not because anyone needs it itemised.
         if (narrowedAnything) {
             loss.record(LossEntry.of(LossKind.TRANSLITERATED, LossSeverity.INFORMATIONAL,
                     text, out.toString(),
@@ -500,15 +471,12 @@ public final class KanaTransliterator {
      */
     private static String enforceCharacterClass(String text, String original,
             TransliterationOptions options, LossCollector loss) {
-
         CharacterClass characterClass = options.characterClass();
         StringBuilder kept = new StringBuilder(text.length());
         List<String> refused = new ArrayList<>();
 
         for (int i = 0; i < text.length(); i++) {
             String character = text.substring(i, i + 1);
-            // Checked as JIS bytes because that is what a character class is
-            // defined over, whatever encoding the output will be written in.
             byte[] encoded = ZenginCharset.MS932.encode(character);
             if (CharacterSet.isClean(encoded, 0, encoded.length, characterClass)) {
                 kept.append(character);
@@ -547,7 +515,6 @@ public final class KanaTransliterator {
      */
     private static String enforceVoicingMarks(String text, String original,
             TransliterationOptions options, LossCollector loss) {
-
         StringBuilder kept = new StringBuilder(text.length());
         List<String> stranded = new ArrayList<>();
 

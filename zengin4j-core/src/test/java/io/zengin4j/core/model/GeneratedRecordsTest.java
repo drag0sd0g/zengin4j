@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test;
  * R-F3, R-M8, R-D1: the committed, format-shaped record types.
  */
 class GeneratedRecordsTest {
-
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
     @Test

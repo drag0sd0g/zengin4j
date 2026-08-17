@@ -28,7 +28,6 @@ import java.util.function.Consumer;
  * @since 0.2.0
  */
 public final class SemanticRules {
-
     private SemanticRules() {
     }
 
@@ -54,7 +53,6 @@ public final class SemanticRules {
      * through a mark leaves behind.
      */
     static final class TruncatedThroughVoicingMark extends AbstractRule {
-
         TruncatedThroughVoicingMark() {
             super("V-601", Severity.WARNING, RuleScope.FIELD);
         }
@@ -67,8 +65,6 @@ public final class SemanticRules {
                 }
                 int last = field.offset() + field.length() - 1;
                 int lastByte = bytes[last] & 0xFF;
-                // A name that stops short of the field end was not truncated:
-                // there was room for the mark and it is not there.
                 if (lastByte == ' ') {
                     return;
                 }
@@ -95,7 +91,6 @@ public final class SemanticRules {
 
     /** V-602. */
     static final class ZeroAmount extends AbstractRule {
-
         ZeroAmount() {
             super("V-602", Severity.WARNING, RuleScope.RECORD);
         }
@@ -120,7 +115,6 @@ public final class SemanticRules {
      * this is worth a line in a report.
      */
     static final class AmountAtFieldMaximum extends AbstractRule {
-
         AmountAtFieldMaximum() {
             super("V-603", Severity.WARNING, RuleScope.RECORD);
         }
@@ -158,7 +152,6 @@ public final class SemanticRules {
 
     /** V-604. */
     static final class NameEntirelyPadding extends AbstractRule {
-
         NameEntirelyPadding() {
             super("V-604", Severity.WARNING, RuleScope.FIELD);
         }
@@ -186,7 +179,6 @@ public final class SemanticRules {
      * says that as well as five thousand would.
      */
     static final class CustomerCodesUnpopulated extends AbstractRule {
-
         CustomerCodesUnpopulated() {
             super("V-605", Severity.INFO, RuleScope.FILE);
         }

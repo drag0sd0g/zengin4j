@@ -29,7 +29,6 @@ import org.junit.jupiter.api.io.TempDir;
  * so this is a regression test rather than a coincidence.
  */
 class NoAnsiEscapesTest {
-
     /** picocli reads this to decide whether to emit colour. */
     private static final String ANSI_PROPERTY = "picocli.ansi";
 
@@ -77,7 +76,6 @@ class NoAnsiEscapesTest {
                 new String[] {"inspect", path, "--annotate", "--allow-unverified"},
                 new String[] {"diff", path, path, "--allow-unverified"},
                 new String[] {"generate", "--count=2", "--out-format=json"},
-                // Failures too: usage errors render through the same help code.
                 new String[] {"validate", "--no-such-option"},
                 new String[] {"frobnicate"},
                 new String[] {"explain", "--format=no-such-format"},

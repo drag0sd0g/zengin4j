@@ -28,7 +28,6 @@ import java.util.Objects;
  * @since 0.1.0
  */
 public abstract class ZenginException extends RuntimeException {
-
     private final String messageEn;
     private final String messageJa;
 

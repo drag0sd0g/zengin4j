@@ -23,7 +23,6 @@ import java.util.Objects;
  * @since 0.4.0
  */
 public final class EncodingOptions {
-
     private static final EncodingOptions DEFAULTS = builder().build();
 
     private final CharacterWritePolicy characters;
@@ -121,7 +120,6 @@ public final class EncodingOptions {
      * @since 0.4.0
      */
     public static final class Builder {
-
         private CharacterWritePolicy characters = CharacterWritePolicy.REJECT;
         private byte replacement = ' ';
         private TruncationPolicy truncation = TruncationPolicy.REJECT_IF_TOO_LONG;

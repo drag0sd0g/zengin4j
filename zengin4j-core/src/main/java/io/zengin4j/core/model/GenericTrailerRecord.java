@@ -9,7 +9,6 @@ import java.util.Map;
  * @since 0.1.0
  */
 public final class GenericTrailerRecord extends GenericRecord implements TrailerRecord {
-
     private final int recordCount;
     private final long totalAmount;
 

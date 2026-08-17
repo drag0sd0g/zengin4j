@@ -24,7 +24,6 @@ import java.util.Locale;
  * @since 0.3.0
  */
 public final class FieldRendering {
-
     /** Bytes of hex shown before the column is truncated. */
     private static final int HEX_BYTES = 6;
 
@@ -42,7 +41,6 @@ public final class FieldRendering {
      */
     public record Row(FieldDescriptor field, String hex, String value, boolean valid,
             String problem) {
-
         /**
          * The value with control characters made visible, for printing.
          *
@@ -91,8 +89,6 @@ public final class FieldRendering {
             } else if (c == '\t') {
                 out.append('␉');
             } else if (c < 0x20 || c == 0x7F) {
-                // U+2400 is ␀; the control pictures run in code-point order, so
-                // this names any C0 character exactly.
                 out.append((char) (0x2400 + (c == 0x7F ? 0x21 : c)));
             } else {
                 out.append(c);
@@ -116,8 +112,6 @@ public final class FieldRendering {
         boolean hide = field.sensitive() && !unmask;
 
         String value = hide ? Diagnostics.maskIdentifier(raw.strip()) : raw;
-        // Hex of an account number is an account number. Masking the decoded
-        // value while printing the bytes it came from would be theatre.
         String hex = hide ? "(masked)" : hex(record, field.offset(), field.length());
 
         String problem = problemWith(field, record, raw);
@@ -294,14 +288,12 @@ public final class FieldRendering {
     }
 
     private static int charWidth(char c) {
-        // Half-width katakana and half-width symbols: one column.
         if (c >= 0xFF61 && c <= 0xFFDC) {
             return 1;
         }
         if (c >= 0xFFE8 && c <= 0xFFEE) {
             return 1;
         }
-        // CJK, kana, full-width forms and the punctuation that comes with them.
         if ((c >= 0x1100 && c <= 0x115F)
                 || (c >= 0x2E80 && c <= 0xA4CF)
                 || (c >= 0xAC00 && c <= 0xD7A3)

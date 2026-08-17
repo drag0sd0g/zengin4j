@@ -22,7 +22,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public final class MonthDayResolver {
-
     private static final MonthDay LEAP_DAY = MonthDay.of(2, 29);
 
     private final ResolutionStrategy strategy;
@@ -124,10 +123,6 @@ public final class MonthDayResolver {
                 return candidate;
             }
         }
-        // Reachable only for 29 February when neither candidate year is a leap
-        // year. Falling back to a date in the past, or searching ahead to the
-        // next leap year several years out, would both be confident answers to
-        // a question the file does not answer. Report it instead (R-D12).
         return Optional.empty();
     }
 

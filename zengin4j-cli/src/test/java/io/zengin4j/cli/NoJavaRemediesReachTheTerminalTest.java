@@ -31,7 +31,6 @@ import org.junit.jupiter.api.io.TempDir;
  * afternoon.
  */
 class NoJavaRemediesReachTheTerminalTest {
-
     @TempDir
     Path directory;
 
@@ -55,19 +54,15 @@ class NoJavaRemediesReachTheTerminalTest {
     /** Every way of failing this test can construct. */
     private List<String[]> failingInvocations() {
         List<String[]> invocations = new ArrayList<>();
-        // R-CLI6: an unverified layout, without the flag.
         invocations.add(new String[] {"inspect", valid.toString()});
         invocations.add(new String[] {"validate", valid.toString()});
         invocations.add(new String[] {"diff", valid.toString(), valid.toString()});
-        // Not a Zengin file at all.
         invocations.add(new String[] {"inspect", garbage.toString(), "--allow-unverified"});
         invocations.add(new String[] {"validate", garbage.toString(), "--allow-unverified"});
         invocations.add(new String[] {"diff", garbage.toString(), valid.toString(),
             "--allow-unverified"});
-        // A record that does not fit the format.
         invocations.add(new String[] {"inspect", truncated.toString(), "--allow-unverified"});
         invocations.add(new String[] {"validate", truncated.toString(), "--allow-unverified"});
-        // Things that do not exist.
         invocations.add(new String[] {"validate", directory.resolve("absent.txt").toString()});
         invocations.add(new String[] {"inspect", directory.resolve("absent.txt").toString()});
         invocations.add(new String[] {"explain", "--format=no-such-format"});
@@ -75,10 +70,8 @@ class NoJavaRemediesReachTheTerminalTest {
         invocations.add(new String[] {"generate", "--format=no-such-format"});
         invocations.add(new String[] {"generate", "--count=-3"});
         invocations.add(new String[] {"generate", "--separator=MIXED"});
-        // A path that cannot be written.
         invocations.add(new String[] {"generate",
             "--out=" + directory.resolve("no").resolve("such").resolve("dir.txt")});
-        // A calendar that is not one.
         invocations.add(new String[] {"validate", valid.toString(), "--allow-unverified",
             "--calendar=" + garbage});
         invocations.add(new String[] {"validate", valid.toString(), "--allow-unverified",

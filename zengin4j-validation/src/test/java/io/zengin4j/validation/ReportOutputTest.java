@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
  * R-V4 (JSON and SARIF) and R-V5 (optional reference data).
  */
 class ReportOutputTest {
-
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /** Parses with a real parser, so the writer is checked rather than trusted. */
@@ -35,8 +34,6 @@ class ReportOutputTest {
     private ValidationReport problems() {
         return ZenginValidator.defaults().validate(Fixtures.fileWithManyProblems());
     }
-
-    // -------------------------------------------------------------- R-V4
 
     /**
      * The JSON is parsed back rather than pattern-matched. A hand-written
@@ -95,9 +92,6 @@ class ReportOutputTest {
         JsonNode run = parsed.get("runs").get(0);
         assertThat(run.get("tool").get("driver").get("name").asText()).isEqualTo("zengin4j");
 
-        // Every id any rule can emit is declared, not just each rule's own —
-        // the composite rules emit several each, and a result referencing an
-        // undeclared ruleId is a document a consumer may reject.
         JsonNode rules = run.get("tool").get("driver").get("rules");
         java.util.Set<String> declared = new java.util.HashSet<>();
         rules.forEach(rule -> declared.add(rule.get("id").asText()));
@@ -144,8 +138,6 @@ class ReportOutputTest {
         assertThat(report.toText(Locale.JAPANESE)).contains("エラー").contains("送信できません");
     }
 
-    // -------------------------------------------------------------- R-V5
-
     /** The library is complete without reference data: those rules just do not run. */
     @Test
     void withoutReferenceDataNoReferenceRulesRun() {
@@ -167,7 +159,6 @@ class ReportOutputTest {
                 .build()
                 .validate(Fixtures.wellFormedFile());
 
-        // The fixtures use bank 9999, which this provider does not carry.
         assertThat(report.findingsOf("V-401")).isNotEmpty();
         assertThat(report.findingsOf("V-401").get(0).expectation())
                 .as("the finding names the data it was checked against")

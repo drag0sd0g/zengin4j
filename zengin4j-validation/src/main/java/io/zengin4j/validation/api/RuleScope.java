@@ -11,7 +11,6 @@ package io.zengin4j.validation.api;
  * @since 0.2.0
  */
 public enum RuleScope {
-
     /** The whole file, including framing and the relationship between batches. */
     FILE,
 

@@ -14,7 +14,6 @@ import java.util.Objects;
  * @since 0.1.0
  */
 public record FormatId(String value) implements Comparable<FormatId> {
-
     /**
      * Validates the identifier.
      *

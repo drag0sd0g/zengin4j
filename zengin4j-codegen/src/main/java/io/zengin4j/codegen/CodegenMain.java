@@ -28,7 +28,6 @@ import java.util.stream.Stream;
  * {@code ./gradlew generateFormatSources}.
  */
 public final class CodegenMain {
-
     private static final String CODE_LISTS_FILE = "code-lists.yaml";
     private static final String YAML_SUFFIX = ".yaml";
     private static final String KANA_SUBSTITUTIONS_FILE = "kana-substitutions.yaml";
@@ -56,9 +55,6 @@ public final class CodegenMain {
 
         List<FormatDescriptor> descriptors = new ArrayList<>();
         Map<FormatDescriptor, String> sources = new LinkedHashMap<>();
-        // Read in file-name order, so a descriptor borrowing a layout with
-        // `same-layout-as` finds it already loaded. The ordering is stated in
-        // the error message when it does not.
         Map<String, FormatDescriptor> byId = new LinkedHashMap<>();
         for (Path file : descriptorFiles) {
             String name = file.getFileName().toString();
@@ -76,10 +72,6 @@ public final class CodegenMain {
         }
 
         if ("verify".equals(mode)) {
-            // Loading is the verification: the descriptor model rejects field
-            // lengths that do not sum to the record length, non-contiguous
-            // offsets, duplicate ids, unresolvable code lists and any claim of
-            // verification without cited sources.
             new RecordSourceGenerator(javaOut).generate(descriptors.get(0), sources.get(descriptors.get(0)));
             System.out.println("all descriptors are internally consistent");
             return;
@@ -101,7 +93,6 @@ public final class CodegenMain {
             Path javaOut,
             Path docsOut,
             Path kanaDir) {
-
         RecordSourceGenerator sourceGenerator = new RecordSourceGenerator(javaOut);
         FormatDocGenerator docGenerator = new FormatDocGenerator(docsOut);
         BundledFormatsGenerator formatsGenerator = new BundledFormatsGenerator(javaOut);
@@ -114,13 +105,9 @@ public final class CodegenMain {
         }
         files.add(sourceGenerator.aggregate(descriptors));
         files.add(sourceGenerator.packageInfo());
-        // The descriptors themselves, compiled to Java so that core needs no
-        // parser and no descriptor resources at runtime (ADR-0016).
         files.add(formatsGenerator.generate(codeLists, descriptors, sources));
         files.add(formatsGenerator.packageInfo());
 
-        // The transliteration tables (R-K9). Same reasoning as the descriptors:
-        // authored as data, compiled to Java, so core parses nothing at runtime.
         KanaTablesGenerator kanaGenerator = new KanaTablesGenerator(javaOut);
         Path substitutions = kanaDir.resolve(KANA_SUBSTITUTIONS_FILE);
         files.add(kanaGenerator.generate(

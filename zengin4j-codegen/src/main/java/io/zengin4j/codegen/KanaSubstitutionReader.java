@@ -24,7 +24,6 @@ import org.yaml.snakeyaml.Yaml;
  * transcribed here.
  */
 final class KanaSubstitutionReader {
-
     /** One declared substitution. */
     record Substitution(String from, String to, String severity, String whyEn, String whyJa) {
     }
@@ -74,14 +73,10 @@ final class KanaSubstitutionReader {
                 throw new CodegenException(file + ": 'from' must be a single character, found '"
                         + substitution.from() + "'");
             }
-            // A character substituted twice would resolve by declaration order,
-            // which is a silent way for two rules to disagree.
             if (!seen.add(substitution.from())) {
                 throw new CodegenException(file + ": '" + substitution.from()
                         + "' is substituted more than once");
             }
-            // A substitution whose replacement is itself substituted would need
-            // a second pass, and the engine deliberately makes only one.
             substitutions.add(substitution);
         }
 

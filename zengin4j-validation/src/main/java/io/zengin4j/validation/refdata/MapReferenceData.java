@@ -21,7 +21,6 @@ import java.util.Optional;
  * @since 0.2.0
  */
 public final class MapReferenceData implements ReferenceDataProvider {
-
     private final Map<String, String> banks;
     private final Map<String, String> branches;
     private final String description;
@@ -79,7 +78,6 @@ public final class MapReferenceData implements ReferenceDataProvider {
      * @since 0.2.0
      */
     public static final class Builder {
-
         private final Map<String, String> banks = new HashMap<>();
         private final Map<String, String> branches = new HashMap<>();
         private final String description;

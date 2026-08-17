@@ -9,7 +9,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public enum RecordKind {
-
     /** ヘッダーレコード — データ区分 {@code 1}. Opens a batch. */
     HEADER("header"),
 

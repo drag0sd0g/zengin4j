@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
  * The lazy view over the recycled buffer (R-MEM1 to R-MEM4).
  */
 class RecordViewTest {
-
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
     /** R-MEM2: a view retained across an iteration must fail loudly, not quietly. */

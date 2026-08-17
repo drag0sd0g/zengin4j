@@ -12,7 +12,6 @@ import java.time.LocalDate;
  * @since 0.2.0
  */
 public interface BusinessCalendar {
-
     /**
      * Whether funds move on a date.
      *

@@ -26,7 +26,6 @@ import java.util.Objects;
  */
 public abstract sealed class GenericRecord
         permits GenericHeaderRecord, GenericDataRecord, GenericTrailerRecord, GenericEndRecord {
-
     private final RecordDescriptor descriptor;
     private final int recordNumber;
     private final long byteOffset;

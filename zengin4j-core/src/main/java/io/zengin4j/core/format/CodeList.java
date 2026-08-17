@@ -40,7 +40,6 @@ public record CodeList(
         List<CodeValue> values,
         List<String> sources,
         Optional<String> note) {
-
     /**
      * Validates and defensively copies the components.
      *

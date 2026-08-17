@@ -6,7 +6,6 @@ package io.zengin4j.core.format;
  * @since 0.1.0
  */
 public enum Alignment {
-
     /** Value at the start of the field, padding after it. */
     LEFT,
 

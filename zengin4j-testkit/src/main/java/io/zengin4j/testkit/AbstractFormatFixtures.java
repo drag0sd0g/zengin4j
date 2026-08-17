@@ -23,7 +23,6 @@ import java.util.Objects;
  * @since 0.3.0
  */
 abstract class AbstractFormatFixtures implements FormatFixtures {
-
     private final FormatDescriptor descriptor;
     private final ZenginCharset charset;
 
@@ -64,15 +63,10 @@ abstract class AbstractFormatFixtures implements FormatFixtures {
 
     @Override
     public final ReaderOptions readerOptions() {
-        // The format is deliberately not pinned: these files carry a 種別コード
-        // and detection is part of what fixtures exercise.
         return ReaderOptions.builder()
                 .charset(charset)
                 .allowUnverifiedFormats(true)
                 .warningListener(warning -> {
-                    // Fixtures are used in tests and by `zengin generate`; the
-                    // unverified-format warning is expected here and would only
-                    // add noise. Callers who want it can build their own options.
                 })
                 .build();
     }

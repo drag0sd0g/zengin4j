@@ -11,7 +11,6 @@ package io.zengin4j.core.charset;
  * @since 0.1.0
  */
 public enum CodeKubun {
-
     /** {@code 0} — JIS. The only variant this library decodes. */
     JIS("0"),
 

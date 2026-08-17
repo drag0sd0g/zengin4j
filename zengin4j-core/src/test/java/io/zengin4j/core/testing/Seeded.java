@@ -22,7 +22,6 @@ import java.util.function.Function;
  * <p>See {@code docs/adr/0017-property-testing-without-jqwik.md}.
  */
 public final class Seeded {
-
     /** Cases per property unless a test asks for more. */
     public static final int DEFAULT_CASES = 400;
 
@@ -42,7 +41,6 @@ public final class Seeded {
      */
     public static <T> void property(
             String name, int cases, long seed, Function<Random, T> generator, Consumer<T> check) {
-
         for (int index = 0; index < cases; index++) {
             long caseSeed = derive(seed, index);
             T value;

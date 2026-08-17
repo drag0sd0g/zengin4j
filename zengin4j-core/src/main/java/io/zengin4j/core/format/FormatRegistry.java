@@ -22,7 +22,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public final class FormatRegistry {
-
     private final Map<FormatId, FormatDescriptor> formats;
     private final Map<String, CodeList> codeLists;
 
@@ -161,7 +160,6 @@ public final class FormatRegistry {
      * @since 0.1.0
      */
     public static final class Builder {
-
         private final Map<FormatId, FormatDescriptor> formats = new LinkedHashMap<>();
         private Map<String, CodeList> codeLists = Map.of();
 

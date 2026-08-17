@@ -18,11 +18,8 @@ import org.junit.jupiter.api.io.TempDir;
  * encoding the default does not read.
  */
 class OptionHandlingTest {
-
     @TempDir
     Path directory;
-
-    // ------------------------------------------------------------- language
 
     @Test
     void findingsCanBeAskedForInJapanese() throws Exception {
@@ -42,8 +39,6 @@ class OptionHandlingTest {
 
         assertThat(result.out()).contains("warning(s)");
     }
-
-    // ------------------------------------------------------------- suppress
 
     @Test
     void aSuppressedRuleStopsAffectingTheExitStatus() throws Exception {
@@ -69,8 +64,6 @@ class OptionHandlingTest {
 
         assertThat(result.status()).isEqualTo(ExitCode.OK.value());
     }
-
-    // ------------------------------------------------------------- calendar
 
     @Test
     void theBundledCalendarCanBeSwitchedOnAndSaysHowLongItIsGoodFor() throws Exception {
@@ -154,8 +147,6 @@ class OptionHandlingTest {
         assertThat(result.status()).isEqualTo(ExitCode.IO.value());
     }
 
-    // -------------------------------------------------------------- charset
-
     @Test
     void aFileCanBeReadInAnExplicitEncoding() throws Exception {
         Path file = directory.resolve("sjis.txt");
@@ -205,8 +196,6 @@ class OptionHandlingTest {
         assertThat(result.err()).contains("MS932");
     }
 
-    // ------------------------------------------------------------- pinning
-
     @Test
     void theFormatCanBePinnedRatherThanDetected() throws Exception {
         Path file = Cli.generate(directory, "pinned.txt", "--count=1");
@@ -217,8 +206,6 @@ class OptionHandlingTest {
         assertThat(result.status()).isZero();
         assertThat(result.out()).contains("sougou-furikomi");
     }
-
-    // -------------------------------------------------------------- lenient
 
     @Test
     void lenientModeKeepsReadingPastARecordThatDoesNotFit() throws Exception {
@@ -232,8 +219,6 @@ class OptionHandlingTest {
         assertThat(strict.status()).isNotEqualTo(ExitCode.OK.value());
         assertThat(lenient.status()).as(lenient.all()).isZero();
     }
-
-    // ------------------------------------------------------------ to stdout
 
     @Test
     void generateWritesToStdoutWhenGivenNoOutputPath() {

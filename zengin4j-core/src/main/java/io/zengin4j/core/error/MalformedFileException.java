@@ -11,7 +11,6 @@ package io.zengin4j.core.error;
  * @since 0.1.0
  */
 public final class MalformedFileException extends ZenginException {
-
     private final long byteOffset;
     private final int recordNumber;
 

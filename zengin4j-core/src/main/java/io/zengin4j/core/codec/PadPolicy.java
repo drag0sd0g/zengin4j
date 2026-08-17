@@ -9,7 +9,6 @@ import io.zengin4j.core.format.FieldType;
  * @since 0.1.0
  */
 public enum PadPolicy {
-
     /** Value first, spaces after: the convention for {@code C} fields. */
     LEFT_ALIGNED_SPACE(Alignment.LEFT, (byte) ' '),
 

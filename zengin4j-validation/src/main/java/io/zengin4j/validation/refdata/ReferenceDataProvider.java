@@ -18,7 +18,6 @@ import java.util.Optional;
  * @since 0.2.0
  */
 public interface ReferenceDataProvider {
-
     /**
      * Whether a bank code is known.
      *

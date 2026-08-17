@@ -60,7 +60,6 @@ import org.junit.jupiter.api.Tag;
  */
 @Tag("fuzz")
 class ReaderFuzzTest {
-
     private static final int RECORD_LIMIT = 100_000;
 
     private static final FormatRegistry REGISTRY = FormatRegistry.defaults();
@@ -94,10 +93,6 @@ class ReaderFuzzTest {
             return;
         }
         if (!file.framing().isReproducible()) {
-            // Found by fuzzing, and the right behaviour rather than a defect: a
-            // file that mixed separator conventions has no convention to
-            // reproduce. The writer owes a refusal by name, and must become
-            // able to write it once a convention is imposed (R-C9).
             assertThatExceptionOfType(FormatDescriptorException.class)
                     .isThrownBy(() -> ZenginWriters.toByteArray(file, WriterOptions.defaults()));
             assertThat(ZenginWriters.toByteArray(file, WriterOptions.separator(SeparatorStyle.CRLF)))

@@ -9,7 +9,6 @@ import java.util.Map;
  * @since 0.1.0
  */
 public final class GenericDataRecord extends GenericRecord implements DataRecord {
-
     private final long amount;
 
     /**

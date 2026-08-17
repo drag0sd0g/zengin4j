@@ -31,7 +31,6 @@ import java.util.function.Consumer;
  * @since 0.2.0
  */
 public final class ConsistencyRules {
-
     /** What an {@code N(12)} trailer total can hold. */
     static final long TRAILER_CAPACITY = 999_999_999_999L;
 
@@ -57,7 +56,6 @@ public final class ConsistencyRules {
      * three different ones (§19.3).
      */
     static final class TrailerTotal extends AbstractRule {
-
         TrailerTotal() {
             super("V-301", Severity.ERROR, RuleScope.BATCH,
                     java.util.Set.of("V-301", "V-303", "V-304"));
@@ -97,8 +95,6 @@ public final class ConsistencyRules {
 
                 TrailerRecord trailer = batch.trailer().orElse(null);
                 if (trailer == null) {
-                    // V-104 already reports the missing trailer; a second
-                    // finding about its contents would be noise.
                     continue;
                 }
                 if (trailer.totalAmount() != sum) {
@@ -117,7 +113,6 @@ public final class ConsistencyRules {
 
     /** V-302. */
     static final class TrailerCount extends AbstractRule {
-
         TrailerCount() {
             super("V-302", Severity.ERROR, RuleScope.BATCH);
         }
@@ -144,7 +139,6 @@ public final class ConsistencyRules {
 
     /** V-305. */
     static final class TypeCodeConsistent extends AbstractRule {
-
         TypeCodeConsistent() {
             super("V-305", Severity.ERROR, RuleScope.FILE);
         }
@@ -189,7 +183,6 @@ public final class ConsistencyRules {
      * rule; reporting it as a warning makes them look.
      */
     static final class DuplicatePayments extends AbstractRule {
-
         DuplicatePayments() {
             super("V-306", Severity.WARNING, RuleScope.BATCH);
         }

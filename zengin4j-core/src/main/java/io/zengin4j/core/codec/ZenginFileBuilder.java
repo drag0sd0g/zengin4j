@@ -63,14 +63,12 @@ import java.util.function.Consumer;
  * @since 0.1.0
  */
 public final class ZenginFileBuilder {
-
     private final FormatDescriptor descriptor;
     private final ViewGeneration generation = new ViewGeneration();
 
     private ZenginCharset charset = ZenginCharset.defaultCharset();
     private FileFraming framing = FileFraming.conventional();
 
-    // Refuse anything the field cannot hold, until a caller says otherwise.
     private EncodingOptions encodingOptions = EncodingOptions.defaults();
     private LossCollector loss = new LossCollector();
     private boolean allowUnverifiedFormats;
@@ -264,12 +262,6 @@ public final class ZenginFileBuilder {
         if (batches.isEmpty()) {
             throw new IllegalStateException("a file needs at least one header record");
         }
-        // Checked here rather than in ZenginWriters, because this is where
-        // values are placed at descriptor-defined offsets — the step an
-        // unverified layout can get wrong. A file the reader produced already
-        // passed the equivalent gate, and writing it back reproduces bytes that
-        // already existed, so the writer re-asking would add friction to the
-        // one path that introduces no risk.
         if (!descriptor.verified() && !allowUnverifiedFormats) {
             throw new UnverifiedFormatException(descriptor.id().value(),
                     UnverifiedFormatException.Operation.BUILDING);
@@ -308,7 +300,6 @@ public final class ZenginFileBuilder {
      */
     private Map<String, String> trailerValues(
             RecordDescriptor trailer, List<DataRecord> data, Map<String, String> overrides) {
-
         Map<String, String> values = new LinkedHashMap<>();
         trailer.findByFormat(FieldFormat.COUNT)
                 .ifPresent(field -> values.put(field.id(), Integer.toString(data.size())));
@@ -341,7 +332,6 @@ public final class ZenginFileBuilder {
 
     /** Assigns record numbers and the byte offsets the configured framing implies. */
     private static final class Cursor {
-
         private int number;
         private long offset;
 
@@ -357,7 +347,6 @@ public final class ZenginFileBuilder {
     }
 
     private static final class PendingBatch {
-
         private final Map<String, String> header;
         private final List<Map<String, String>> data = new ArrayList<>();
         private final Map<String, String> trailerOverrides = new LinkedHashMap<>();
@@ -374,7 +363,6 @@ public final class ZenginFileBuilder {
      * @since 0.1.0
      */
     public static final class FieldValues {
-
         private final RecordDescriptor descriptor;
         private final Map<String, String> values = new LinkedHashMap<>();
 

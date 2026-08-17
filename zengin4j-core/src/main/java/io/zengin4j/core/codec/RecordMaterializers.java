@@ -11,7 +11,6 @@ import java.util.Optional;
  * else in this package works from descriptors alone.
  */
 final class RecordMaterializers {
-
     private RecordMaterializers() {
     }
 

@@ -25,7 +25,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public interface BatchReader extends AutoCloseable {
-
     /**
      * Returns the format the file is being read as.
      *

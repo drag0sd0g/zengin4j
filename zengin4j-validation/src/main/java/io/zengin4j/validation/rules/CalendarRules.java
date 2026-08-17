@@ -35,7 +35,6 @@ import java.util.function.Consumer;
  * @since 0.2.0
  */
 public final class CalendarRules {
-
     /**
      * How far ahead institutions typically accept an instruction. A month is
      * the common ceiling; this is a warning either way, because the real limit
@@ -72,7 +71,6 @@ public final class CalendarRules {
      * the rules from disagreeing with each other about the same date.
      */
     static final class ValueDateIsABusinessDay extends AbstractRule {
-
         ValueDateIsABusinessDay() {
             super("V-501", Severity.ERROR, RuleScope.BATCH,
                     java.util.Set.of("V-501", "V-502", "V-503", "V-505"));
@@ -80,8 +78,6 @@ public final class CalendarRules {
 
         @Override
         public Severity severityOf(String emittedId) {
-            // V-505 says the calendar cannot answer, which is information about
-            // this library's data rather than a defect in the caller's file.
             return "V-505".equals(emittedId) ? Severity.INFO : Severity.ERROR;
         }
 
@@ -102,9 +98,6 @@ public final class CalendarRules {
                 try {
                     classified = calendar.classify(date);
                 } catch (BeyondCalendarHorizonException beyond) {
-                    // R-V1: validation reports, it does not raise. The caller
-                    // asked what is wrong with the file, and "I cannot tell you
-                    // about this date" is an answer worth having.
                     out.accept(Messages.format("V-505.message", date, beyond.horizon())
                             .into(Finding.of(Severity.INFO, "V-505")
                                     .at(header.recordNumber(), header.byteOffset()))
@@ -116,7 +109,6 @@ public final class CalendarRules {
 
                 switch (classified.kind()) {
                     case BUSINESS_DAY -> {
-                        // nothing to report
                     }
                     case WEEKEND -> out.accept(Messages.format("V-501.message",
                                     date, weekendName(date))
@@ -136,7 +128,6 @@ public final class CalendarRules {
                             .actual(date.toString())
                             .build());
                     default -> {
-                        // exhaustive
                     }
                 }
             }
@@ -149,7 +140,6 @@ public final class CalendarRules {
 
     /** V-504. */
     static final class ValueDateWithinForwardWindow extends AbstractRule {
-
         ValueDateWithinForwardWindow() {
             super("V-504", Severity.WARNING, RuleScope.BATCH);
         }

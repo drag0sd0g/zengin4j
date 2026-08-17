@@ -17,7 +17,6 @@ package io.zengin4j.core.time;
  * @since 0.1.0
  */
 public enum ResolutionStrategy {
-
     /**
      * The next occurrence at or after the reference date. Appropriate for
      * instruction files, where the value date has not happened yet.

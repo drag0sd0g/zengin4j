@@ -19,7 +19,6 @@ import org.junit.jupiter.params.provider.MethodSource;
  * @see JsonOutputTest for R-CLI2
  */
 class CommandBehaviourTest {
-
     @TempDir
     Path directory;
 
@@ -28,8 +27,6 @@ class CommandBehaviourTest {
                 .map(io.zengin4j.core.format.FormatId::value)
                 .toList();
     }
-
-    // ------------------------------------------------------------- generate
 
     /** R-CLI3, for every format the testkit covers. */
     @ParameterizedTest
@@ -61,8 +58,6 @@ class CommandBehaviourTest {
                 "--format=" + format, "--count=200");
 
         Cli result = Cli.run("validate", file.toString(), "--allow-unverified",
-                // V-306 fires on the duplicate payments a 200-record random draw
-                // inevitably produces; that is the rule working, not a defect.
                 "--suppress=V-306");
 
         assertThat(result.status())
@@ -109,13 +104,10 @@ class CommandBehaviourTest {
         Path none = Cli.generate(directory, "none.txt", "--count=1", "--separator=NONE");
         Path eof = Cli.generate(directory, "eof.txt", "--count=1", "--separator=LF", "--eof-byte");
 
-        // header + payment + trailer + end = 4 records of 120 bytes.
         assertThat(Files.readAllBytes(none)).hasSize(480);
         assertThat(Files.readAllBytes(lf)).hasSize(484);
         assertThat(Files.readAllBytes(eof)).hasSize(485);
     }
-
-    // -------------------------------------------------------------- inspect
 
     @Test
     void inspectSummarisesWithoutAnnotateAndSaysHowToGetMore() throws Exception {
@@ -181,8 +173,6 @@ class CommandBehaviourTest {
 
         assertThat(result.err()).contains("has not been confirmed against two independent");
     }
-
-    // ----------------------------------------------------------------- diff
 
     @Test
     void diffOnIdenticalFilesSaysSoAndExitsZero() throws Exception {
@@ -258,12 +248,8 @@ class CommandBehaviourTest {
 
         Cli result = Cli.run("diff", before.toString(), after.toString(), "--allow-unverified");
 
-        // The generator draws from the same seeded sequence, so the first two
-        // payments are identical and only the trailer moves and changes.
         assertThat(result.out()).contains("1 added");
     }
-
-    // -------------------------------------------------------------- explain
 
     @Test
     void explainListsEveryBundledFormatWhenGivenNothing() {

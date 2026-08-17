@@ -28,7 +28,6 @@ import java.util.Objects;
  * @since 0.1.0
  */
 public final class ZenginReaders {
-
     private ZenginReaders() {
     }
 

@@ -14,7 +14,6 @@ import io.zengin4j.core.charset.CodeKubun;
  * @since 0.1.0
  */
 public final class UnsupportedEncodingVariantException extends ZenginException {
-
     private final CodeKubun found;
 
     /**

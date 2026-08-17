@@ -18,12 +18,9 @@ import org.junit.jupiter.params.provider.EnumSource;
  * when there are several.
  */
 class LossTest {
-
     private static LossEntry entry(LossKind kind, LossSeverity severity) {
         return LossEntry.of(kind, severity, "before", "after", "what happened", "経緯");
     }
-
-    // ------------------------------------------------------------- severity
 
     /**
      * R-I16 — the ordering is the semantics.
@@ -64,8 +61,6 @@ class LossTest {
                 .containsExactly(LossKind.TRUNCATED, LossKind.TRANSLITERATED, LossKind.DROPPED,
                         LossKind.DEFAULTED, LossKind.COERCED);
     }
-
-    // ---------------------------------------------------------------- report
 
     @Test
     void anEmptyReportIsLossless() {
@@ -159,8 +154,6 @@ class LossTest {
         assertThat(report.entries()).hasSize(1);
     }
 
-    // ------------------------------------------------------------- collector
-
     @Test
     void aCollectorGathersEntriesAndBuildsAReport() {
         LossCollector collector = new LossCollector();
@@ -191,8 +184,6 @@ class LossTest {
     void anEmptyCollectorBuildsTheSharedEmptyReport() {
         assertThat(new LossCollector().build().isLossless()).isTrue();
     }
-
-    // ----------------------------------------------------------------- entry
 
     @Test
     void anEntryCanBeLocatedAfterTheFact() {

@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
  * Issue 2.1: building files with computed trailers.
  */
 class ZenginFileBuilderTest {
-
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
     @Test
@@ -98,7 +97,6 @@ class ZenginFileBuilderTest {
 
         assertThat(offsets(withSeparators)).containsExactly(0L, 122L, 244L, 366L);
         assertThat(offsets(without)).containsExactly(0L, 120L, 240L, 360L);
-        // The offsets are where the writer actually puts them.
         byte[] bytes = ZenginWriters.toByteArray(withSeparators, WriterOptions.defaults());
         assertThat(bytes).hasSize(4 * 122);
         assertThat((char) bytes[244]).isEqualTo('8');
@@ -224,14 +222,12 @@ class ZenginFileBuilderTest {
                     assertThat(thrown.formatId()).isEqualTo("sougou-furikomi");
                     assertThat(thrown.operation())
                             .isEqualTo(UnverifiedFormatException.Operation.BUILDING);
-                    // The remedy named must be the one that actually applies here.
                     assertThat(thrown.messageEn())
                             .contains("ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)")
                             .doesNotContain("ReaderOptions");
                     assertThat(thrown.messageJa()).isNotBlank();
                 });
 
-        // And the opt-in is what makes it work.
         assertThat(ZenginFileBuilder.forFormat(descriptor)
                 .allowUnverifiedFormats(true)
                 .header(header -> header.set("originatorCode", "9900000001"))
@@ -275,7 +271,6 @@ class ZenginFileBuilderTest {
                 .isThrownBy(() -> Fixtures.builder(descriptor)
                         .header(header -> header.set("originatorCode", -1L)))
                 .withMessageContaining("cannot carry a negative value");
-        // Every overload validates the id, not just the String one.
         assertThatExceptionOfType(FormatDescriptorException.class)
                 .isThrownBy(() -> Fixtures.builder(descriptor)
                         .header(header -> header.set("noSuchField", 1L)))
@@ -301,7 +296,6 @@ class ZenginFileBuilderTest {
                 ZenginCharset.MS932, Map.of("amount", "150000"));
 
         assertThat(frame).hasSize(120);
-        // データ区分 constant, then zero-padded numerics and space-padded text.
         assertThat((char) frame[0]).isEqualTo('2');
         assertThat(new String(frame, 80, 10, java.nio.charset.StandardCharsets.US_ASCII))
                 .isEqualTo("0000150000");

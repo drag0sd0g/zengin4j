@@ -28,7 +28,6 @@ import java.util.Map;
  * different table on one leg of the CI matrix.
  */
 final class KanaTablesGenerator {
-
     static final String PACKAGE = "io.zengin4j.core.kana.generated";
     static final String GENERATOR = "io.zengin4j.codegen.KanaTablesGenerator";
 
@@ -109,8 +108,6 @@ final class KanaTablesGenerator {
         return new GeneratedFile(path, content);
     }
 
-    // ------------------------------------------------------------- derivation
-
     /**
      * Full-width form to half-width sequence, derived from Unicode.
      *
@@ -128,7 +125,6 @@ final class KanaTablesGenerator {
                 narrowing.put(String.valueOf(full), ascii);
             }
         }
-        // The ideographic space, which is not in the full-width ASCII block.
         narrowing.put("　", " ");
 
         for (char half = HALF_WIDTH_FIRST; half <= HALF_WIDTH_LAST; half++) {
@@ -136,9 +132,6 @@ final class KanaTablesGenerator {
                     "" + half + DAKUTEN, "" + half + HANDAKUTEN)) {
                 String full = Normalizer.normalize(sequence, Normalizer.Form.NFKC);
                 if (full.codePointCount(0, full.length()) == 1 && !full.equals(sequence)) {
-                    // putIfAbsent: the bare kana is offered before its voiced
-                    // forms, so a kana that is its own composition keeps the
-                    // shorter sequence.
                     narrowing.putIfAbsent(full, sequence);
                 }
             }
@@ -151,7 +144,6 @@ final class KanaTablesGenerator {
      */
     private static void verify(Map<String, String> narrowing,
             List<KanaSubstitutionReader.Substitution> substitutions) {
-
         if (narrowing.size() != EXPECTED_NARROWING_ENTRIES) {
             throw new CodegenException("the derived narrowing table has " + narrowing.size()
                     + " entries, expected " + EXPECTED_NARROWING_ENTRIES
@@ -171,7 +163,6 @@ final class KanaTablesGenerator {
         }
 
         for (KanaSubstitutionReader.Substitution substitution : substitutions) {
-            // A replacement must itself be narrowable, or writable as it stands.
             for (int i = 0; i < substitution.to().length(); ) {
                 int codePoint = substitution.to().codePointAt(i);
                 String character = new String(Character.toChars(codePoint));
@@ -186,8 +177,6 @@ final class KanaTablesGenerator {
             }
         }
     }
-
-    // --------------------------------------------------------------- emission
 
     private void header(StringBuilder out, String source) {
         out.append("package ").append(PACKAGE).append(';').append(NL).append(NL)
@@ -282,7 +271,6 @@ final class KanaTablesGenerator {
 
     private void substitutionTable(StringBuilder out,
             List<KanaSubstitutionReader.Substitution> substitutions) {
-
         out.append("    /** The declared judgement calls: what the field rules refuse. */").append(NL)
                 .append("    private static final Map<String, KanaSubstitution> SUBSTITUTIONS =")
                 .append(NL)

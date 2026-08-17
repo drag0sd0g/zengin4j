@@ -29,7 +29,6 @@ public record FileFraming(
         SeparatorStyle separator,
         boolean trailingSeparator,
         boolean trailingEofByte) {
-
     /**
      * Validates the components.
      */

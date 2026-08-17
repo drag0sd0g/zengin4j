@@ -32,7 +32,6 @@ import org.junit.jupiter.params.provider.MethodSource;
  * that violate the character rules teach every downstream test the wrong thing.
  */
 class AllFormatFixturesTest {
-
     static List<FormatId> formats() {
         return FormatFixtures.supported();
     }

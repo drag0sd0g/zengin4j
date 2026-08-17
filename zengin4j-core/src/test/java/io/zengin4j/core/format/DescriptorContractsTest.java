@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
  * from YAML or built in code by a consumer registering a variant (R-X1).
  */
 class DescriptorContractsTest {
-
     private static final FormatId ID = FormatId.of("example");
 
     @Test

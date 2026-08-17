@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
  * The contracts that hold whatever the file contains: R-V1, R-V3 and INV-7.
  */
 class ValidatorContractTest {
-
     /**
      * R-V1. The one behaviour a validator cannot have is failing on bad input,
      * because bad input is the only reason anyone runs one.
@@ -84,7 +83,6 @@ class ValidatorContractTest {
         assertThat(report.findingsOf("V-100")).singleElement().satisfies(finding -> {
             assertThat(finding.severity()).isEqualTo(Severity.ERROR);
             assertThat(finding.messageEn()).contains("could not be read");
-            // From the bundle, not inline (R-E4).
             assertThat(finding.messageJa()).contains("読み取れませんでした")
                     .doesNotContain("could not be read");
         });
@@ -207,8 +205,6 @@ class ValidatorContractTest {
                             rule.id())
                     .doesNotContain("''");
         }
-        // And a message with an apostrophe survives formatting with its
-        // argument intact, which is what the doubling is for.
         assertThat(Messages.format("V-301.message", 1, 2, 3).en())
                 .contains("batch's").contains("1").doesNotContain("{0}");
     }
@@ -231,7 +227,6 @@ class ValidatorContractTest {
                     .contains(rule.id());
         }
 
-        // V-502 and V-501 come from one rule. Suppressing one must leave the other.
         java.util.Set<String> emitted = new java.util.HashSet<>();
         Rules.bundled().forEach(rule -> emitted.addAll(rule.emits()));
         assertThat(emitted).contains("V-303", "V-304", "V-502", "V-503", "V-505");
@@ -256,7 +251,6 @@ class ValidatorContractTest {
 
     /** A rule that always fails, for testing that the engine contains it. */
     private static final class ExplodingRule implements Rule {
-
         @Override
         public String id() {
             return "V-999";

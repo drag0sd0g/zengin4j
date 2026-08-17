@@ -15,7 +15,6 @@ import java.io.IOException;
  */
 @AnalyzeClasses(packages = "io.zengin4j.core", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
-
     /**
      * R-M1, P3: zero runtime dependencies. This is the property that makes the
      * artifact adoptable where dependencies are reviewed, and the only way to

@@ -20,7 +20,6 @@ import java.util.Objects;
  * @since 0.4.0
  */
 public record KanaSubstitution(String replacement, LossSeverity severity, String whyEn, String whyJa) {
-
     /**
      * Validates the components.
      */

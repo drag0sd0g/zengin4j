@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
  * caller relies on when they do not know which encoding their file is in.
  */
 class EncodingMatrixTest {
-
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
     private ReaderOptions options(ZenginCharset charset) {
@@ -38,8 +37,6 @@ class EncodingMatrixTest {
                 })
                 .build();
     }
-
-    // ------------------------------------------------------- the matrix itself
 
     /**
      * The load-bearing claim in {@code docs/encoding.md}: a conformant file
@@ -92,10 +89,8 @@ class EncodingMatrixTest {
         ZenginFile parsed = ZenginReaders.readFile(
                 new ByteArrayInputStream(file), options(ZenginCharset.UTF_8));
 
-        // Structure survives: framing and numerics are ASCII either way.
         assertThat(parsed.totalRecords()).isEqualTo(4);
         assertThat(parsed.allData().get(0).amount()).isEqualTo(Fixtures.AMOUNT);
-        // Text does not.
         assertThat(((SougouFurikomiData) parsed.allData().get(0)).beneficiaryName())
                 .isNotEqualTo(Fixtures.BENEFICIARY);
     }
@@ -107,13 +102,9 @@ class EncodingMatrixTest {
         assertThat(ZenginCharset.SHIFT_JIS.encode(Fixtures.BANK_NAME)).hasSize(8);
         assertThat(ZenginCharset.UTF_8.encode(Fixtures.BANK_NAME)).hasSize(24);
 
-        // A 15-byte 被仕向銀行名 holds it under the Japanese encodings and cannot
-        // hold it under UTF-8.
         assertThat(ZenginCharset.MS932.encode(Fixtures.BANK_NAME).length).isLessThanOrEqualTo(15);
         assertThat(ZenginCharset.UTF_8.encode(Fixtures.BANK_NAME).length).isGreaterThan(15);
     }
-
-    // --------------------------------------------- the divergence, pinned exactly
 
     /**
      * Single-byte katakana is identical under both Japanese encodings. This is
@@ -143,14 +134,13 @@ class EncodingMatrixTest {
      */
     @Test
     void theDoubleByteDivergenceIsExactlyWhatTheDocumentationSays() {
-        assertDivergence(0x81, 0x60, '〜', '～');   // wave dash / fullwidth tilde
-        assertDivergence(0x81, 0x61, '‖', '∥');   // double vertical line / parallel to
-        assertDivergence(0x81, 0x7C, '−', '－');   // minus sign / fullwidth hyphen-minus
+        assertDivergence(0x81, 0x60, '〜', '～');
+        assertDivergence(0x81, 0x61, '‖', '∥');
+        assertDivergence(0x81, 0x7C, '−', '－');
 
-        // NEC and IBM extensions: CP932 has them, Shift_JIS does not.
-        assertOnlyInMs932(0x87, 0x40, '①');            // ①
-        assertOnlyInMs932(0x87, 0x54, 'Ⅰ');            // Ⅰ
-        assertOnlyInMs932(0x87, 0x82, '№');            // №
+        assertOnlyInMs932(0x87, 0x40, '①');
+        assertOnlyInMs932(0x87, 0x54, 'Ⅰ');
+        assertOnlyInMs932(0x87, 0x82, '№');
     }
 
     private static void assertDivergence(int first, int second, char shiftJis, char ms932) {

@@ -11,7 +11,6 @@ package io.zengin4j.core.loss;
  * @since 0.4.0
  */
 public enum LossKind {
-
     /** Text was shortened to fit a fixed-width field. */
     TRUNCATED,
 

@@ -22,7 +22,6 @@ import java.util.Map;
  * @since 0.3.0
  */
 public final class CliMessages {
-
     /** Java remedy to command-line remedy, longest first so prefixes cannot shadow. */
     private static final Map<String, String> REMEDIES = remedies();
 

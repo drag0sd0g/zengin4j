@@ -7,11 +7,6 @@
  *
  * @since 0.1.0
  */
-// javac warns that a module name component should avoid terminal digits, in case
-// a trailing number is mistaken for a version. Here "20022" is the standard's
-// name, not a version, and every package in this module is already called that.
-// Suppressed deliberately: a warning nobody is permitted to fix is a warning
-// everyone learns to scroll past, which is how the last one survived.
 @SuppressWarnings("module")
 module io.zengin4j.iso20022 {
     requires transitive io.zengin4j.core;

@@ -39,7 +39,6 @@ import org.junit.jupiter.api.Test;
  * random generation never would, and runs on demand.
  */
 class InvariantProperties {
-
     private static final long SEED = 0x1234_2026L;
 
     /** Bound on records read, so a defect shows up as a failure rather than a hang. */
@@ -142,8 +141,6 @@ class InvariantProperties {
                 });
     }
 
-    // ------------------------------------------------------------ generators
-
     private static byte[] arbitraryBytes(Random random) {
         byte[] bytes = new byte[random.nextInt(400)];
         random.nextBytes(bytes);
@@ -184,8 +181,6 @@ class InvariantProperties {
         return fields;
     }
 
-    // --------------------------------------------------------------- helpers
-
     private static void assertReadIsWellBehaved(byte[] input, ParseMode mode) {
         ReaderOptions options = ReaderOptions.builder()
                 .registry(REGISTRY)
@@ -198,7 +193,6 @@ class InvariantProperties {
             int records = 0;
             while (reader.hasNext() && records < RECORD_LIMIT) {
                 RecordView view = reader.next();
-                // Touching the record must not misbehave either.
                 view.kind();
                 view.rawBytes();
                 records++;
@@ -206,7 +200,6 @@ class InvariantProperties {
             assertThat(records).as("reading %d bytes should terminate", input.length)
                     .isLessThan(RECORD_LIMIT);
         } catch (ZenginException expected) {
-            // Declared, located and bilingual: exactly what the contract allows.
             assertThat(expected.messageEn()).isNotBlank();
             assertThat(expected.messageJa()).isNotBlank();
         }

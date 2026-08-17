@@ -37,7 +37,6 @@ import picocli.CommandLine;
         mixinStandardHelpOptions = true,
         description = "Shows a file's structure, and with --annotate every field byte by byte.")
 public final class InspectCommand implements Callable<Integer> {
-
     @CommandLine.Parameters(index = "0", paramLabel = "FILE", description = "The file to inspect.")
     Path file;
 
@@ -133,8 +132,6 @@ public final class InspectCommand implements Callable<Integer> {
         return records;
     }
 
-    // ------------------------------------------------------------------ text
-
     private void text(PrintWriter out, ZenginFile parsed, List<ZenginRecord> records) {
         FormatDescriptor descriptor = parsed.descriptor();
         out.println(descriptor.id().value() + " — " + descriptor.nameJa()
@@ -204,8 +201,6 @@ public final class InspectCommand implements Callable<Integer> {
         }
         FieldRendering.table(out, rows);
     }
-
-    // ------------------------------------------------------------------ json
 
     private String json(ZenginFile parsed, List<ZenginRecord> records) {
         FormatDescriptor descriptor = parsed.descriptor();

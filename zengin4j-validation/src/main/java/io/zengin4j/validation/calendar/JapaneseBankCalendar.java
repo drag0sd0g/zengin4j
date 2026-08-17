@@ -41,7 +41,6 @@ import java.util.Optional;
  * @since 0.2.0
  */
 public final class JapaneseBankCalendar implements BusinessCalendar {
-
     private static final String RESOURCE = "japanese-holidays.csv";
 
     /**
@@ -99,9 +98,6 @@ public final class JapaneseBankCalendar implements BusinessCalendar {
     public LocalDate nextBusinessDay(LocalDate date) {
         Objects.requireNonNull(date, "date");
         LocalDate candidate = date;
-        // A run of non-business days cannot exceed a fortnight even around the
-        // new year; the bound is a guard against a malformed calendar, not an
-        // expected path.
         for (int i = 0; i < 31; i++) {
             requireWithinHorizon(candidate);
             if (classify(candidate).isBusinessDay()) {

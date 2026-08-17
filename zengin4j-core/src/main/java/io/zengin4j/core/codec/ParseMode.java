@@ -6,7 +6,6 @@ package io.zengin4j.core.codec;
  * @since 0.1.0
  */
 public enum ParseMode {
-
     /**
      * Stop at the first problem with a located diagnostic.
      *

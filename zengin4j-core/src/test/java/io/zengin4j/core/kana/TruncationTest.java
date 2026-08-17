@@ -25,7 +25,6 @@ import org.junit.jupiter.params.provider.ValueSource;
  * and adjacent.
  */
 class TruncationTest {
-
     /**
      * Names placing voicing marks where they can do the most damage.
      *
@@ -34,25 +33,23 @@ class TruncationTest {
      */
     static List<String> corpus() {
         return List.of(
-                "ｶﾞｸﾌﾞﾁ",        // marks at 1 and 4
-                "ｶﾞ",             // a single voiced character
-                "ｶﾞｷﾞｸﾞｹﾞｺﾞ",   // every character voiced: marks at every odd index
-                "ｱｶﾞ",            // mark late
-                "ｶﾞｱ",            // mark early
-                "ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ",   // semi-voiced throughout
-                "ｱｲｳｴｵ",          // no marks at all
-                "ｳﾞｧ",            // vu, the only v-sound these files can spell
-                "ﾀﾞ",             // two bytes exactly
-                "ｱﾞ".substring(0, 1) + "ｲ",  // a bare kana, then another
-                "ﾃｽﾄｼﾞ",         // mark at the end
-                "ｼﾞｮ".substring(0, 2));      // mark in the middle of three bytes
+                "ｶﾞｸﾌﾞﾁ",
+                "ｶﾞ",
+                "ｶﾞｷﾞｸﾞｹﾞｺﾞ",
+                "ｱｶﾞ",
+                "ｶﾞｱ",
+                "ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ",
+                "ｱｲｳｴｵ",
+                "ｳﾞｧ",
+                "ﾀﾞ",
+                "ｱﾞ".substring(0, 1) + "ｲ",
+                "ﾃｽﾄｼﾞ",
+                "ｼﾞｮ".substring(0, 2));
     }
 
     private static byte[] bytes(String text) {
         return ZenginCharset.MS932.encode(text);
     }
-
-    // -------------------------------------------------------------- INV-4
 
     /**
      * INV-4 — a truncated result never ends mid-character and never begins with
@@ -70,7 +67,6 @@ class TruncationTest {
             try {
                 kept = KanaTransliterator.truncateSafe(full, max);
             } catch (FieldTooSmallException tooSmall) {
-                // A legitimate outcome: the field cannot hold one character.
                 continue;
             }
 
@@ -85,7 +81,6 @@ class TruncationTest {
                     .as("'%s' truncated to %d begins with a stranded mark", name, max)
                     .isFalse();
 
-            // Every mark that survived must still have its kana in front of it.
             for (int i = 0; i < kept.length; i++) {
                 int mark = kept[i] & 0xFF;
                 if (!VoicingMarks.isMark(mark)) {
@@ -124,8 +119,6 @@ class TruncationTest {
         }
     }
 
-    // ------------------------------------------------------- the exact cut
-
     /**
      * The case §16.2 describes, at the byte where it happens.
      *
@@ -163,8 +156,6 @@ class TruncationTest {
         assertThat(KanaTransliterator.truncateSafe(full, 99)).isSameAs(full);
     }
 
-    // ------------------------------------------------------------- refusals
-
     @Test
     void aFieldTooSmallForOneCharacterIsRefused() {
         assertThatExceptionOfType(FieldTooSmallException.class)
@@ -196,8 +187,6 @@ class TruncationTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> KanaTransliterator.truncateSafe(bytes("ｱ"), -1));
     }
-
-    // ------------------------------------------------------------- policies
 
     /** R-K4: the three policies, of which the default is to refuse. */
     @Test
@@ -293,7 +282,6 @@ class TruncationTest {
                 : new io.zengin4j.core.charset.CharacterClass[] {
                     io.zengin4j.core.charset.CharacterClass.BANK_NAME,
                     io.zengin4j.core.charset.CharacterClass.PARTY_NAME}) {
-
             TransliterationOptions options = TransliterationOptions.builder()
                     .characterClass(characterClass)
                     .truncation(TruncationPolicy.TRUNCATE_WITH_MARKER)
@@ -320,8 +308,6 @@ class TruncationTest {
                 .isThrownBy(() -> KanaTransliterator.toHalfWidth("ガクブチ", 2, options));
     }
 
-    // ------------------------------------------------- measured in the output
-
     /**
      * Truncation counts bytes of the encoding the file will be written in.
      *
@@ -340,8 +326,6 @@ class TruncationTest {
                 .truncation(TruncationPolicy.TRUNCATE_SAFE)
                 .build();
 
-        // ｶﾞｸﾌﾞﾁ is 18 UTF-8 bytes. A 12-byte budget reaches four characters,
-        // and the fifth is ﾌ's voicing mark — so ﾌ goes too.
         Transliteration result = KanaTransliterator.toHalfWidth("ガクブチ", 12, utf8);
 
         assertThat(result.text())

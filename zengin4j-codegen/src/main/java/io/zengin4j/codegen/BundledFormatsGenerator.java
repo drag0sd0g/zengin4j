@@ -26,7 +26,6 @@ import java.util.Optional;
  * survives the move rather than being reimplemented in the generator.
  */
 final class BundledFormatsGenerator {
-
     static final String PACKAGE = "io.zengin4j.core.format.generated";
     static final String GENERATOR = "io.zengin4j.codegen.BundledFormatsGenerator";
 
@@ -42,7 +41,6 @@ final class BundledFormatsGenerator {
             Map<String, CodeList> codeLists,
             List<FormatDescriptor> formats,
             Map<FormatDescriptor, String> sources) {
-
         StringBuilder out = new StringBuilder();
         out.append("package ").append(PACKAGE).append(';').append(NL).append(NL)
                 .append("import io.zengin4j.core.annotation.Generated;").append(NL)
@@ -125,8 +123,6 @@ final class BundledFormatsGenerator {
         return new GeneratedFile(path.resolve("package-info.java"), content);
     }
 
-    // ------------------------------------------------------------- accessors
-
     private void codeListsAccessor(StringBuilder out, Map<String, CodeList> codeLists) {
         out.append("    /**").append(NL)
                 .append("     * Returns the code lists the bundled descriptors reference.").append(NL)
@@ -162,8 +158,6 @@ final class BundledFormatsGenerator {
         out.append(");").append(NL)
                 .append("    }").append(NL).append(NL);
     }
-
-    // ---------------------------------------------------------------- bodies
 
     private void codeListMethod(StringBuilder out, CodeList list) {
         out.append("    private static CodeList ").append(methodName(list.id())).append("() {").append(NL)
@@ -258,8 +252,6 @@ final class BundledFormatsGenerator {
                     out.append(".withCodeList(codeLists.get(").append(quote(value.id())).append("))"));
             field.note().ifPresent(value ->
                     out.append(".withNote(").append(quote(value)).append(')'));
-            // Only when it differs from what the field type implies, so the
-            // generated source shows the declarations rather than the defaults.
             if (!field.codes().isEmpty()) {
                 out.append(".withCodes(List.of(")
                         .append(field.codes().stream().map(BundledFormatsGenerator::quote)
@@ -273,8 +265,6 @@ final class BundledFormatsGenerator {
         }
         out.append("    }").append(NL).append(NL);
     }
-
-    // --------------------------------------------------------------- helpers
 
     private static String methodName(String id) {
         StringBuilder result = new StringBuilder();

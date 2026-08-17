@@ -13,7 +13,6 @@ package io.zengin4j.core.error;
  * @since 0.1.0
  */
 public final class FormatDescriptorException extends ZenginException {
-
     private final String formatId;
     private final String problem;
 

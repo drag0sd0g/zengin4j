@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
  * {@code io.zengin4j.validation}, the one holding {@link ZenginValidator}.
  */
 class ModuleDescriptorTest {
-
     private static final Pattern EXPORTS = Pattern.compile("^\\s*exports\\s+([\\w.]+)\\s*;",
             Pattern.MULTILINE);
 

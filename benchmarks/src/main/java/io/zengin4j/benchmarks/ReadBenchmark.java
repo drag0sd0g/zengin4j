@@ -57,7 +57,6 @@ import org.openjdk.jmh.infra.Blackhole;
 @org.openjdk.jmh.annotations.Warmup(iterations = 3, time = 2)
 @State(Scope.Benchmark)
 public class ReadBenchmark {
-
     /** Payment records per file. 8k ≈ 1 MB; 80k ≈ 10 MB, past any cache. */
     @Param({"8000", "80000"})
     public int payments;

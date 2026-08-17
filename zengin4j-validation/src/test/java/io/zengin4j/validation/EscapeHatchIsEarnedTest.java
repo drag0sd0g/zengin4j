@@ -33,7 +33,6 @@ import org.junit.jupiter.params.provider.MethodSource;
  * A call that did not need the escape hatch fails here.
  */
 class EscapeHatchIsEarnedTest {
-
     /** Directories a call site may legitimately live in. */
     private static final List<Path> SEARCHED = List.of(
             Path.of("..", "zengin4j-validation", "src", "test", "java"),
@@ -64,8 +63,6 @@ class EscapeHatchIsEarnedTest {
                 for (Path file : files.filter(Files::isRegularFile)
                         .filter(path -> path.toString().endsWith(".java"))
                         .toList()) {
-
-                    // The declaration and its implementation are not call sites.
                     String name = file.getFileName().toString();
                     if (name.equals("FormatFixtures.java")
                             || name.equals("AbstractFormatFixtures.java")

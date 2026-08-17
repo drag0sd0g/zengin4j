@@ -20,7 +20,6 @@ import java.util.NoSuchElementException;
  * @since 0.1.0
  */
 public interface ZenginReader extends AutoCloseable {
-
     /**
      * Returns the format the file is being read as.
      *

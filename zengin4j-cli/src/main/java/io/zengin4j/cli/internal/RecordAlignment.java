@@ -23,10 +23,8 @@ import java.util.List;
  * @since 0.3.0
  */
 public final class RecordAlignment {
-
     /** What happened to a record between the two files. */
     public enum Change {
-
         /** Present in both, unchanged. */
         SAME,
 
@@ -68,11 +66,6 @@ public final class RecordAlignment {
      * @return the aligned pairs, in order
      */
     public static List<Pair> align(List<byte[]> before, List<byte[]> after) {
-        // Records that match at both ends need no alignment, and stripping them
-        // is what makes this affordable in practice: the usual edit changes a
-        // handful of payments in a file of thousands, leaving a middle small
-        // enough that the table below is trivial. Without it, an 8,000-record
-        // file needs a 64-million-cell table and dies.
         int head = 0;
         int limit = Math.min(before.size(), after.size());
         while (head < limit && Arrays.equals(before.get(head), after.get(head))) {
@@ -175,7 +168,6 @@ public final class RecordAlignment {
      * @since 0.3.0
      */
     public static final class TooLargeToAlignException extends RuntimeException {
-
         private static final long serialVersionUID = 1L;
 
         TooLargeToAlignException(int before, int after, long cells) {

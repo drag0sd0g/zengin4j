@@ -30,7 +30,6 @@ import java.util.List;
  * @since 0.3.0
  */
 public interface FormatFixtures {
-
     /**
      * Returns the format these fixtures produce.
      *

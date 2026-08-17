@@ -33,7 +33,6 @@ import java.util.Objects;
  * @since 0.1.0
  */
 public final class RecordEncoder {
-
     private RecordEncoder() {
     }
 
@@ -113,15 +112,9 @@ public final class RecordEncoder {
      */
     private static String applyPolicy(String value, FieldDescriptor field, ZenginCharset charset,
             EncodingOptions options, LossCollector loss) {
-
         if (field.type() != FieldType.C || !options.checkCharacters()) {
             return value;
         }
-        // Checked as JIS X 0201 bytes, not as bytes of the output encoding. A
-        // character class is defined over JIS byte values, so testing a UTF-8
-        // encoding against one asks whether 0xEF is a permitted kana — a
-        // question with no meaning and a misleading answer. Length is measured
-        // in the output encoding; permission is not.
         byte[] encoded = ZenginCharset.MS932.encode(value);
         boolean clean = CharacterSet.isClean(encoded, 0, encoded.length, field.charClass())
                 && voicingMarksAreLegal(encoded);
@@ -199,7 +192,6 @@ public final class RecordEncoder {
      */
     private static IllegalArgumentException refusal(String value, FieldDescriptor field,
             byte[] encoded) {
-
         List<CharacterViolation> violations =
                 CharacterSet.validate(encoded, 0, encoded.length, field.charClass());
         String problem;
@@ -219,11 +211,6 @@ public final class RecordEncoder {
 
     private static String transliterate(String value, FieldDescriptor field, ZenginCharset charset,
             EncodingOptions options, LossCollector loss) {
-
-        // The charset is passed through, not defaulted. Field widths are in
-        // bytes of the encoding the record is written in, and a transliterator
-        // measuring MS932 while the caller writes UTF-8 would call a 45-byte
-        // value a 15-byte one and let it overflow the field.
         TransliterationOptions transliteration = TransliterationOptions.builder()
                 .characterClass(field.charClass())
                 .charset(charset)
@@ -248,7 +235,6 @@ public final class RecordEncoder {
      */
     private static String replace(String value, FieldDescriptor field,
             EncodingOptions options, LossCollector loss) {
-
         requireWritableReplacement(field, options);
 
         byte[] encoded = ZenginCharset.MS932.encode(value);

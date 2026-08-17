@@ -15,7 +15,6 @@ import java.util.Optional;
  * @since 0.1.0
  */
 public enum FieldFormat {
-
     /**
      * Four digits, {@code MMDD}, with no year component. Decoded to
      * {@link java.time.MonthDay}; the year is never invented (R-D9).

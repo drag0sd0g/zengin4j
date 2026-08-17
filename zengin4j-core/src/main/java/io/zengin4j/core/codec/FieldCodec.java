@@ -23,7 +23,6 @@ import java.util.OptionalLong;
  * @since 0.1.0
  */
 public final class FieldCodec {
-
     /** The {@code N(12)} trailer total ceiling: ¥999,999,999,999. */
     public static final long MAX_TRAILER_TOTAL = 999_999_999_999L;
 

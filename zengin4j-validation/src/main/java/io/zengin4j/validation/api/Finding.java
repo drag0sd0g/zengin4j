@@ -46,7 +46,6 @@ public record Finding(
         String messageJa,
         Optional<String> actualValue,
         Optional<String> expectation) implements Comparable<Finding> {
-
     /**
      * Validates the components.
      *
@@ -151,7 +150,6 @@ public record Finding(
      * @since 0.2.0
      */
     public static final class Builder {
-
         private final Severity severity;
         private final String ruleId;
         private OptionalInt recordNumber = OptionalInt.empty();

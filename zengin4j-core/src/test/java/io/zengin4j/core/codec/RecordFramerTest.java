@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
  * Issue 1.6: framing with optional separators (R-C6 to R-C10, §19.1).
  */
 class RecordFramerTest {
-
     private final RecordFramer framer = new RecordFramer(4);
 
     @Test

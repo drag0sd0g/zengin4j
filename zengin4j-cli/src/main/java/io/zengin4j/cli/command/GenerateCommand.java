@@ -33,7 +33,6 @@ import picocli.CommandLine;
         description = "Writes a synthetic file. Every value is invented; the same seed "
                 + "reproduces the same bytes.")
 public final class GenerateCommand implements Callable<Integer> {
-
     @CommandLine.Option(
             names = "--format",
             paramLabel = "ID",
@@ -108,8 +107,6 @@ public final class GenerateCommand implements Callable<Integer> {
             return ExitCode.USAGE.value();
         }
 
-        // Surfaced as a usage error rather than a stack trace: asking for a
-        // format the testkit does not cover is a reasonable thing to try.
         ZenginGenerator generator;
         try {
             generator = ZenginGenerator.builder()
@@ -130,9 +127,6 @@ public final class GenerateCommand implements Callable<Integer> {
             if (outFormat == OutputFormat.JSON) {
                 stdout.print(describe(bytes, null));
             } else {
-                // Written to the raw stream, not the writer: this is a
-                // Shift_JIS payment file, and putting it through a UTF-8
-                // PrintWriter would re-encode every katakana byte.
                 stdout.flush();
                 System.out.write(bytes);
                 System.out.flush();

@@ -31,7 +31,6 @@ import java.util.Arrays;
  * </pre>
  */
 public final class GenerateTestFixtures {
-
     private GenerateTestFixtures() {
     }
 
@@ -86,8 +85,6 @@ public final class GenerateTestFixtures {
         System.out.println("  same seed, same bytes:      " + Arrays.equals(first, second));
         System.out.println("  different seed, different:  " + !Arrays.equals(first, different));
 
-        // Separator and end-of-file conventions are part of the fixture, since
-        // reading them back is exactly what a downstream test needs to prove.
         for (SeparatorStyle separator : new SeparatorStyle[] {
                 SeparatorStyle.NONE, SeparatorStyle.LF, SeparatorStyle.CRLF}) {
             byte[] bytes = ZenginGenerator.builder()

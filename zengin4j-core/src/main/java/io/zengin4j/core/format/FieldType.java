@@ -12,7 +12,6 @@ import io.zengin4j.core.error.FormatDescriptorException;
  * @since 0.1.0
  */
 public enum FieldType {
-
     /**
      * ゾーン10進数 — ASCII digits only, right aligned, padded on the left with
      * {@code '0'}. An omitted value is all zeros.
