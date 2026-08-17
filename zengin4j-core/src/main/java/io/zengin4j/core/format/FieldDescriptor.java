@@ -99,11 +99,6 @@ public record FieldDescriptor(
     }
 
     /**
-     * Returns the offset one past the end of this field.
-     *
-     * @return {@code offset + length}
-     */
-    /**
      * Returns this field as a specification, without its offset.
      *
      * <p>The offset is dropped rather than carried, so a spec fed back through
@@ -119,6 +114,12 @@ public record FieldDescriptor(
                 required, filler, sensitive, format, constant, codeList, note, charClass, codes);
     }
 
+    /**
+     * Returns the offset one past the end of this field.
+     *
+     * @return {@code offset + length}
+     * @since 0.1.0
+     */
     public int endOffset() {
         return offset + length;
     }

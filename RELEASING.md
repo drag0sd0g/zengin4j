@@ -78,9 +78,10 @@ Before the first release, in the repository settings:
 |---|---|---|
 | `zengin4j-core` | yes | the library |
 | `zengin4j-testkit` | yes | consumers need it on their own test class path (R-M4) |
+| `zengin4j-validation` | yes | since 0.2.0; depends only on core (R-M2) |
 | `zengin4j-codegen` | no | builds the descriptors; not part of the product |
 | `benchmarks` | no | a measurement harness |
-| `zengin4j-validation`, `-iso20022`, `-cli`, `-spring-boot-starter` | no | skeletons until Epics 4–7 land |
+| `zengin4j-iso20022`, `-cli`, `-spring-boot-starter` | no | skeletons until Epics 5–7 land |
 
 Publishing an empty jar would claim a name on Central for ever and disappoint
 anyone who downloaded it. R-B11 says completeness is not a release gate; it does
@@ -89,8 +90,8 @@ not say to reserve names.
 Each published module carries a sources jar, a javadoc jar, detached GPG
 signatures and a CycloneDX SBOM (R-B4, R-B6). Archives are reproducible (R-B5).
 
-**`zengin4j-core`'s POM declares no dependencies**, and `check` fails if that
-ever stops being true — the ArchUnit rule checks the code, and this checks the
+**`zengin4j-core`'s POM declares no dependencies**, and **`zengin4j-validation`'s
+declares exactly one** — core. `check` fails if the first ever stops being true — the ArchUnit rule checks the code, and this checks the
 metadata a consumer actually resolves.
 
 ## Versioning
