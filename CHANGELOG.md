@@ -277,6 +277,130 @@ A research pass against published sources. No parsed output changed, so no versi
   to the wrong configuration would appear without breaking a single import. The SBOM agrees:
   **zero components for core**, exactly one for testkit.
 
+### Added — Epic 5, the command line tool
+
+- **`zengin`**, a command with five subcommands: `validate`, `inspect`, `generate`, `diff` and
+  `explain`. Ships as a self-contained jar from `./gradlew :zengin4j-cli:shadedJar`.
+- **`inspect --annotate`** (R-CLI5), which §27 calls the primary diagnostic tool and asks for more
+  care than the feature list implies. Per field: byte offset, length, type, hex, decoded value, the
+  name in both languages, and whether the value is one the field may hold. Columns are measured in
+  *display* width — 種別コード is five characters and ten terminal columns, and a table padded by
+  character count is visibly crooked in a tool whose whole job is showing where bytes sit.
+- **Exit codes as a contract** (R-CLI1): `0` clean, `1` warnings only, `2` errors, `3` usage,
+  `4` I/O. The `1` for warnings alone is deliberate and unusual; the reasoning is in
+  [ADR-0025](docs/adr/0025-warnings-exit-non-zero.md). `diff` uses the same `1` for "the files
+  differ", matching `diff(1)`.
+- **`--out-format=json` on every command** (R-CLI2), written by hand for the reason ADR-0022 gives
+  and one more: a reflective serialiser needs GraalVM configuration that goes stale the first time a
+  field is renamed, and a writer that reflects over nothing needs none.
+- **`diff` aligns records rather than comparing positions**
+  ([ADR-0027](docs/adr/0027-diff-aligns-records-rather-than-positions.md)). Inserting one payment
+  near the top of a 50-payment file would otherwise report 49 records as changed — which is exactly
+  the edit somebody most wants to see clearly.
+- **`generate` covers all four bundled formats** (R-CLI3), not just 総合振込, closing the known
+  limitation recorded in Epic 4. The same seed produces the same bytes on every platform and JDK.
+- **`explain`** prints any format's byte layout, or one field of it, from the descriptors the reader
+  actually uses — including code lists narrowed by a format, and the sources behind the layout.
+- **Nothing prints an account number by default** (R-CLI4), and nor is its hex printed, since hex of
+  an account number is an account number to anyone reading a byte dump. What exactly `--unsafe-print`
+  gates, and why names and amounts are not in the same category, is
+  [ADR-0026](docs/adr/0026-what-unsafe-print-actually-gates.md).
+- **picocli**, as a runtime dependency of `zengin4j-cli` and nothing else
+  ([ADR-0024](docs/adr/0024-picocli-for-the-cli.md)). This module is an application, is not
+  published, and has no consumer to inherit anything; `core`'s zero-dependency guarantee is
+  unaffected and still separately enforced.
+- **GraalVM native-image configuration**, generated from the `@Command` annotations at compile time
+  by `picocli-codegen` so it cannot go stale when an option is renamed. The `nativeImage` task is
+  optional per §5.6 and deliberately not wired into `check`.
+- **`JapaneseBankCalendar.fromCsv(Path)`**, so `--calendar=FILE` can supply holiday data the caller
+  controls. The bundled data expires and a released jar cannot be re-cut every February when the
+  Cabinet Office publishes the next year's equinoxes.
+- **`FormatFixtures`** in the testkit, with implementations for all four formats. 給与振込 is not
+  総合振込 with three fields renamed, and 預金口座振替 moves money the other way, so each
+  implementation maps to the field ids its own descriptor declares rather than sharing a layout.
+- **[`docs/cli.md`](docs/cli.md)**, checked against the parser by `CliReferenceTest`: a documented
+  option that no command accepts, or an option the page omits, fails the build.
+- **`examples/GenerateTestFixtures.java`** (UC-6), and a CI job that runs the shaded jar end to end —
+  the unit tests drive the command objects in-process, which cannot catch a missing `Main-Class` or a
+  resource lost to the shading rules.
+
+### Fixed — Epic 5
+
+- **`zengin diff` could crash and report success.** Two files that differ
+  throughout built an `O(n·m)` alignment table — 64 million cells for 8,000
+  records — and died with an `OutOfMemoryError` under an ordinary heap. Worse
+  than the crash was the exit status: an `Error` is not an `Exception`, so it
+  escaped picocli's handler uncaught and **the JVM exited 1, which in this tool
+  means "the files differ"**. A script comparing a generated file against a
+  committed one would have read a crash as a completed comparison. Records
+  matching at both ends are now discounted first, which makes the realistic edit
+  cost nothing; a table above 16 million cells after that is refused with a
+  sentence; and `Zengin.run` catches `Throwable` so no future `Error` can
+  reproduce the collision.
+- **The annotate table lacked the English field name**, which R-CLI5 asks for by
+  name. The field id is not a substitute: it diverges from `nameEn` for eight of
+  the fifty-two bundled fields — `dataKubun` is "Record Type", `dummy` is
+  "Filler", `amount` is "Transfer Amount". The sequence column was dropped to pay
+  for it, since in a byte-oriented tool the offset is the better key.
+- **A control byte in a field tore the table in half.** A record whose fields
+  have slipped out of alignment carries the file's own separators inside a field,
+  and a raw `0x0D` broke the row across two lines — in the one case `inspect`
+  exists for. Control characters now print as `␍`, `␊` and friends. The raw value
+  is unchanged, so JSON still escapes it properly.
+- **Library remedies naming Java APIs reached the terminal.** "Set
+  `ReaderOptions.builder().allowUnverifiedFormats(true)`" is the right advice for
+  a caller writing code and a puzzle at a shell prompt. Three separate failures
+  printed one, including through `validate`, which does not throw at all — it
+  wraps the failure in a `V-100` finding that goes to stdout and never reaches
+  the exception handler. `CliMessages` translates them, and
+  `NoJavaRemediesReachTheTerminalTest` provokes every failure it can and fails
+  the build if any output still names a Java API — which is what contains the
+  fragility of translating by string replacement.
+- **`explain --field=X` without `--format` silently listed the formats instead**,
+  answering a question nobody asked and leaving the reader thinking their field
+  did not exist.
+- **An unwritable output path printed only the path.** `NoSuchFileException`
+  carries the bare filename as its message, so the failure read like a success
+  line.
+- **A test and a CI assertion that would have started failing on 1 October
+  2026.** Both pinned a holiday to `2026-09-30` and relied on the fixture's
+  yearless `0930` value date resolving to 2026 — which it does only until
+  October, after which the reader looks forward to 2027. The library's own date
+  tests pin their reference date explicitly and were never exposed; the CLI has
+  no way to pin one, which is what let this through. A test that expires is
+  worse than no test, because it fails long after the change that would explain
+  it.
+- **The round-trip properties held for one format of four, and nothing said so.**
+  `RandomZenginFiles` took a `FormatDescriptor` parameter while hard-coding
+  総合振込's field ids, so passing any other descriptor failed outright — a false
+  generality that left INV-1, INV-2 and INV-6 unproven for 給与振込, 賞与振込 and
+  預金口座振替 since Epic 3. R-T7 calls those the load-bearing correctness
+  guarantee. The generator now derives values from the descriptor, which also
+  makes the properties true of a consumer's own format, and
+  `AllFormatsRoundTripProperties` runs them across all four.
+- **The golden corpus had silently degraded to no payments.** It is drawn from a
+  seeded generator, so changing value generation shifted the draw and left a
+  header, a trailer and an end record with nothing between them — while every
+  test still passed. A golden file whose diff cannot show a decoding change in a
+  payment is doing half its job. The seed now yields a representative corpus and
+  `theCorpusIsRepresentative` holds it to that rather than trusting it.
+- **The generator emitted a name no format permits.** `ﾀﾞﾐｰ ｻﾌﾞﾛｳ` contains ｰ, the 長音, which the
+  standard never allows — and `PAYROLL_NAME` admits no symbols at all, so there is no spelling of it
+  that works. Running `zengin validate` over a generated 給与振込 file reported six `V-202` errors
+  against this project's own testkit. Every line of the generator was covered while one of its eight
+  values was wrong, so the new tests check the *data*: every name against every name field of every
+  format, and generation at 200 records rather than 5, since five draws from eight names usually miss
+  the bad one.
+- **`diff` reported four edited records as four additions and four removals.** The alignment
+  backtrack emits removals and additions in runs, not alternating pairs, and the first merge only
+  looked at immediate neighbours.
+- **The unverified-format error told a shell user to call a Java API.** Correct advice for a caller
+  writing code, useless at a prompt; the CLI now restates the remedy as `--allow-unverified`
+  (R-E3, R-CLI6).
+- **The examples documented an invocation that no longer works.** All three still showed
+  `java -cp "*/build/libs/*"`, which `runExamples` replaced in Epic 4 precisely because the glob
+  picks up the sources jar.
+
 ### Added — Epic 4, validation
 
 - **`zengin4j-validation`**, 27 rules across the six tiers of §14.3, emitting 32 distinct finding
@@ -371,9 +495,17 @@ A research pass against published sources. No parsed output changed, so no versi
   institution's specification. See [DISCLAIMER.md](DISCLAIMER.md).
 - **The 200-byte formats (振込入金通知, 入出金取引明細) are not implemented.** They carry 和暦 dates
   and vary more between institutions than the 120-byte ones; Epic 8.
-- No CLI, no transliteration engine, no ISO 20022 mapping. Epics 5 to 7.
+- No transliteration engine and no ISO 20022 mapping. Epics 6 and 7.
 - **`V-4xx` needs reference data you supply**, and `V-5xx` needs the calendar switched on. Both are
   optional by design (R-V5, R-V6); neither runs by default.
+- **`zengin validate` is not reproducible across dates for a yearless value
+  date.** The `MMDD` fields carry no year, and the reader resolves them forward
+  from *today*, so the same file can validate clean in August and trip a
+  calendar rule in October. The library exposes `MonthDayResolver` for exactly
+  this, and `ZenginValidator.withDateResolver(...)` accepts one; the CLI does
+  not surface it, because §27 lists no such option. An `--as-of=YYYY-MM-DD` flag
+  would close it — recorded in [OPEN_QUESTIONS](docs/OPEN_QUESTIONS.md) rather
+  than added unasked.
 - **Tier 4 checks existence, not activity at the value date.** §14.3 asks for "both active at the
   value date where temporal data is available"; `ReferenceDataProvider` has no temporal dimension, so
   that data is never available and a branch which closed last month still passes. Supplying it means
@@ -392,9 +524,8 @@ A research pass against published sources. No parsed output changed, so no versi
 - **The committed fuzzing corpus is one input.** Fuzzing has found exactly one thing so far, and it
   is committed and replayed on every build; the working corpus is local and untracked. The corpus
   grows as nightly runs find more.
-- **The testkit ships fixtures for 総合振込 only.** `SougouFurikomiFixtures` and `ZenginGenerator`
-  do not yet cover the three formats added here, so UC-6 fixture generation reaches one format of
-  four.
+- ~~**The testkit ships fixtures for 総合振込 only.**~~ Closed in Epic 5: `FormatFixtures` covers all
+  four, from Java or from `zengin generate --format=…`.
 - **R-C18's write-side character policies** (`REJECT` / `TRANSLITERATE` / `REPLACE`) are not
   implemented. `TRANSLITERATE` needs the transliteration engine, so the requirement lands with it in
   Epic 6.
@@ -406,12 +537,18 @@ A research pass against published sources. No parsed output changed, so no versi
 
 ### Quality gates
 
-`./gradlew build` enforces, on every run: the Java 21 baseline, the tests, ≥ 90% line and ≥ 85%
-branch coverage on `core`, the ArchUnit module rules, descriptor consistency, and that the
-committed generated sources match the descriptors, and the committed fuzzing corpora replay. Current
-figures: 356 tests — 240 in `core`, 88 in `validation`, 19 in `codegen`, 9 in `testkit` — alongside
-847 corpus replays in the non-mutating `fuzz` task. `core` 95.7% line and 89.3% branch;
-`validation` 93.8% line and 81.6% branch.
+`./gradlew build` enforces, on every run: the Java 21 baseline, the tests, the coverage floors
+(≥ 90% line and ≥ 85% branch on `core`; 90/80 on `validation`; 95/90 on `testkit`; 85/75 on `cli`),
+the ArchUnit module rules, descriptor consistency, that the committed generated sources match the
+descriptors, that `docs/cli.md` and `docs/validation-rules.md` match the code, and that the
+committed fuzzing corpora replay. Current figures: 546 tests — 257 in `core`, 132 in `cli`, 90 in
+`validation`, 48 in `testkit`, 19 in `codegen` — alongside 847 corpus replays in the non-mutating
+`fuzz` task, and 480 property cases per invariant across the four formats. `core` 95.7% line and 89.3% branch; `testkit` 97.8% and 100%; `validation` 93.1% and
+81.6%; `cli` 92.9% and 79.9%.
+
+Fuzzing stays pointed at `core`. The CLI adds no parser of its own — picocli does the argument
+parsing and the record parsing is `core`'s, already fuzzed — so a fuzz target here would exercise
+somebody else's code.
 
 Mutating fuzz runs are not part of `check` — they are nightly, via `fuzzAll`. Replaying what
 fuzzing has already found is, because it is deterministic and costs about two seconds.

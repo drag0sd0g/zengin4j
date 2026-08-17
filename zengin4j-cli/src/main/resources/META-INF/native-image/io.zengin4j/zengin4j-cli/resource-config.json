@@ -1,0 +1,22 @@
+{
+  "_comment": [
+    "Resources a native image must include, because nothing on the class path",
+    "is reachable at run time unless it is named here.",
+    "",
+    "picocli-codegen generates the reflection config next door but knows only",
+    "about picocli's own resources, not this library's. These three are loaded",
+    "by name at run time: the message bundles behind every finding, and the",
+    "holiday data behind the V-5xx rules.",
+    "",
+    "NativeImageResourcesTest fails the build when a runtime resource is not",
+    "matched here, which is what stops this file going stale."
+  ],
+  "resources": {
+    "includes": [
+      { "pattern": "io/zengin4j/validation/api/messages\\.properties" },
+      { "pattern": "io/zengin4j/validation/api/messages_ja\\.properties" },
+      { "pattern": "io/zengin4j/validation/calendar/japanese-holidays\\.csv" }
+    ]
+  },
+  "bundles": []
+}

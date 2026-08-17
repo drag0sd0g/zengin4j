@@ -74,6 +74,78 @@ jobs:
       - name: Run the examples
         run: ./gradlew runExamples
 
+  cli-smoke:
+    name: The CLI runs as a shipped jar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+
+      # The unit tests drive the command objects in-process, which is right for
+      # covering edge cases and cannot catch the things that only go wrong once
+      # the jar is assembled: a missing Main-Class, a resource excluded by the
+      # shading rules, a module descriptor left in the uber-jar. This runs the
+      # artifact a user would actually download.
+      - name: Build the shaded jar
+        run: ./gradlew :zengin4j-cli:shadedJar
+
+      - name: Run it end to end
+        run: |
+          set -uo pipefail
+          jar=$(ls zengin4j-cli/build/libs/*-all.jar)
+          run() { java -jar "$jar" "$@"; }
+
+          # Asserts an exit status, because the statuses are a contract that
+          # scripts branch on (R-CLI1, ADR-0025).
+          expect() {
+            local want=$1; shift
+            "$@" > /dev/null 2>&1
+            local got=$?
+            if [ "$got" -ne "$want" ]; then
+              echo "expected exit $want, got $got: $*" >&2
+              exit 1
+            fi
+          }
+
+          expect 0 run --version
+          expect 0 run explain --format=sougou-furikomi
+          expect 3 run explain --format=no-such-format
+          expect 3 run   # a bare `zengin` asked for nothing
+
+          expect 0 run generate --format=kyuyo-furikomi --count=25 --seed=7 --out=a.txt
+          expect 0 run generate --format=kyuyo-furikomi --count=25 --seed=8 --out=b.txt
+          expect 0 run inspect a.txt --annotate --allow-unverified
+
+          # The calendar is checked by its stderr line rather than by an exit
+          # code. The fixture's value date is the yearless 0930, resolved
+          # forward from today, so whether it trips a V-5xx rule depends on what
+          # day CI runs — and an assertion that changes answer with the calendar
+          # date is a scheduled failure, not a test.
+          run validate a.txt --allow-unverified --calendar=bundled 2>&1 >/dev/null \
+            | grep -q "bundled Japanese bank calendar" \
+            || { echo "--calendar=bundled did not load"; exit 1; }
+          expect 0 run validate a.txt --allow-unverified --suppress=V-306
+
+          expect 0 run diff a.txt a.txt --allow-unverified
+          expect 1 run diff a.txt b.txt --allow-unverified
+          expect 4 run validate nonexistent.txt
+
+          # R-CLI6: an unverified layout must not read without the flag.
+          expect 2 run inspect a.txt
+
+          # The same seed must produce the same bytes on this machine too
+          # (R-CLI3) — the unit tests prove it in-process, this proves the jar.
+          run generate --format=kyuyo-furikomi --count=25 --seed=7 --out=a-again.txt > /dev/null
+          cmp a.txt a-again.txt || { echo "generation is not reproducible"; exit 1; }
+
+          # R-CLI4: account numbers must not reach a CI log by default.
+          run inspect a.txt --annotate --allow-unverified 2>/dev/null > dump.txt
+          grep -q '(masked)' dump.txt || { echo "sensitive fields were not masked"; exit 1; }
+
   constant-memory:
     name: 1 GB under a 64 MB heap
     runs-on: ubuntu-latest

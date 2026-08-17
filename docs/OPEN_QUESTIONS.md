@@ -55,8 +55,33 @@ index exists so that whoever picks up an epic sees those tasks without reading t
 - Whether a field can narrow a shared code list, or lists must be split. → [OQ-9](#oq-9--the-headers-預金種目-admits-a-narrower-set-than-the-data-records)
 - `zengin-code/source-data` is the obvious `ReferenceDataProvider` dataset. → [OQ-5](#oq-5--there-is-no-published-test-range-for-bank-and-branch-codes)
 
+### Epic 5 — the command line tool
+
+**Completed 2026-08-17.** No open question was closed by this epic; four were raised.
+
+- **How far should `--unsafe-print` reach?** R-CLI4 forbids printing "full record contents" by
+  default and R-CLI5 asks for a byte-annotated field table, which read strictly are in conflict. The
+  line drawn is: it gates the fields the descriptors mark `sensitive`, and their hex as well.
+  Amounts and names print. Written up and open to argument in
+  [ADR-0026](adr/0026-what-unsafe-print-actually-gates.md).
+- **Every bundled code list is `open: true`**, so "this value is not in the list" can never fire for
+  a bundled format — only a *narrowed* field can reject. Whether an unlisted value in an open list
+  deserves a soft note rather than silence is undecided; `inspect` currently says nothing, on the
+  grounds that a tool which cries wolf on conforming files stops being read.
+- **`convert` and `dryrun` are in the §27 synopsis and are not implemented.** Both are ISO 20022
+  mappings and belong with that module rather than as stubs. → Epic 7.
+- **Should the CLI let a caller pin the date that yearless `MMDD` fields resolve against?** As it
+  stands `zengin validate` resolves them forward from today, so the same file can validate clean in
+  August and trip a calendar rule in October — the tool's answer depends on when it is run, which is
+  poor for something a pipeline branches on. The library already has `MonthDayResolver` and
+  `ZenginValidator.withDateResolver(...)`; §27 lists no flag for it, so none was added. An
+  `--as-of=YYYY-MM-DD` would close it, and would also let a stored file be re-validated as of the
+  day it was sent. Found by a CLI test that would have started failing on 1 October 2026.
+
 ### Epic 7 — ISO 20022
 
+- **`zengin convert` and `zengin dryrun`**, the two commands §27 lists that Epic 5 could not build.
+  `dryrun` serves UC-5 and returns only the loss report (R-I17).
 - **Model the 金融EDI情報 overlay** — a conditional descriptor field, or a derived accessor reading
   the twenty bytes when 識別表示 is `Y`. → [OQ-8](#oq-8--the-金融edi情報-overlay-is-not-modelled)
 - **Preserve the Base64 encoding exactly**, including the 76-character line split across `<Ustrd>`

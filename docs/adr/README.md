@@ -28,6 +28,10 @@ implementing. An implementation that makes twenty undocumented judgement calls i
 | [0021](0021-the-shared-header-date-is-effective-date.md) | The shared header date is `effectiveDate`; formats keep their own names | Accepted |
 | [0022](0022-hand-written-json-and-sarif.md) | JSON and SARIF are written by hand, and checked by a real parser | Accepted |
 | [0023](0023-holidays-are-data-not-an-algorithm.md) | The holiday calendar is data, and refuses to guess past it | Accepted |
+| [0024](0024-picocli-for-the-cli.md) | picocli parses the command line, and only the CLI depends on it | Accepted |
+| [0025](0025-warnings-exit-non-zero.md) | A file with only warnings exits 1 | Accepted |
+| [0026](0026-what-unsafe-print-actually-gates.md) | What `--unsafe-print` actually gates | Accepted |
+| [0027](0027-diff-aligns-records-rather-than-positions.md) | `diff` aligns records rather than comparing positions | Accepted |
 
 ## Template
 

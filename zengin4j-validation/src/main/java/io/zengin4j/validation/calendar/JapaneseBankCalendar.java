@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.MonthDay;
@@ -147,8 +149,6 @@ public final class JapaneseBankCalendar implements BusinessCalendar {
     }
 
     private static Loaded load() {
-        Map<LocalDate, String> holidays = new HashMap<>();
-        LocalDate horizon = null;
         try (InputStream stream = JapaneseBankCalendar.class.getResourceAsStream(RESOURCE)) {
             if (stream == null) {
                 throw new IllegalStateException(
@@ -156,30 +156,72 @@ public final class JapaneseBankCalendar implements BusinessCalendar {
             }
             try (BufferedReader reader =
                     new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    line = line.strip();
-                    if (line.isEmpty() || line.startsWith("#")) {
-                        continue;
-                    }
-                    if (line.startsWith("horizon=")) {
-                        horizon = LocalDate.parse(line.substring("horizon=".length()));
-                        continue;
-                    }
-                    int comma = line.indexOf(',');
-                    if (comma > 0) {
-                        holidays.put(LocalDate.parse(line.substring(0, comma)),
-                                line.substring(comma + 1));
-                    }
-                }
+                return parse(reader, "the bundled holiday data");
             }
         } catch (IOException e) {
             throw new UncheckedIOException("could not read the bundled holiday data", e);
         }
+    }
+
+    /**
+     * Reads holiday data from a file in the bundled format (R-V7).
+     *
+     * <p>The bundled data expires, and a released jar cannot be re-cut every
+     * February when the Cabinet Office publishes the next year's equinoxes.
+     * This is the way out: same format, same rules, data the caller controls.
+     *
+     * <p>The format is one {@code YYYY-MM-DD,name} per line, a
+     * {@code horizon=YYYY-MM-DD} line stating the last date the data covers,
+     * and {@code #} comments. <strong>The horizon is required.</strong> Without
+     * it the calendar could not tell "this is a business day" from "I have no
+     * data for that year", and the second answer dressed up as the first is how
+     * a payment gets dated to a day the banks are shut.
+     *
+     * @param path the CSV file
+     * @return a calendar over that data
+     * @throws UncheckedIOException  if the file cannot be read
+     * @throws IllegalArgumentException if it declares no horizon or holds an
+     *                                  unparseable line
+     */
+    public static JapaneseBankCalendar fromCsv(Path path) {
+        Objects.requireNonNull(path, "path");
+        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            return new JapaneseBankCalendar(parse(reader, path.toString()));
+        } catch (IOException e) {
+            throw new UncheckedIOException("could not read holiday data from " + path, e);
+        }
+    }
+
+    private static Loaded parse(BufferedReader reader, String source) throws IOException {
+        Map<LocalDate, String> holidays = new HashMap<>();
+        LocalDate horizon = null;
+        String line;
+        int number = 0;
+        while ((line = reader.readLine()) != null) {
+            number++;
+            line = line.strip();
+            if (line.isEmpty() || line.startsWith("#")) {
+                continue;
+            }
+            try {
+                if (line.startsWith("horizon=")) {
+                    horizon = LocalDate.parse(line.substring("horizon=".length()));
+                    continue;
+                }
+                int comma = line.indexOf(',');
+                if (comma <= 0) {
+                    throw new IllegalArgumentException(
+                            "expected 'YYYY-MM-DD,name' or 'horizon=YYYY-MM-DD'");
+                }
+                holidays.put(LocalDate.parse(line.substring(0, comma)), line.substring(comma + 1));
+            } catch (RuntimeException malformed) {
+                throw new IllegalArgumentException(source + " line " + number + ": "
+                        + malformed.getMessage(), malformed);
+            }
+        }
         if (horizon == null) {
-            throw new IllegalStateException(
-                    "the bundled holiday data declares no horizon; without one this calendar would"
-                            + " answer questions it cannot answer (R-V7)");
+            throw new IllegalArgumentException(source + " declares no horizon; without one this"
+                    + " calendar would answer questions it cannot answer (R-V7)");
         }
         return new Loaded(Map.copyOf(holidays), horizon);
     }

@@ -1,8 +1,11 @@
 # Version catalogue (R-B1).
 #
 # NOTE: nothing here is a runtime dependency of zengin4j-core (R-M1, P3).
-# Every entry below is test-scoped or build-scoped. The ArchUnit rule
-# `coreHasNoThirdPartyRuntimeDependencies` enforces that at the bytecode level.
+# Everything below is test-scoped or build-scoped, with one exception: picocli
+# is a runtime dependency of zengin4j-cli, which is an application rather than a
+# library and is not published. The ArchUnit rule
+# `coreHasNoThirdPartyRuntimeDependencies` enforces core's side at the bytecode
+# level, and `checkPomHasNoDependencies` enforces it in the published POM.
 [versions]
 junit = "5.14.4"
 assertj = "3.27.7"
@@ -14,6 +17,9 @@ jacoco = "0.8.15"
 jmh = "1.37"
 cyclonedx = "2.4.1"
 jackson = "2.20.0"
+# The CLI's argument parser. A runtime dependency of zengin4j-cli only, which
+# ships as an application and is not published (ADR-0024).
+picocli = "4.7.7"
 pitest = "1.25.9"
 pitest-junit5 = "1.2.3"
 # Build-scoped only: used by zengin4j-codegen to read the descriptors and
@@ -36,6 +42,11 @@ pitest-command-line = { module = "org.pitest:pitest-command-line", version.ref =
 # writers produce, so an independent implementation checks them rather than a
 # string comparison. Never a runtime dependency of any module (R-M1, R-M2).
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+# Annotation processor. Generates the GraalVM reflection and resource
+# configuration for the commands at compile time, so a native image needs no
+# hand-maintained JSON that silently goes stale.
+picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
 jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
 jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
 pitest-junit5-plugin = { module = "org.pitest:pitest-junit5-plugin", version.ref = "pitest-junit5" }

@@ -1,5 +1,6 @@
 package io.zengin4j.testkit;
 
+import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.model.SeparatorStyle;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,15 +20,35 @@ import java.util.Random;
  * real institutions use, and names are drawn from a fixed list of obviously
  * fictional katakana strings (R-L1, P1).
  *
+ * <p>Works for any format {@link FormatFixtures} covers. The generated values
+ * are the same for each — a name, an amount, an account number — while which
+ * fields carry them, and in which direction the money moves, is the fixtures'
+ * business.
+ *
  * @since 0.1.0
  */
 public final class ZenginGenerator {
 
+    /**
+     * Names drawn on by the generator.
+     *
+     * <p>All eight must be valid in <strong>every</strong> format's name field,
+     * which means satisfying the strictest: {@code PAYROLL_NAME} admits no
+     * Latin letters and no symbols whatever, so these are half-width katakana
+     * and spaces and nothing else. No small kana, and no 長音 {@code ｰ} — the
+     * standard writes a long vowel as {@code -}, which {@code PAYROLL_NAME}
+     * does not permit either, so these names simply have none.
+     *
+     * <p>This list contained ﾀﾞﾐｰ ｻﾌﾞﾛｳ until running {@code zengin validate}
+     * over a generated payroll file reported six {@code V-202} errors against
+     * it. {@link io.zengin4j.testkit.GeneratorNamesTest} now checks every name
+     * against every name field of every bundled format.
+     */
     private static final List<String> NAMES = List.of(
-            "ﾃｽﾄ ﾀﾛｳ", "ﾃｽﾄ ﾊﾅｺ", "ｻﾝﾌﾟﾙ ｲﾁﾛｳ", "ｻﾝﾌﾟﾙ ｼﾞﾛｳ", "ﾀﾞﾐｰ ｻﾌﾞﾛｳ",
+            "ﾃｽﾄ ﾀﾛｳ", "ﾃｽﾄ ﾊﾅｺ", "ｻﾝﾌﾟﾙ ｲﾁﾛｳ", "ｻﾝﾌﾟﾙ ｼﾞﾛｳ", "ﾀﾞﾐ ｻﾌﾞﾛｳ",
             "ﾓｼﾞ ｼﾖｳ", "ｶﾅ ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ", "ﾃｽﾄ ｶﾞｸﾌﾞﾁ");
 
-    private final SougouFurikomiFixtures fixtures;
+    private final FormatFixtures fixtures;
     private final long seed;
     private final int payments;
     private final SeparatorStyle separator;
@@ -48,6 +69,15 @@ public final class ZenginGenerator {
      */
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * Returns the format this generator produces.
+     *
+     * @return the format id, never {@code null}
+     */
+    public FormatId formatId() {
+        return fixtures.formatId();
     }
 
     /**
@@ -79,7 +109,7 @@ public final class ZenginGenerator {
      */
     public static final class Builder {
 
-        private SougouFurikomiFixtures fixtures = SougouFurikomiFixtures.create();
+        private FormatFixtures fixtures = SougouFurikomiFixtures.create();
         private long seed = 42L;
         private int payments = 10;
         private SeparatorStyle separator = SeparatorStyle.CRLF;
@@ -94,9 +124,20 @@ public final class ZenginGenerator {
          * @param value the fixtures
          * @return this builder
          */
-        public Builder fixtures(SougouFurikomiFixtures value) {
+        public Builder fixtures(FormatFixtures value) {
             this.fixtures = Objects.requireNonNull(value, "fixtures");
             return this;
+        }
+
+        /**
+         * Sets the format to generate, using its bundled fixtures.
+         *
+         * @param value the format id
+         * @return this builder
+         * @throws IllegalArgumentException if the testkit has no fixtures for it
+         */
+        public Builder format(FormatId value) {
+            return fixtures(FormatFixtures.forFormat(Objects.requireNonNull(value, "format")));
         }
 
         /**

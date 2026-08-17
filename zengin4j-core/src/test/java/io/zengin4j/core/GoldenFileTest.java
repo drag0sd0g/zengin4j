@@ -57,8 +57,18 @@ class GoldenFileTest {
 
     private static final String EXPECTED = "/conformance/sougou-furikomi.expected.txt";
 
-    /** Fixed: the corpus must not change when the generator's randomness is re-seeded. */
-    private static final long GOLDEN_SEED = 20_260_816L;
+    /**
+     * Fixed: the corpus must not change when the generator's randomness is
+     * re-seeded.
+     *
+     * <p>Chosen to produce a corpus that exercises every record kind, which
+     * {@link #theCorpusIsRepresentative()} then holds it to. The previous seed
+     * silently degraded to a header, a trailer and an end record — no payments
+     * at all — when value generation changed and the draw shifted. A golden
+     * file whose diff cannot show a decoding change in a data record is a
+     * golden file doing half its job, and nothing said so.
+     */
+    private static final long GOLDEN_SEED = 20_260_831L;
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
@@ -84,6 +94,33 @@ class GoldenFileTest {
                         + " rewrote it on checkout — which .gitattributes exists to prevent")
                 .doesNotContain("\r\n");
         assertThat(rendered).isEqualTo(expected);
+    }
+
+    /**
+     * The corpus exercises every record kind.
+     *
+     * <p>A golden file earns its keep by turning a change in decoding into a
+     * diff a reviewer can read — and it can only do that for records it
+     * contains. The corpus is drawn from a seeded generator, so a change to how
+     * values are generated shifts the draw, and this corpus has already
+     * silently degraded once to a header, a trailer and an end record with no
+     * payments between them. Every test still passed.
+     *
+     * <p>So the corpus is held to being representative, rather than trusted to
+     * stay that way.
+     */
+    @Test
+    void theCorpusIsRepresentative() {
+        ZenginFile parsed = ZenginReaders.readFile(new ByteArrayInputStream(corpus()), options);
+
+        assertThat(parsed.batches()).as("a corpus with no batch shows nothing").isNotEmpty();
+        assertThat(parsed.allData())
+                .as("a corpus with no data record cannot show a decoding change in a payment")
+                .isNotEmpty();
+        assertThat(parsed.batches().get(0).trailer())
+                .as("the trailer is where the computed totals show up")
+                .isPresent();
+        assertThat(parsed.endRecord()).isPresent();
     }
 
     /** INV-1 against a file that is committed rather than generated. */
