@@ -20,9 +20,7 @@ import java.util.Arrays;
  * <p>Run it with:
  *
  * <pre>
- * ./gradlew :zengin4j-testkit:jar
- * java -cp "zengin4j-core/build/libs/*:zengin4j-testkit/build/libs/*" \
- *      examples/BuildSougouFurikomi.java
+ * ./gradlew runExamples
  * </pre>
  *
  * <p>Three things a fixture generator has to be able to do, in order: build a

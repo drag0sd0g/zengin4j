@@ -35,7 +35,7 @@ ZEDI のプロファイルは、Business Application Header と電文本体を *
 
 ## 現在の状況
 
-本リポジトリは **Epic 4（検証）** の段階です。
+本リポジトリは **Epic 5（コマンドラインツール）** の段階です。
 
 | | |
 |---|---|
@@ -53,7 +53,8 @@ ZEDI のプロファイルは、Business Application Header と電文本体を *
 | ✅ | 検証: 6 階層 27 ルール。すべての指摘がバイト位置を持ちます |
 | ✅ | JSON / SARIF 出力。SARIF は CI 上でファイルへの注釈として表示されます |
 | ✅ | 日本の銀行営業日カレンダー（祝日込み）。データ範囲外は推測せず報告します |
-| ⬜ | コマンドラインツール — Epic 5 |
+| ✅ | `zengin` コマンド: `validate` / `inspect` / `generate` / `diff` / `explain` |
+| ✅ | 4 フォーマットすべての合成テストデータ生成（Java からも CLI からも） |
 | ⬜ | 半角カナ変換と濁点を壊さない切り詰め — Epic 6 |
 | ⬜ | `pain.001` の双方向変換と損失レポート — Epic 7 |
 
@@ -157,6 +158,33 @@ ID と既定の重大度、そして**これらのルールが検査しない範
 実行可能な例は [`examples/`](examples/) にあります。各フォーマットのバイト配置は
 [`docs/formats/`](docs/formats/) にあり、ライブラリが実際に使用する定義から生成しています。
 
+## コマンドラインから
+
+```sh
+./gradlew :zengin4j-cli:shadedJar
+alias zengin='java -jar zengin4j-cli/build/libs/zengin4j-cli-*-all.jar'
+```
+
+金融機関にファイルを返却され、理由が判然としないときに使うのが `inspect --annotate` です。
+各項目のバイト位置・生バイト・復号値・和英の項目名、そしてその値が使用可能かどうかを表示します。
+
+```
+record 2  DATA  byte 122
+  off   len T  field                  項目名          name                     hex                  value
+  1     4   N  beneficiaryBankCode    被仕向銀行番号  Beneficiary Bank Code    39 39 39 39          9999        ok
+  43    7   N  accountNumber          口座番号        Account Number           (masked)             ***6543     ok
+  50    30  C  beneficiaryName        受取人名        Beneficiary Name         D3 B0 DE 20 …        ﾓｰﾞ ｼﾖｳ     <- 長音 ｰ は使用できません
+```
+
+このほか `validate`（テキスト / JSON / SARIF 出力と、パイプラインで分岐できる終了コード）、
+`diff`（項目単位の差分。レコードを対応付けるため、明細を 1 件挿入しても以降が全件変更扱いに
+なりません）、`generate`（合成ファイル生成。同じシードなら同じバイト列）、`explain`
+（ファイルなしで任意フォーマットのバイト配置を表示）があります。
+
+**`--unsafe-print` を指定しない限り、口座番号は出力されません。** 16 進表記も同様です
+（16 進の口座番号も口座番号です）。終了コードを含む詳細は [`docs/cli.md`](docs/cli.md)
+を参照してください。
+
 ## 2 つの境界
 
 **検証済みか未検証か。** すべてのフォーマット定義・コードリスト・マッピング規則は `verified`
@@ -203,6 +231,7 @@ ISO 20022 へ移行しておらず、実装の根拠となる公開プロファ�
 
 ```bash
 ./gradlew build                    # コンパイル・テスト・カバレッジ・アーキテクチャ規則・差分検出
+./gradlew :zengin4j-cli:shadedJar  # 単独実行可能な `zengin` コマンドを生成
 ./gradlew runExamples              # examples/ の全プログラムを実行し、出力をそのまま表示
 ./gradlew generateFormatSources    # 定義ファイル変更後にレコード型とドキュメントを再生成
 ./gradlew :zengin4j-core:pitest    # ミューテーションテスト（任意実行・1 分程度）
@@ -224,7 +253,10 @@ JDK 21 以降が必要です。使用する JDK に関わらず Java 21 のバ�
 
 公開は手動承認付きの GitHub Actions でのみ行い、開発マシンからは実行できません。手順は
 [RELEASING.md](RELEASING.md) を参照してください。公開対象は `zengin4j-core`、`zengin4j-testkit`、
-`zengin4j-validation` の 3 つです。他のモジュールは雛形であり、意図的に公開しません。
+`zengin4j-validation` の 3 つです。`zengin4j-cli` はライブラリではなくアプリケーションであり
+公開しません。実行時依存を持つことを許している唯一のモジュールなのはそのためです
+（[ADR-0024](docs/adr/0024-picocli-for-the-cli.md)）。残りのモジュールは雛形であり、
+意図的に公開しません。
 
 ## ライセンス
 

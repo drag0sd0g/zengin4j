@@ -1,10 +1,15 @@
 package io.zengin4j.core.testing;
 
+import io.zengin4j.core.charset.CharacterSet;
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.codec.RecordEncoder;
 import io.zengin4j.core.codec.RecordFramer;
 import io.zengin4j.core.codec.ZenginFileBuilder;
+import io.zengin4j.core.format.FieldDescriptor;
+import io.zengin4j.core.format.FieldFormat;
+import io.zengin4j.core.format.FieldType;
 import io.zengin4j.core.format.FormatDescriptor;
+import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.model.FileFraming;
 import io.zengin4j.core.model.SeparatorStyle;
@@ -18,7 +23,7 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Generates small, valid 総合振込 files.
+ * Generates small, valid files for any bundled format.
  *
  * <p>Files are deliberately tiny — one or two batches of at most three
  * payments. Without a shrinking library a failing case is reported as
@@ -70,7 +75,8 @@ public final class RandomZenginFiles {
 
         for (int batch = 0; batch < batches; batch++) {
             records.add(RecordEncoder.encode(descriptor.record(RecordKind.HEADER),
-                    ZenginCharset.MS932, header(random)));
+                    ZenginCharset.MS932,
+                    valuesFor(random, descriptor.record(RecordKind.HEADER), 0L)));
 
             int count = random.nextInt(4);
             long batchTotal = 0;
@@ -78,7 +84,8 @@ public final class RandomZenginFiles {
                 long amount = amount(random);
                 batchTotal += amount;
                 records.add(RecordEncoder.encode(descriptor.record(RecordKind.DATA),
-                        ZenginCharset.MS932, payment(random, amount)));
+                        ZenginCharset.MS932,
+                        valuesFor(random, descriptor.record(RecordKind.DATA), amount)));
             }
             payments += count;
             total += batchTotal;
@@ -122,12 +129,14 @@ public final class RandomZenginFiles {
 
         int batches = 1 + random.nextInt(2);
         for (int batch = 0; batch < batches; batch++) {
-            Map<String, String> header = header(random);
+            Map<String, String> header =
+                    valuesFor(random, descriptor.record(RecordKind.HEADER), 0L);
             builder.header(values -> header.forEach(values::set));
 
             int count = random.nextInt(4);
             for (int i = 0; i < count; i++) {
-                Map<String, String> payment = payment(random, amount(random));
+                Map<String, String> payment =
+                        valuesFor(random, descriptor.record(RecordKind.DATA), amount(random));
                 builder.payment(values -> payment.forEach(values::set));
             }
         }
@@ -144,38 +153,92 @@ public final class RandomZenginFiles {
         return new FileFraming(mark, separator, trailing, eof);
     }
 
-    private static Map<String, String> header(Random random) {
+    /**
+     * Field values for a record, derived from the descriptor.
+     *
+     * <p><strong>Nothing here names a field.</strong> An earlier version listed
+     * 総合振込's ids — {@code beneficiaryBankCode}, {@code customerCode1} — which
+     * made the {@code descriptor} parameter a false generality: passing any
+     * other format failed, because {@link RecordEncoder} rejects an id the
+     * record does not declare. The properties that carry R-T7 therefore held
+     * for one of the four bundled formats and nobody could tell.
+     *
+     * <p>Deriving from the descriptor also makes these properties true of a
+     * consumer's own format, which is a stronger claim than R-T7 asks for.
+     *
+     * @param random     the source of randomness
+     * @param record     the record layout to fill
+     * @param amount     the value for the record's amount field, if it has one
+     */
+    private static Map<String, String> valuesFor(Random random, RecordDescriptor record,
+            long amount) {
         Map<String, String> values = new LinkedHashMap<>();
-        values.put("codeKubun", "0");
-        values.put("originatorCode", "99" + digits(random, 8));
-        values.put("originatorName", name(random));
-        values.put("valueDate", monthDay(random));
-        values.put("originBankCode", "9999");
-        values.put("originBankName", name(random, 15));
-        values.put("originBranchCode", "998");
-        values.put("originBranchName", name(random, 15));
-        values.put("accountType", pick(random, ACCOUNT_TYPES));
-        values.put("accountNumber", "9" + digits(random, 6));
+        for (FieldDescriptor field : record.fields()) {
+            // Constants and filler are the encoder's business; setting them
+            // here would be asserting that this code and the encoder agree
+            // about what it already guarantees.
+            if (field.constant().isPresent() || field.filler()) {
+                continue;
+            }
+            valueFor(random, field, amount).ifPresent(value -> values.put(field.id(), value));
+        }
         return values;
     }
 
-    private static Map<String, String> payment(Random random, long amount) {
-        Map<String, String> values = new LinkedHashMap<>();
-        values.put("beneficiaryBankCode", "9999");
-        values.put("beneficiaryBankName", name(random, 15));
-        values.put("beneficiaryBranchCode", "999");
-        values.put("beneficiaryBranchName", name(random, 15));
-        values.put("clearingHouseCode", "0000");
-        values.put("accountType", pick(random, ACCOUNT_TYPES));
-        values.put("accountNumber", "9" + digits(random, 6));
-        values.put("beneficiaryName", name(random));
-        values.put("amount", Long.toString(amount));
-        values.put("newCode", pick(random, NEW_CODES));
-        values.put("customerCode1", random.nextBoolean() ? "INV" + digits(random, 7) : "");
-        values.put("customerCode2", random.nextBoolean() ? digits(random, 4) : "");
-        values.put("transferCategory", pick(random, TRANSFER_CATEGORIES));
-        values.put("identification", random.nextInt(6) == 0 ? "Y" : " ");
-        return values;
+    /** One field's value, chosen from what the descriptor says it may hold. */
+    private static java.util.Optional<String> valueFor(Random random, FieldDescriptor field,
+            long amount) {
+        if (field.format().filter(f -> f == FieldFormat.AMOUNT).isPresent()) {
+            return java.util.Optional.of(Long.toString(amount));
+        }
+        if (field.format().filter(f -> f == FieldFormat.MMDD).isPresent()) {
+            return java.util.Optional.of(monthDay(random));
+        }
+        if (field.format().filter(f -> f == FieldFormat.CODE_KUBUN).isPresent()) {
+            // Always JIS. The other value in the list is EBCDIC, and the reader
+            // rejects such a file by name rather than decoding it (ADR-0010) —
+            // so drawing it at random would generate a file the library is
+            // designed to refuse, and INV-1 speaks only of *valid* files.
+            return java.util.Optional.of("0");
+        }
+        if (field.codeList().isPresent()) {
+            List<String> permitted = field.codes().isEmpty()
+                    ? field.codeList().get().values().stream()
+                            .map(io.zengin4j.core.format.CodeValue::code).toList()
+                    : field.codes();
+            return permitted.isEmpty()
+                    ? java.util.Optional.empty()
+                    : java.util.Optional.of(pick(random, permitted));
+        }
+        if (field.type() == FieldType.N) {
+            // Leading 9 keeps every generated identifier inside the invented
+            // range (R-L1), whatever the field turns out to be.
+            return java.util.Optional.of("9" + digits(random, field.length() - 1));
+        }
+        // Text: a name that fits, sometimes empty where the field permits it.
+        if (!field.required() && random.nextInt(4) == 0) {
+            return java.util.Optional.of("");
+        }
+        return java.util.Optional.of(nameFor(random, field));
+    }
+
+    /**
+     * A name that fits the field and satisfies its character class.
+     *
+     * <p>The classes genuinely differ — payroll names admit no Latin letters at
+     * all — so a name valid in one format's 受取人名 can be invalid in
+     * another's. Candidates are filtered against the field's own class rather
+     * than against a single global set.
+     */
+    private static String nameFor(Random random, FieldDescriptor field) {
+        List<String> candidates = NAMES.stream()
+                .filter(candidate -> {
+                    byte[] encoded = ZenginCharset.MS932.encode(candidate);
+                    return encoded.length <= field.length()
+                            && CharacterSet.isClean(encoded, 0, encoded.length, field.charClass());
+                })
+                .toList();
+        return candidates.isEmpty() ? "" : candidates.get(random.nextInt(candidates.size()));
     }
 
     /** Weighted towards small values, with the field's extremes represented. */

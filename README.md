@@ -39,7 +39,7 @@ in Epic 7; see [Status](#status).
 
 ## Status
 
-This repository is at **Epic 4 — validation**. What works today:
+This repository is at **Epic 5 — the command line tool**. What works today:
 
 | | |
 |---|---|
@@ -57,7 +57,8 @@ This repository is at **Epic 4 — validation**. What works today:
 | ✅ | Validation: 27 rules across six tiers, every finding located to the byte |
 | ✅ | JSON and SARIF reports — SARIF renders as CI annotations on the file |
 | ✅ | A Japanese bank calendar, holidays included, that refuses to guess past its data |
-| ⬜ | CLI — Epic 5 |
+| ✅ | `zengin` command: `validate`, `inspect`, `generate`, `diff`, `explain` |
+| ✅ | Deterministic synthetic fixtures for all four formats, from Java or the CLI |
 | ⬜ | Half-width katakana transliteration and dakuten-safe truncation — Epic 6 |
 | ⬜ | ISO 20022 `pain.001` in both directions, with loss reporting — Epic 7 |
 
@@ -164,6 +165,34 @@ Runnable versions live in [`examples/`](examples/), and the byte layout of every
 format — generated from the descriptors the library actually uses — is in
 [`docs/formats/`](docs/formats/).
 
+## From the command line
+
+```sh
+./gradlew :zengin4j-cli:shadedJar
+alias zengin='java -jar zengin4j-cli/build/libs/zengin4j-cli-*-all.jar'
+```
+
+`inspect --annotate` is the one to reach for when a bank rejects a file and the rejection
+notice says something unhelpful. It shows every field's offset, bytes, decoded value, name in
+both languages, and whether the value is one the field may hold:
+
+```
+record 2  DATA  byte 122
+  off   len T  field                  項目名          name                     hex                  value
+  1     4   N  beneficiaryBankCode    被仕向銀行番号  Beneficiary Bank Code    39 39 39 39          9999        ok
+  43    7   N  accountNumber          口座番号        Account Number           (masked)             ***6543     ok
+  50    30  C  beneficiaryName        受取人名        Beneficiary Name         D3 B0 DE 20 …        ﾓｰﾞ ｼﾖｳ     <- the long vowel mark ｰ is never permitted — write a long vowel as - (0x2D)
+```
+
+The rest: `validate` (text, JSON or SARIF, with an exit status a pipeline can branch on),
+`diff` (field by field, aligned so an inserted payment does not report every later record as
+changed), `generate` (synthetic files, same seed same bytes) and `explain` (any format's byte
+layout, no file needed).
+
+**No command prints an account number unless you pass `--unsafe-print`** — nor its hex, since
+hex of an account number is an account number. Full reference, including the exit codes, is in
+[`docs/cli.md`](docs/cli.md).
+
 ## What this library will and will not claim
 
 There are two boundaries, and both are load-bearing.
@@ -215,6 +244,7 @@ Architecture decision records live in [`docs/adr/`](docs/adr/).
 
 ```bash
 ./gradlew build                    # compile, test, coverage gate, architecture rules, drift check
+./gradlew :zengin4j-cli:shadedJar  # build the self-contained `zengin` command
 ./gradlew runExamples              # run every program in examples/ and print what it prints
 ./gradlew generateFormatSources    # regenerate record classes and docs after editing a descriptor
 ./gradlew :zengin4j-core:pitest    # mutation testing; opt-in, takes about a minute
@@ -237,7 +267,10 @@ deterministic and takes about two seconds.
 
 Publishing is a manually-approved GitHub Action and cannot be run from a developer machine — see
 [RELEASING.md](RELEASING.md). `zengin4j-core`, `zengin4j-testkit` and `zengin4j-validation` publish
-to `io.github.drag0sd0g`; the other modules are skeletons and deliberately do not.
+to `io.github.drag0sd0g`. `zengin4j-cli` is an application rather than a library and is not
+published — which is why it is the one module allowed a runtime dependency
+([ADR-0024](docs/adr/0024-picocli-for-the-cli.md)). The remaining modules are skeletons and
+deliberately do not publish.
 
 ## Licence
 

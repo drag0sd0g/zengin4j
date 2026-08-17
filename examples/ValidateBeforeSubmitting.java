@@ -22,9 +22,7 @@ import java.util.Locale;
  * <p>Run it with:
  *
  * <pre>
- * ./gradlew :zengin4j-testkit:jar :zengin4j-validation:jar
- * java -cp "zengin4j-core/build/libs/*:zengin4j-testkit/build/libs/*:zengin4j-validation/build/libs/*" \
- *      examples/ValidateBeforeSubmitting.java
+ * ./gradlew runExamples
  * </pre>
  *
  * <p>The file below has five things wrong with it, of three different kinds:
