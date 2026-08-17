@@ -378,10 +378,10 @@ io.zengin4j                       ← replace with a group ID the publisher cont
 │   └── refdata         ReferenceDataProvider, ZenginCodeProvider
 ├── iso20022
 │   ├── api             Iso20022Mapper, MappingContext, MappingResult, RoundTripResult
-│   ├── loss            MappingLossReport, LossEntry, LossKind, LossSeverity, LossCollector
+│   ├── loss            MappingLossReport  (LossEntry/Kind/Severity/Collector moved to core — ADR-0029)
 │   ├── envelope        ZediEnvelopeReader, ZediEnvelopeWriter, BusinessApplicationHeader
 │   ├── mapping         MappingRule, MappingRegistry, path resolution
-│   ├── kana            KanaTransliterator, TruncationPolicy, KanaTables
+│   ├── kana            (moved to core.kana in Epic 6 — R-C18 puts it on core's write path; ADR-0029)
 │   ├── pain001 | pain002 | camt052 | camt054
 │   └── experimental
 │       └── pain008     口座振替 mapping — NON-STANDARD, this project's own design
@@ -1520,7 +1520,7 @@ private static boolean isVoicingMark(byte b) {
 | # | Requirement |
 |---|---|
 | **R-K1** | Implement full-width → half-width katakana (`タ` → `ﾀ`) with voiced decomposition (`ガ` → `ｶ` + `ﾞ`, `パ` → `ﾊ` + `ﾟ`). |
-| **R-K2** | Full-width Latin and digits → half-width, then uppercase. Long vowel `ー` → `ｰ`. Small kana `ャ` → `ｬ`. Punctuation `、` `。` `「` `」` → half-width equivalents. |
+| **R-K2** | Full-width Latin and digits → half-width, then uppercase. ~~Long vowel `ー` → `ｰ`. Small kana `ャ` → `ｬ`.~~ **Corrected in Epic 6 — see the note below.** Punctuation `、` `。` `「` `」` → half-width equivalents. |
 | **R-K3** | **Truncation must be dakuten-aware** per §16.3. Never split a base/mark pair; never emit a leading orphaned mark. |
 | **R-K4** | Truncation policy configurable: `REJECT_IF_TOO_LONG` (default), `TRUNCATE_SAFE` (always emits a `MATERIAL` loss entry), `TRUNCATE_WITH_MARKER`. |
 | **R-K5** | Hiragana input: reject by default; optional conversion to katakana behind a flag, always with a `MATERIAL` loss entry. Never silent. |
@@ -1528,6 +1528,26 @@ private static boolean isVoicingMark(byte b) {
 | **R-K7** | Only certain base kana legally take a voicing mark: dakuten after `ｶ`–`ｺ`, `ｻ`–`ｿ`, `ﾀ`–`ﾄ`, `ﾊ`–`ﾎ`, `ｳ`; handakuten only after `ﾊ`–`ﾎ`. A mark following any other base is a `V-2xx` validation finding. |
 | **R-K8** | Provide the inverse (half → full width) for display when mapping upward, marked `INFORMATIONAL` since it is not reliably reversible. |
 | **R-K9** | Transliteration tables are a **data resource**, not code, covered by an exhaustive table-driven test. |
+
+> **Correction, Epic 6 — R-K2's two named kana mappings are wrong.**
+>
+> `ｰ` (`0xB0`) and every small kana (`0xA7`–`0xAF`) are excluded from *every* field class by
+> 全国銀行協会 付録1, as implemented in `CharacterClass` since Epic 3. A transliterator following
+> R-K2 as written would emit text that this library's own validation rule `V-202` rejects.
+>
+> Implemented instead: `ー` → `-` and `ャ` → `ヤ`, each recorded as a `MATERIAL` loss. The
+> reasoning, and the consequence that a long vowel has *no* legal form in a payroll name, are in
+> [ADR-0028](docs/adr/0028-the-specifications-kana-mappings-are-wrong.md).
+>
+> This requirement predates the source research. Where a document written up front disagrees with
+> evidence gathered later, the evidence wins — and the original wording is left above rather than
+> quietly edited, because the ADR cites it.
+
+> **Correction, Epic 6 — §16.3's reference implementation is asymmetric.**
+>
+> It checks for a leading orphaned voicing mark only on the truncating path, so a short input
+> beginning with a stray mark passes and a long one does not. The input is equally damaged either
+> way. `KanaTransliterator.truncateSafe` checks it before the length test.
 
 ## 17. Error and exception taxonomy
 

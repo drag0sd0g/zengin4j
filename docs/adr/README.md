@@ -32,6 +32,9 @@ implementing. An implementation that makes twenty undocumented judgement calls i
 | [0025](0025-warnings-exit-non-zero.md) | A file with only warnings exits 1 | Accepted |
 | [0026](0026-what-unsafe-print-actually-gates.md) | What `--unsafe-print` actually gates | Accepted |
 | [0027](0027-diff-aligns-records-rather-than-positions.md) | `diff` aligns records rather than comparing positions | Accepted |
+| [0028](0028-the-specifications-kana-mappings-are-wrong.md) | Two of the specification's kana mappings are wrong | Accepted |
+| [0029](0029-transliteration-lives-in-core.md) | Transliteration and the loss vocabulary live in `core` | Accepted |
+| [0030](0030-kana-tables-are-derived-not-transcribed.md) | The kana tables are derived; only the judgement calls are declared | Accepted |
 
 ## Template
 

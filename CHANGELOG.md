@@ -277,6 +277,77 @@ A research pass against published sources. No parsed output changed, so no versi
   to the wrong configuration would appear without breaking a single import. The SBOM agrees:
   **zero components for core**, exactly one for testkit.
 
+### Added — Epic 6, transliteration and dakuten-safe truncation
+
+- **`KanaTransliterator`** (§16): full-width to half-width with voiced decomposition — ガ becomes
+  ｶ+ﾞ, パ becomes ﾊ+ﾟ, ヴ becomes ｳ+ﾞ — plus full-width Latin and digits narrowed and upper-cased,
+  and the inverse for display (R-K1, R-K2, R-K8).
+- **Dakuten-safe truncation** (R-K3, R-K4, §16.3). A voiced character is two bytes with one glyph,
+  so a cut at a byte boundary turns ガクブチ into カクブチ with nothing in the file to show for it.
+  A cut that would land on a voicing mark takes the base kana with it. Three policies:
+  `REJECT_IF_TOO_LONG` (the default — a payee's name is not a codec's to shorten), `TRUNCATE_SAFE`
+  and `TRUNCATE_WITH_MARKER`.
+- **Kanji is refused, never guessed** (R-K6, P4). 東 is ヒガシ, トウ or アズマ depending on whose
+  name it is, and a wrong reading misroutes the payment. Hiragana is refused by default too —
+  convertible, but a name arriving in hiragana usually means the wrong field was sent (R-K5).
+- **The loss vocabulary** (`LossKind`, `LossSeverity`, `LossEntry`, `LossReport`, `LossCollector`),
+  so that nothing is lost silently (P5, R-I14–R-I16). Narrowing and case folding are
+  `INFORMATIONAL`; anything that changes how a name reads is `MATERIAL`. Epic 7 builds its mapping
+  report on this rather than a second vocabulary.
+- **R-C18's write-side policies**, deferred from Epic 3 because `TRANSLITERATE` needed an engine
+  that did not exist. `RecordEncoder` now takes `EncodingOptions`: `REJECT` (default),
+  `TRANSLITERATE` and `REPLACE`, applied per field against that field's own character class.
+- **`VoicingMarks` in `core`**, holding R-K7's ranges once. Validation rule `V-206` had the only
+  copy; the transliterator needs the same fact, and two copies of it would eventually disagree —
+  at which point the library would write files it rejects.
+- **Tables derived from Unicode, judgement calls declared as data**
+  ([ADR-0030](docs/adr/0030-kana-tables-are-derived-not-transcribed.md)). Transcribing 186
+  width-correspondence pairs by hand is the error-prone work R-F2 forbids for byte offsets, and a
+  slip would be invisible — ｼ for ｿ reads as a plausible name. The 186 are derived from NFKC and
+  checked for cardinality and single-byte width at build time; the ~20 substitutions a person had
+  to decide live in `kana-substitutions.yaml` with their reasons.
+- **`docs/encoding.md` extended to R-DOC4's full scope**, and
+  **`examples/TransliterateNames.java`** (§16).
+
+### Fixed — Epic 6
+
+- **`REJECT` did not reject.** The default write policy checked only a value's *length*, so a
+  full-width name that happened to fit the byte budget was written into a field permitting only
+  half-width — producing exactly the file `V-202` reports. It has been possible to build an invalid
+  file this way since Epic 2; R-C18 is what closes it.
+- **The encoder would write a voicing mark no kana can carry.** `ｱ` is permitted and `ﾞ` is
+  permitted, so `ｱﾞ` passed a character-by-character check while being a sequence the standard does
+  not recognise — the one `V-206` exists to report. Now refused, using the shared `VoicingMarks`.
+- **Two of the specification's kana mappings are wrong**
+  ([ADR-0028](docs/adr/0028-the-specifications-kana-mappings-are-wrong.md)). R-K2 says ー becomes ｰ
+  and ャ becomes ｬ; `CharacterClass` permits neither in any field, so following it would emit text
+  this library rejects. Implemented as ー→`-` and ャ→ヤ, both `MATERIAL`.
+- **`TRUNCATE_WITH_MARKER` wrote a marker no field permits.** The default was `*`, which
+  `CharacterClass` admits in *no* name class — so a policy whose whole purpose is to make a change
+  visible produced a field `V-202` then rejected. The default is now `-`, and a marker the target
+  field would refuse is refused. `PAYROLL_NAME` admits no symbol at all, so marked truncation is
+  impossible there and says so.
+- **`REPLACE` could write a byte no field permits, or a stranded voicing mark.** `'?'` is the
+  obvious replacement and is permitted by no name class; `0xDE` is a voicing mark and would strand
+  itself after whatever kana it landed behind. Both are now refused before anything is written.
+- **`TRANSLITERATE` measured length in the wrong encoding.** It built its options without the
+  encoder's charset, so it measured MS932 while the caller wrote UTF-8 — calling a 45-byte value a
+  15-byte one and letting it overflow the field.
+- **`V-206` kept its own copy of R-K7's byte ranges** after `VoicingMarks` was introduced to hold
+  them once. ADR-0029 said the duplication had been removed; it had not, until now.
+- **Truncation separated a kana from its mark when the file encoding was UTF-8.** The string-level
+  methods handed UTF-8 bytes to `truncateSafe`, which reads JIS X 0201 — so it looked for `0xDE`
+  where that mark's first byte is `0xEF`, kept the base and dropped the mark. `ﾌﾞ` became `ﾌ`: the
+  silent rename the whole engine exists to prevent, reintroduced by measuring in the wrong units.
+  Length is now counted in the encoding the file will actually be written in.
+- **§16.3's reference implementation checks for a leading orphaned mark only when truncating**, so a
+  short input beginning with a stray mark passed and a long one did not. The input is equally
+  damaged either way.
+- **ヷ and ヺ decompose to a stranded mark.** Unicode splits the archaic VA and VO into ﾜ+ﾞ and ｦ+ﾞ,
+  and neither kana has a voiced form the standard recognises. The derived table faithfully contains
+  mappings that must never be written; the engine refuses them, and a test names all four cases so
+  a fifth would fail the build rather than reach a file.
+
 ### Added — Epic 5, the command line tool
 
 - **`zengin`**, a command with five subcommands: `validate`, `inspect`, `generate`, `diff` and
@@ -512,7 +583,7 @@ A research pass against published sources. No parsed output changed, so no versi
   institution's specification. See [DISCLAIMER.md](DISCLAIMER.md).
 - **The 200-byte formats (振込入金通知, 入出金取引明細) are not implemented.** They carry 和暦 dates
   and vary more between institutions than the 120-byte ones; Epic 8.
-- No transliteration engine and no ISO 20022 mapping. Epics 6 and 7.
+- No ISO 20022 mapping. Epic 7.
 - **`V-4xx` needs reference data you supply**, and `V-5xx` needs the calendar switched on. Both are
   optional by design (R-V5, R-V6); neither runs by default.
 - **`zengin validate` is not reproducible across dates for a yearless value
@@ -543,9 +614,8 @@ A research pass against published sources. No parsed output changed, so no versi
   grows as nightly runs find more.
 - ~~**The testkit ships fixtures for 総合振込 only.**~~ Closed in Epic 5: `FormatFixtures` covers all
   four, from Java or from `zengin generate --format=…`.
-- **R-C18's write-side character policies** (`REJECT` / `TRANSLITERATE` / `REPLACE`) are not
-  implemented. `TRANSLITERATE` needs the transliteration engine, so the requirement lands with it in
-  Epic 6.
+- ~~**R-C18's write-side character policies** are not implemented.~~ Closed in Epic 6:
+  `EncodingOptions` carries all three, and `REJECT` — the default — now actually rejects.
 - **Character-set validation may over-report for your institution.** Where sources disagree on how
   many symbols a name admits, the narrow reading is implemented — see
   [D-003](docs/DISCREPANCIES.md). A finding may be a false positive; it is never a false negative.
@@ -558,10 +628,10 @@ A research pass against published sources. No parsed output changed, so no versi
 (≥ 90% line and ≥ 85% branch on `core`; 90/80 on `validation`; 95/90 on `testkit`; 85/75 on `cli`),
 the ArchUnit module rules, descriptor consistency, that the committed generated sources match the
 descriptors, that `docs/cli.md` and `docs/validation-rules.md` match the code, and that the
-committed fuzzing corpora replay. Current figures: 549 tests — 257 in `core`, 135 in `cli`, 90 in
+committed fuzzing corpora replay. Current figures: 760 tests — 464 in `core`, 135 in `cli`, 94 in
 `validation`, 48 in `testkit`, 19 in `codegen` — alongside 847 corpus replays in the non-mutating
-`fuzz` task, and 480 property cases per invariant across the four formats. `core` 95.7% line and 89.3% branch; `testkit` 97.8% and 100%; `validation` 93.1% and
-81.6%; `cli` 92.9% and 79.9%.
+`fuzz` task, and property runs covering INV-1, INV-2, INV-4, INV-6 and INV-8. `core` 95.9% line
+and 90.0% branch; `testkit` 96.1% and 100%; `validation` 93.1% and 81.6%; `cli` 92.9% and 79.9%.
 
 Fuzzing stays pointed at `core`. The CLI adds no parser of its own — picocli does the argument
 parsing and the record parsing is `core`'s, already fuzzed — so a fuzz target here would exercise
@@ -571,7 +641,7 @@ Mutating fuzz runs are not part of `check` — they are nightly, via `fuzzAll`. 
 fuzzing has already found is, because it is deterministic and costs about two seconds.
 
 Mutation testing (R-T15) is an opt-in task — `./gradlew :zengin4j-core:pitest` — because it takes
-about forty seconds rather than the second `check` takes. Current score: 89%, against a threshold of
+about forty seconds rather than the second `check` takes. Current score: 88%, against a threshold of
 80%.
 
 Most of what still survives is in `StreamingZenginReader`'s buffer management — compaction and

@@ -117,7 +117,7 @@ public final class ValidateBeforeSubmitting {
                 List.of(header,
                         kit.data("ﾔﾏﾀﾞ ﾀﾛｳ", 150_000L, "9876543"),
                         kit.data("ﾔﾏﾀﾞ ﾀﾛｳ", 150_000L, "9876543"),
-                        kit.data("ﾃｽﾄｰﾊﾅｺ", 0L, "9876544"),
+                        kit.dataUnchecked("ﾃｽﾄｰﾊﾅｺ", 0L, "9876544"),
                         kit.trailer(3, 999_999L),
                         kit.end()),
                 SeparatorStyle.CRLF, false);

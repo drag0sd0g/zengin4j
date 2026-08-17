@@ -22,6 +22,10 @@ val formatsDir = rootProject.layout.projectDirectory.dir("zengin4j-core/formats"
 val javaOutDir = rootProject.layout.projectDirectory.dir("zengin4j-core/src/main/java")
 val docsOutDir = rootProject.layout.projectDirectory.dir("docs/formats")
 
+// The transliteration substitutions, on the same footing as the descriptors:
+// build input, compiled to Java, never packaged (R-K9, ADR-0016).
+val kanaDir = rootProject.layout.projectDirectory.dir("zengin4j-core/kana")
+
 fun codegenTask(
     taskName: String,
     mode: String,
@@ -37,8 +41,10 @@ fun codegenTask(
         "--formats", formatsDir.asFile.absolutePath,
         "--java-out", javaOutDir.asFile.absolutePath,
         "--docs-out", docsOutDir.asFile.absolutePath,
+        "--kana", kanaDir.asFile.absolutePath,
     )
     inputs.dir(formatsDir).withPropertyName("descriptors")
+    inputs.dir(kanaDir).withPropertyName("kanaSubstitutions")
     if (outputDir != null) {
         outputs.dir(outputDir).withPropertyName("generated")
     } else {

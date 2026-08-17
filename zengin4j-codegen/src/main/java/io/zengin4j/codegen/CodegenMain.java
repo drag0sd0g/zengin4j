@@ -31,6 +31,7 @@ public final class CodegenMain {
 
     private static final String CODE_LISTS_FILE = "code-lists.yaml";
     private static final String YAML_SUFFIX = ".yaml";
+    private static final String KANA_SUBSTITUTIONS_FILE = "kana-substitutions.yaml";
 
     private CodegenMain() {
     }
@@ -38,8 +39,8 @@ public final class CodegenMain {
     /**
      * Runs the generator.
      *
-     * @param args {@code --mode}, {@code --formats}, {@code --java-out} and
-     *             {@code --docs-out}
+     * @param args {@code --mode}, {@code --formats}, {@code --java-out},
+     *             {@code --docs-out} and {@code --kana}
      */
     public static void main(String[] args) {
         Map<String, String> options = parse(args);
@@ -47,6 +48,7 @@ public final class CodegenMain {
         Path formats = Path.of(required(options, "--formats"));
         Path javaOut = Path.of(required(options, "--java-out"));
         Path docsOut = Path.of(required(options, "--docs-out"));
+        Path kanaDir = Path.of(required(options, "--kana"));
 
         List<Path> descriptorFiles = descriptorFiles(formats);
         Map<String, CodeList> codeLists = YamlDescriptorReader.readCodeLists(
@@ -83,7 +85,7 @@ public final class CodegenMain {
             return;
         }
 
-        List<GeneratedFile> files = plan(descriptors, codeLists, sources, javaOut, docsOut);
+        List<GeneratedFile> files = plan(descriptors, codeLists, sources, javaOut, docsOut, kanaDir);
         switch (mode) {
             case "generate" -> write(files);
             case "check" -> check(files);
@@ -97,7 +99,8 @@ public final class CodegenMain {
             Map<String, CodeList> codeLists,
             Map<FormatDescriptor, String> sources,
             Path javaOut,
-            Path docsOut) {
+            Path docsOut,
+            Path kanaDir) {
 
         RecordSourceGenerator sourceGenerator = new RecordSourceGenerator(javaOut);
         FormatDocGenerator docGenerator = new FormatDocGenerator(docsOut);
@@ -115,6 +118,14 @@ public final class CodegenMain {
         // parser and no descriptor resources at runtime (ADR-0016).
         files.add(formatsGenerator.generate(codeLists, descriptors, sources));
         files.add(formatsGenerator.packageInfo());
+
+        // The transliteration tables (R-K9). Same reasoning as the descriptors:
+        // authored as data, compiled to Java, so core parses nothing at runtime.
+        KanaTablesGenerator kanaGenerator = new KanaTablesGenerator(javaOut);
+        Path substitutions = kanaDir.resolve(KANA_SUBSTITUTIONS_FILE);
+        files.add(kanaGenerator.generate(
+                KanaSubstitutionReader.read(substitutions), KANA_SUBSTITUTIONS_FILE));
+        files.add(kanaGenerator.packageInfo());
         return files;
     }
 

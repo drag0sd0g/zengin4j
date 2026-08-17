@@ -81,7 +81,7 @@ class RuleEdgeCaseTest {
     @Test
     void v206_reportsAHandakutenAfterAKanaThatCannotTakeOne() {
         ValidationReport report = validate(fileWith(
-                KIT.data("ｶﾟﾔﾏ", SougouFurikomiFixtures.AMOUNT, "9876543")));
+                KIT.dataUnchecked("ｶﾟﾔﾏ", SougouFurikomiFixtures.AMOUNT, "9876543")));
 
         assertThat(report.findingsOf("V-206")).isNotEmpty();
         assertThat(report.findingsOf("V-206").get(0).messageEn()).contains("handakuten");
@@ -109,7 +109,7 @@ class RuleEdgeCaseTest {
     @Test
     void v206_reportsAMarkWithNoBaseAtAll() {
         ValidationReport report = validate(fileWith(
-                KIT.data("ﾞﾔﾏﾀﾞ", SougouFurikomiFixtures.AMOUNT, "9876543")));
+                KIT.dataUnchecked("ﾞﾔﾏﾀﾞ", SougouFurikomiFixtures.AMOUNT, "9876543")));
 
         assertThat(report.findingsOf("V-206")).isNotEmpty();
         assertThat(report.findingsOf("V-206").get(0).messageEn()).contains("start of the field");

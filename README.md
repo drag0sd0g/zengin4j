@@ -39,7 +39,7 @@ in Epic 7; see [Status](#status).
 
 ## Status
 
-This repository is at **Epic 5 — the command line tool**. What works today:
+This repository is at **Epic 6 — transliteration**. What works today:
 
 | | |
 |---|---|
@@ -59,7 +59,8 @@ This repository is at **Epic 5 — the command line tool**. What works today:
 | ✅ | A Japanese bank calendar, holidays included, that refuses to guess past its data |
 | ✅ | `zengin` command: `validate`, `inspect`, `generate`, `diff`, `explain` |
 | ✅ | Deterministic synthetic fixtures for all four formats, from Java or the CLI |
-| ⬜ | Half-width katakana transliteration and dakuten-safe truncation — Epic 6 |
+| ✅ | Half-width katakana transliteration, with everything it changes recorded |
+| ✅ | Dakuten-safe truncation: a cut never separates a kana from its voicing mark |
 | ⬜ | ISO 20022 `pain.001` in both directions, with loss reporting — Epic 7 |
 
 ## Quickstart
@@ -161,9 +162,31 @@ people learn to override. [`docs/validation-rules.md`](docs/validation-rules.md)
 lists every id with its default severity, and says what these rules do *not*
 check.
 
-Runnable versions live in [`examples/`](examples/), and the byte layout of every bundled
-format — generated from the descriptors the library actually uses — is in
-[`docs/formats/`](docs/formats/).
+Names usually arrive full-width and have to go into a fixed number of half-width bytes. That
+conversion is where money goes missing, so it is explicit about what it costs:
+
+```java
+Transliteration result = KanaTransliterator.toHalfWidth("ガクブチ ジロウ", options);
+
+result.text();                  // ｶﾞｸﾌﾞﾁ ｼﾞﾛｳ
+result.isMateriallyChanged();   // false — narrowing alone changes no name
+```
+
+**A voiced character is two bytes with one glyph.** `ｶﾞ` is `B6 DE`, so a cut at a byte boundary
+turns ガクブチ into カクブチ — a different payee, in a file that records nothing about it.
+Truncation here moves the cut back past the base kana rather than severing the pair, and the
+default policy refuses to truncate at all.
+
+**The target field changes the answer.** A long vowel becomes `-`, and payroll names admit no
+symbols, so ヨーコ can be written into a 総合振込 file and not into a 給与振込 one. Transliteration
+takes a `CharacterClass` for that reason.
+
+**Kanji is refused, never guessed** — 東 is ヒガシ, トウ or アズマ depending on whose name it is.
+There is no reading dictionary here and there will not be one.
+
+Runnable versions live in [`examples/`](examples/), the byte-level reference is
+[`docs/encoding.md`](docs/encoding.md), and the byte layout of every bundled format — generated
+from the descriptors the library actually uses — is in [`docs/formats/`](docs/formats/).
 
 ## From the command line
 

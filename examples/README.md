@@ -8,6 +8,7 @@ Runnable programs, one per use case in §4 of the build specification.
 | [`BuildSougouFurikomi.java`](BuildSougouFurikomi.java) | UC-6 — generate a test fixture for a downstream service | ✅ |
 | [`ValidateBeforeSubmitting.java`](ValidateBeforeSubmitting.java) | UC-1 — catch what a bank would reject, before sending | ✅ |
 | [`GenerateTestFixtures.java`](GenerateTestFixtures.java) | UC-6 — fixtures for every bundled format, reproducibly | ✅ |
+| [`TransliterateNames.java`](TransliterateNames.java) | §16 — getting names from a source system into a payment file | ✅ |
 | — | UC-3 — an ISO 20022 edge adapter | Epic 7 |
 | — | UC-4 — produce a ZEDI `pain.001` with its BAH | Epic 7 |
 | — | UC-5 — migration analysis with `dryRun` | Epic 7 |
