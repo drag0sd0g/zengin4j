@@ -67,6 +67,16 @@ You are responsible for that validation. This library's job is to be honest
 about what it does and does not know; it is not a substitute for your
 institution's specification.
 
+**`zengin4j-validation` is not step 3.** A report that says `submittable` means
+no bundled rule objected — the records are the length the descriptor declares,
+the fields hold what their types permit, and the trailers agree with their
+batches. It cannot mean the offsets are right, because the rules read the same
+descriptors the writer does: if a field is in the wrong place, both agree about
+the wrong place and the file passes. Nor does it know your cut-off times, your
+per-file record limits, or which 種別コード your institution accepts. What these
+rules do and do not check is listed in
+[docs/validation-rules.md](docs/validation-rules.md).
+
 ## Reporting a discrepancy
 
 If you find a field this library places differently from your institution's

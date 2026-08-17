@@ -277,6 +277,91 @@ A research pass against published sources. No parsed output changed, so no versi
   to the wrong configuration would appear without breaking a single import. The SBOM agrees:
   **zero components for core**, exactly one for testkit.
 
+### Added — Epic 4, validation
+
+- **`zengin4j-validation`**, 27 rules across the six tiers of §14.3, emitting 32 distinct finding
+  ids. Every finding carries its
+  severity, rule id, record number, byte offset, field id, both languages, the offending value and
+  what would have been acceptable (R-V2) — so a report points at the byte rather than at the file.
+- **Validation returns a report and never throws** (R-V1). Not for a malformed file, not for bytes
+  that are not a Zengin file at all, and not for a rule with a bug in it: the engine converts an
+  escaping exception into a `V-000` finding and runs the other rules. Bad input is the only reason
+  anyone runs a validator.
+- **Every rule is suppressible and re-rankable by id** (R-V3), because institutional practice
+  varies enough that some rule here is wrong for somebody. Ids are stable across versions —
+  renumbering one would silently re-enable a check that had been turned off deliberately.
+- **Deterministic reports** (INV-7). Findings sort by position then by rule id, so the same file
+  always produces the same report; asserted by shuffling the rule order twenty ways and comparing
+  the rendered output.
+- **JSON and SARIF** (R-V4), written by hand because R-M2 permits no JSON dependency — and checked
+  by parsing the output back with a real parser, since a writer that produced *almost* valid JSON
+  would pass any `contains` assertion and fail in the consumer
+  ([ADR-0022](docs/adr/0022-hand-written-json-and-sarif.md)).
+- **A Japanese bank calendar** (R-V6, R-V7) built from the Cabinet Office's published holiday data
+  rather than from a formula. The equinoxes are fixed by an astronomical determination published in
+  February of the preceding year and cannot be computed; substitute and bridge holidays come with
+  the data. The year-end closure is modelled separately because 2 January 2026 is a **Friday** and
+  banks are shut — a holidays-only calendar passes that date. Past its horizon it refuses rather
+  than guesses ([ADR-0023](docs/adr/0023-holidays-are-data-not-an-algorithm.md)).
+- **Reference data is optional and pluggable** (R-V5), and no snapshot ships. Institution data goes
+  stale — banks merge, branches close — and a copy compiled into a released jar would look
+  authoritative while being wrong. Without a provider the `V-4xx` rules do not run and nothing else
+  changes.
+- **Messages in both languages from properties files** (R-E4), loaded as `PropertyResourceBundle`
+  directly rather than through locale resolution: `getBundle(name, ENGLISH)` falls back to the
+  *default* locale before the base bundle, so on a Japanese JVM every finding would have carried the
+  same text twice — invisible to anyone developing in another locale.
+- **Account numbers are masked in findings** (R-E6) unless the caller opts out, because findings
+  reach logs, tickets and CI annotations.
+- **`examples/ValidateBeforeSubmitting.java`** (UC-1), which found two message defects on its first
+  run: a Japanese message interpolating an English weekday name, and another wrapping an English
+  description inside Japanese text.
+- **[`docs/validation-rules.md`](docs/validation-rules.md)**, every id with its default severity and
+  what it checks, plus a section on what these rules do *not* check. `RuleReferenceTest` fails the
+  build when the page and the code disagree, including the rule count quoted in the README.
+
+### Fixed — Epic 4
+
+- **Composite rules are now suppressible one id at a time.** `V-301` also emits `V-303` and `V-304`,
+  and `V-501` also emits `V-502`, `V-503` and `V-505`, because each set is several verdicts on one
+  computation. Suppression matched on the rule's own id alone, so `suppress("V-303")` silently did
+  nothing — precisely the R-V3 promise the ids exist to keep. `Rule.emits()` now declares the full
+  set, and the engine filters on it.
+- **`V-403` is implemented rather than merely numbered.** The id had a message and a description in
+  both bundles and no rule behind it, so a consumer suppressing it was suppressing nothing.
+- **`V-505` reports the severity it actually emits.** Its rule declared `ERROR` while the finding was
+  built as `INFO`, which SARIF then published as an error-level rule that never produces an error.
+  `Rule.severityOf(String)` lets a composite rule answer per id.
+- **SARIF declares every id it can reference.** The driver listed one rule per `Rule`, so results
+  carrying `V-303`, `V-304`, `V-502`, `V-503` or `V-505` referenced undeclared ids — a document a
+  strict consumer is entitled to reject.
+- **`toJson()` and `toSarif()` are on `ValidationReport`**, as §14.1 describes them, rather than only
+  on `ReportWriters`.
+- **`V-000` and `V-100` take their text from the message bundles** like every other id. Both were
+  built from string literals in Java, so the one place message text is supposed to live did not have
+  it and neither could be re-worded without a recompile.
+- **`io.zengin4j.validation` is exported from the module descriptor.** Five packages were exported
+  and the sixth — the one holding `ZenginValidator` — was not, so on the module path the entry point
+  was unreachable while everything supporting it was visible. Nothing in an ordinary build notices:
+  on the class path it works, and the compiler has no opinion. `ModuleDescriptorTest` now fails the
+  build when a package with public types is not exported, across all three published modules.
+- **`FieldDescriptor.endOffset()` has its Javadoc back.** It had been separated from its comment by
+  an inserted method, leaving the comment dangling and the method undocumented — a `javac` warning
+  that was being scrolled past.
+- **`runExamples` prints what the examples print.** Output went to `logger.info`, invisible without
+  `--info`, which defeats the point: reading an example's output is how two Japanese message defects
+  were found, and both had exit code zero.
+- **Syntax rules now examine records the reader rejected.** They skipped malformed records on the
+  grounds that field boundaries are unreliable — but a record is usually malformed *because* a field
+  contains something it should not, and boundaries are reliable whenever the length and
+  discriminator are right. Tier 2 was skipping exactly the records it exists to explain.
+- **`runExamples` replaces the documented `java -cp "*/build/libs/*"` invocation.** That glob also
+  matches the sources jar, which carries a copy of every resource, sorts before the main jar and
+  therefore shadows it — a stale one served a freshly built example an old message bundle.
+- **`''` no longer leaks into rule descriptions.** A `.message` goes through `MessageFormat` and
+  needs its apostrophes doubled; a `.description` is returned verbatim and must not. Getting it
+  backwards is invisible until somebody reads a SARIF document.
+
 ### Known limitations
 
 - **Every bundled format descriptor is `verified: false`**, though not for want of evidence: the
@@ -286,7 +371,20 @@ A research pass against published sources. No parsed output changed, so no versi
   institution's specification. See [DISCLAIMER.md](DISCLAIMER.md).
 - **The 200-byte formats (振込入金通知, 入出金取引明細) are not implemented.** They carry 和暦 dates
   and vary more between institutions than the 120-byte ones; Epic 8.
-- No validation layer, no CLI, no transliteration engine, no ISO 20022 mapping. Epics 4 to 7.
+- No CLI, no transliteration engine, no ISO 20022 mapping. Epics 5 to 7.
+- **`V-4xx` needs reference data you supply**, and `V-5xx` needs the calendar switched on. Both are
+  optional by design (R-V5, R-V6); neither runs by default.
+- **Tier 4 checks existence, not activity at the value date.** §14.3 asks for "both active at the
+  value date where temporal data is available"; `ReferenceDataProvider` has no temporal dimension, so
+  that data is never available and a branch which closed last month still passes. Supplying it means
+  dated validity on the interface and a dataset carrying it — `zengin-code` does not. Recorded in
+  [docs/validation-rules.md](docs/validation-rules.md) rather than left as an unstated gap.
+- **The bundled calendar expires at the end of 2027.** Later dates produce a `V-505` finding rather
+  than an answer. Refreshing it is one CSV and a re-run of the conversion.
+- **Validation branch coverage is gated at 80%, below core's 85%.** Half the remaining branches are
+  the "no calendar", "no reference data", "this format has no such field" guards that R-V5 and R-V6
+  require; reaching them needs contrived descriptors that prove the guard compiles rather than that
+  any rule works. The floor ratchets up, never down.
 - Over-length records are supported only through an explicit record-length override (OQ-3).
 - **A file that mixed separator conventions within itself cannot be written back byte-exactly.**
   There is no convention to reproduce, so INV-1 does not apply; the writer says so rather than
@@ -311,7 +409,9 @@ A research pass against published sources. No parsed output changed, so no versi
 `./gradlew build` enforces, on every run: the Java 21 baseline, the tests, ≥ 90% line and ≥ 85%
 branch coverage on `core`, the ArchUnit module rules, descriptor consistency, and that the
 committed generated sources match the descriptors, and the committed fuzzing corpora replay. Current
-figures: 268 tests, 95.7% line and 89.3% branch coverage.
+figures: 356 tests — 240 in `core`, 88 in `validation`, 19 in `codegen`, 9 in `testkit` — alongside
+847 corpus replays in the non-mutating `fuzz` task. `core` 95.7% line and 89.3% branch;
+`validation` 93.8% line and 81.6% branch.
 
 Mutating fuzz runs are not part of `check` — they are nightly, via `fuzzAll`. Replaying what
 fuzzing has already found is, because it is deterministic and costs about two seconds.

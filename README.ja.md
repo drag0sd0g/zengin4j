@@ -35,7 +35,7 @@ ZEDI のプロファイルは、Business Application Header と電文本体を *
 
 ## 現在の状況
 
-本リポジトリは **Epic 3（120 バイト系フォーマットと文字集合）** の段階です。
+本リポジトリは **Epic 4（検証）** の段階です。
 
 | | |
 |---|---|
@@ -50,7 +50,9 @@ ZEDI のプロファイルは、Business Application Header と電文本体を *
 | ✅ | 任意のレコード区切り（なし / CR / LF / CRLF、混在も可）、BOM、EOF バイトの処理 |
 | ✅ | 厳格モードと寛容モード。不正レコードは例外ではなくデータとして表現 |
 | ✅ | 年を持たない `MMDD` 日付の年補完（明示的な戦略指定が必須） |
-| ⬜ | バイト位置つき検証結果、JSON / SARIF 出力 — Epic 4 |
+| ✅ | 検証: 6 階層 27 ルール。すべての指摘がバイト位置を持ちます |
+| ✅ | JSON / SARIF 出力。SARIF は CI 上でファイルへの注釈として表示されます |
+| ✅ | 日本の銀行営業日カレンダー（祝日込み）。データ範囲外は推測せず報告します |
 | ⬜ | コマンドラインツール — Epic 5 |
 | ⬜ | 半角カナ変換と濁点を壊さない切り詰め — Epic 6 |
 | ⬜ | `pain.001` の双方向変換と損失レポート — Epic 7 |
@@ -126,15 +128,46 @@ assert Arrays.equals(ZenginWriters.toByteArray(parsed, WriterOptions.defaults())
 各レコードが元のバイト列を保持し、復号した値から再生成しない理由がこれです。予備領域や、まだ検証
 できていない値が、往復しても変化しません。
 
+検証は例外を投げず、レポートを返します。各指摘は「どこが」を必ず伴います。
+
+```java
+ValidationReport report = ZenginValidator.builder()
+        .withCalendar(JapaneseBankCalendar.bundled())
+        .build()
+        .validate(file);
+
+if (!report.isSubmittable()) {
+    System.out.print(report.toText(Locale.JAPANESE));
+}
+```
+
+```
+ERROR V-202 record 4 byte 366 [beneficiaryName]: 項目 beneficiaryName に使用できない文字が
+  含まれています: 長音 ｰ は使用できません。長音はハイフン - (0x2D) で表記してください。
+ERROR V-301 record 5 byte 488 [totalAmount]: トレーラーの合計金額は 999,999 ですが、明細の
+  合計は 300,000 です（差額 699,999）。
+WARNING V-306 record 3 byte 244: レコード 2 の明細と、銀行・支店・口座・金額がすべて同一です。
+```
+
+金融機関ごとに運用が異なるため、すべてのルールは ID で個別に抑止・重大度変更ができます。送信可否を
+左右するのはエラーのみで、警告は妨げません。警告で止めるレポートは、いずれ無視されるからです。
+ID と既定の重大度、そして**これらのルールが検査しない範囲**は
+[`docs/validation-rules.md`](docs/validation-rules.md) にまとめています。
+
 実行可能な例は [`examples/`](examples/) にあります。各フォーマットのバイト配置は
 [`docs/formats/`](docs/formats/) にあり、ライブラリが実際に使用する定義から生成しています。
 
 ## 2 つの境界
 
-**検証済みか未検証か。** すべてのフォーマット定義とマッピング規則は `verified` フラグと出典を
-持ちます。`verified: true` にできるのは、[`docs/SOURCES.md`](docs/SOURCES.md) に独立した 2 つ以上の
-公開資料が記載されている場合のみです。0.1.0 の定義はすべて未検証であり、生成ドキュメントにも
-その旨が明示されます。
+**検証済みか未検証か。** すべてのフォーマット定義・コードリスト・マッピング規則は `verified`
+フラグと出典を持ちます。`verified: true` にできるのは、[`docs/SOURCES.md`](docs/SOURCES.md) に
+独立した 2 つ以上の公開資料が記載されている場合のみで、これは慣習ではなくローダーが強制します。
+
+総合振込のレイアウトは、全銀協の手順書を含む独立した 6 件の資料と照合し、バイト位置・桁数の
+すべてが一致しています。それでも `verified: false` のままです。ある項目の属性について資料間に
+不一致が残っており（[D-002](docs/DISCREPANCIES.md)）、項目単位の不一致が解消されるまでフォーマット
+を未検証として扱う規則があるためです。参照しているコードリストは検証済みです。生成ドキュメントは
+この 3 つの状態を区別し、未検証のフォーマットは明示的に許可しない限り読み込めません。
 
 **準拠か実験的か。** 預金口座振替に対応する公式の ISO 20022 プロファイルは存在しません。
 `pain.008` へのマッピングは本プロジェクト独自の設計であり、`io.zengin4j.iso20022.experimental`
@@ -170,6 +203,7 @@ ISO 20022 へ移行しておらず、実装の根拠となる公開プロファ�
 
 ```bash
 ./gradlew build                    # コンパイル・テスト・カバレッジ・アーキテクチャ規則・差分検出
+./gradlew runExamples              # examples/ の全プログラムを実行し、出力をそのまま表示
 ./gradlew generateFormatSources    # 定義ファイル変更後にレコード型とドキュメントを再生成
 ./gradlew :zengin4j-core:pitest    # ミューテーションテスト（任意実行・1 分程度）
 ./gradlew :zengin4j-core:fuzzAll   # カバレッジ誘導ファジング（任意実行・CI では毎晩実行）
@@ -189,8 +223,8 @@ JDK 21 以降が必要です。使用する JDK に関わらず Java 21 のバ�
 ## リリース
 
 公開は手動承認付きの GitHub Actions でのみ行い、開発マシンからは実行できません。手順は
-[RELEASING.md](RELEASING.md) を参照してください。公開対象は `zengin4j-core` と
-`zengin4j-testkit` のみです。
+[RELEASING.md](RELEASING.md) を参照してください。公開対象は `zengin4j-core`、`zengin4j-testkit`、
+`zengin4j-validation` の 3 つです。他のモジュールは雛形であり、意図的に公開しません。
 
 ## ライセンス
 

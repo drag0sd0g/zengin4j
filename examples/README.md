@@ -6,7 +6,7 @@ Runnable programs, one per use case in §4 of the build specification.
 |---|---|---|
 | [`ParseSougouFurikomi.java`](ParseSougouFurikomi.java) | UC-2 — read a 総合振込 file into a downstream pipeline | ✅ |
 | [`BuildSougouFurikomi.java`](BuildSougouFurikomi.java) | UC-6 — generate a test fixture for a downstream service | ✅ |
-| — | UC-1 — pre-submission validation | Epic 4 |
+| [`ValidateBeforeSubmitting.java`](ValidateBeforeSubmitting.java) | UC-1 — catch what a bank would reject, before sending | ✅ |
 | — | UC-3 — an ISO 20022 edge adapter | Epic 7 |
 | — | UC-4 — produce a ZEDI `pain.001` with its BAH | Epic 7 |
 | — | UC-5 — migration analysis with `dryRun` | Epic 7 |
@@ -20,16 +20,17 @@ available now, is shown in
 ## Running them
 
 ```bash
-./gradlew :zengin4j-testkit:jar
-
-java -cp "zengin4j-core/build/libs/*:zengin4j-testkit/build/libs/*" \
-     examples/ParseSougouFurikomi.java
-
-java -cp "zengin4j-core/build/libs/*:zengin4j-testkit/build/libs/*" \
-     examples/BuildSougouFurikomi.java
+./gradlew runExamples
 ```
 
-On Windows, use `;` instead of `:` as the class-path separator.
+That builds what each example needs and runs all of them, which is also what CI
+does (R-DOC6).
+
+To run one by hand, take the class path from Gradle rather than globbing
+`build/libs/*` — that glob also matches the sources and javadoc jars, and a
+sources jar carries a copy of every resource, sorts first, and shadows the real
+one. A stale one will serve an example an old message bundle and look like a
+bug in the code.
 
 The examples build their own input with the testkit rather than reading a
 committed file. That is deliberate: no data resembling a real payment,

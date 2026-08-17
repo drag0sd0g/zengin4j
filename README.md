@@ -39,7 +39,7 @@ in Epic 7; see [Status](#status).
 
 ## Status
 
-This repository is at **Epic 3 — the 120-byte formats and the character sets**. What works today:
+This repository is at **Epic 4 — validation**. What works today:
 
 | | |
 |---|---|
@@ -54,7 +54,9 @@ This repository is at **Epic 3 — the 120-byte formats and the character sets**
 | ✅ | Optional separators (none / CR / LF / CRLF, even mixed), byte order marks, EOF byte |
 | ✅ | Strict and lenient parsing, with malformed records surfaced as data rather than exceptions |
 | ✅ | Year inference for the yearless `MMDD` dates, as an explicit, named decision |
-| ⬜ | Validation with byte-level findings, JSON and SARIF — Epic 4 |
+| ✅ | Validation: 27 rules across six tiers, every finding located to the byte |
+| ✅ | JSON and SARIF reports — SARIF renders as CI annotations on the file |
+| ✅ | A Japanese bank calendar, holidays included, that refuses to guess past its data |
 | ⬜ | CLI — Epic 5 |
 | ⬜ | Half-width katakana transliteration and dakuten-safe truncation — Epic 6 |
 | ⬜ | ISO 20022 `pain.001` in both directions, with loss reporting — Epic 7 |
@@ -131,6 +133,33 @@ assert Arrays.equals(ZenginWriters.toByteArray(parsed, WriterOptions.defaults())
 That is the point of retaining every record's raw bytes rather than re-encoding from decoded
 fields: reserved space and values nobody has verified yet survive the trip untouched.
 
+Validation returns a report rather than throwing, and every finding says where:
+
+```java
+ValidationReport report = ZenginValidator.builder()
+        .withCalendar(JapaneseBankCalendar.bundled())
+        .build()
+        .validate(file);
+
+if (!report.isSubmittable()) {
+    System.out.print(report.toText());
+}
+```
+
+```
+ERROR V-202 record 4 byte 366 [beneficiaryName]: the long vowel mark ｰ is never
+  permitted — write a long vowel as - (0x2D).
+ERROR V-301 record 5 byte 488 [totalAmount]: Trailer total is 999,999 but the
+  batch's payments add up to 300,000, a difference of 699,999.
+WARNING V-306 record 3 byte 244: This payment is identical to the one in record 2.
+```
+
+Every rule is suppressible by id, because institutional practice varies. Errors
+block submission; warnings do not — a report that blocked on warnings is a report
+people learn to override. [`docs/validation-rules.md`](docs/validation-rules.md)
+lists every id with its default severity, and says what these rules do *not*
+check.
+
 Runnable versions live in [`examples/`](examples/), and the byte layout of every bundled
 format — generated from the descriptors the library actually uses — is in
 [`docs/formats/`](docs/formats/).
@@ -186,6 +215,7 @@ Architecture decision records live in [`docs/adr/`](docs/adr/).
 
 ```bash
 ./gradlew build                    # compile, test, coverage gate, architecture rules, drift check
+./gradlew runExamples              # run every program in examples/ and print what it prints
 ./gradlew generateFormatSources    # regenerate record classes and docs after editing a descriptor
 ./gradlew :zengin4j-core:pitest    # mutation testing; opt-in, takes about a minute
 ./gradlew :zengin4j-core:fuzzAll   # coverage-guided fuzzing; opt-in, runs nightly in CI
@@ -206,8 +236,8 @@ deterministic and takes about two seconds.
 ## Releasing
 
 Publishing is a manually-approved GitHub Action and cannot be run from a developer machine — see
-[RELEASING.md](RELEASING.md). `zengin4j-core` and `zengin4j-testkit` publish to
-`io.github.drag0sd0g`; the other modules are skeletons and deliberately do not.
+[RELEASING.md](RELEASING.md). `zengin4j-core`, `zengin4j-testkit` and `zengin4j-validation` publish
+to `io.github.drag0sd0g`; the other modules are skeletons and deliberately do not.
 
 ## Licence
 

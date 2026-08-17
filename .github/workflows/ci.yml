@@ -68,14 +68,11 @@ jobs:
 
       # R-DOC6: an example that does not run is documentation of something that
       # used to work.
+      # Through Gradle rather than a shell glob: `build/libs/*` also matches the
+      # sources and javadoc jars, and a sources jar carries a copy of every
+      # resource that shadows the real one.
       - name: Run the examples
-        run: |
-          ./gradlew :zengin4j-testkit:jar
-          for example in examples/*.java; do
-            echo "::group::$example"
-            java -cp "zengin4j-core/build/libs/*:zengin4j-testkit/build/libs/*" "$example"
-            echo "::endgroup::"
-          done
+        run: ./gradlew runExamples
 
   constant-memory:
     name: 1 GB under a 64 MB heap

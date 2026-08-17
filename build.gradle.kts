@@ -42,7 +42,7 @@ allprojects {
 //
 // zengin4j-codegen builds the descriptors and never ships; benchmarks measure
 // and never ship.
-val publishedModules = setOf("zengin4j-core", "zengin4j-testkit")
+val publishedModules = setOf("zengin4j-core", "zengin4j-testkit", "zengin4j-validation")
 
 subprojects {
     apply(plugin = "java-library")
@@ -130,6 +130,12 @@ subprojects {
         toolVersion = jacocoToolVersion
     }
 
+    tasks.withType<JacocoReport>().configureEach {
+        reports {
+            xml.required = true
+        }
+    }
+
     // ------------------------------------------------------------- publishing
     //
     // R-B4: signed artefacts with sources and javadoc jars. R-B5's reproducible
@@ -164,6 +170,10 @@ subprojects {
                             "zengin4j-core" ->
                                 "Reader, writer and format descriptors for Japanese Zengin " +
                                     "fixed-length bank file formats. Zero runtime dependencies."
+                            "zengin4j-validation" ->
+                                "Structured validation of Zengin files: byte-level findings in " +
+                                    "English and Japanese, JSON and SARIF reports, and a Japanese " +
+                                    "bank calendar. Depends only on zengin4j-core."
                             else ->
                                 "Synthetic fixtures and deterministic generators for testing " +
                                     "against Zengin fixed-length bank file formats."
@@ -241,5 +251,60 @@ subprojects {
         "testImplementation"(junitJupiter)
         "testImplementation"(assertjCore)
         "testRuntimeOnly"(junitPlatformLauncher)
+    }
+}
+
+// R-DOC6: the examples must run, so the build runs them.
+//
+// Previously the documented invocation was `java -cp "*/build/libs/*"`, which
+// puts the sources and javadoc jars on the class path alongside the real one.
+// A sources jar carries a copy of every resource, sorts before the main jar,
+// and therefore shadows it — so a stale sources jar silently served an old
+// message bundle to a freshly built example. Taking the runtime class path from
+// Gradle removes the guesswork and the failure mode with it.
+val runExamples by tasks.registering {
+    group = "verification"
+    description = "Runs every program in examples/ (R-DOC6)."
+
+    val examples = fileTree("examples") { include("*.java") }
+    val classpath = files(
+        project(":zengin4j-core").tasks.named("jar"),
+        project(":zengin4j-testkit").tasks.named("jar"),
+        project(":zengin4j-validation").tasks.named("jar"),
+    )
+    dependsOn(classpath)
+    inputs.files(examples)
+    inputs.files(classpath)
+    outputs.upToDateWhen { false }
+
+    // The JVM running Gradle, which the build already requires to be 21+.
+    val javaHome = providers.systemProperty("java.home")
+
+    doLast {
+        // `File`, not `java.io.File`: in a Gradle Kotlin script `java` resolves
+        // to the JavaPluginExtension accessor, so the qualified name does not
+        // compile. Kotlin default-imports java.io.File anyway.
+        val javaBinary = File(javaHome.get(), "bin/java").absolutePath
+        examples.sortedBy { it.name }.forEach { example ->
+            logger.lifecycle("running ${example.name}")
+            val result = providers.exec {
+                commandLine(
+                    javaBinary,
+                    "-cp", classpath.joinToString(File.pathSeparator),
+                    example.absolutePath,
+                )
+            }
+            // Lifecycle, not info: an example exists to be read, and this task
+            // only runs when somebody asks for it. Seeing the output is how the
+            // Japanese message defects in ValidateBeforeSubmitting were caught —
+            // both produced a zero exit code and wrong text.
+            result.standardOutput.asText.get().trimEnd().lines()
+                .forEach { logger.lifecycle("    $it") }
+            val exit = result.result.get().exitValue
+            if (exit != 0) {
+                throw GradleException("${example.name} exited with $exit:\n" +
+                    result.standardError.asText.get())
+            }
+        }
     }
 }
