@@ -370,6 +370,23 @@ A research pass against published sources. No parsed output changed, so no versi
   no way to pin one, which is what let this through. A test that expires is
   worse than no test, because it fails long after the change that would explain
   it.
+- **The CLI wrote ANSI colour codes into its usage text on Windows.** picocli's
+  `Ansi.AUTO` decided the Windows CI runners were a colour terminal, so
+  `Usage: zengin validate` arrived as `Usage: \e[1mzengin validate\e[21m\e[0m` —
+  invisible to a person, very visible to anything else reading the output, and
+  green on Linux and macOS across two JDKs. Colour is now off unconditionally:
+  detecting a terminal is not portable across this project's own matrix, because
+  `System.console() != null` means "not redirected" on JDK 21 while JDK 22
+  changed it to return a Console even when redirected, and `--release 21`
+  cannot call the `isTerminal()` that replaced it. `NoAnsiEscapesTest` forces
+  ANSI on before every assertion, so it reproduces the Windows condition
+  everywhere rather than only where the problem is.
+- **The CLI smoke job in CI never ran its assertions.** GitHub invokes the step
+  with `bash -e`, which `set -uo pipefail` does not undo, so the first
+  assertion that deliberately expects a non-zero exit killed the script — it
+  produced no output and exited 3. A second bug sat behind it: `pipefail` on the
+  `--calendar` check reported grep as having failed whenever `validate`
+  legitimately exited 1 for a warning.
 - **The round-trip properties held for one format of four, and nothing said so.**
   `RandomZenginFiles` took a `FormatDescriptor` parameter while hard-coding
   総合振込's field ids, so passing any other descriptor failed outright — a false
@@ -541,7 +558,7 @@ A research pass against published sources. No parsed output changed, so no versi
 (≥ 90% line and ≥ 85% branch on `core`; 90/80 on `validation`; 95/90 on `testkit`; 85/75 on `cli`),
 the ArchUnit module rules, descriptor consistency, that the committed generated sources match the
 descriptors, that `docs/cli.md` and `docs/validation-rules.md` match the code, and that the
-committed fuzzing corpora replay. Current figures: 546 tests — 257 in `core`, 132 in `cli`, 90 in
+committed fuzzing corpora replay. Current figures: 549 tests — 257 in `core`, 135 in `cli`, 90 in
 `validation`, 48 in `testkit`, 19 in `codegen` — alongside 847 corpus replays in the non-mutating
 `fuzz` task, and 480 property cases per invariant across the four formats. `core` 95.7% line and 89.3% branch; `testkit` 97.8% and 100%; `validation` 93.1% and
 81.6%; `cli` 92.9% and 79.9%.

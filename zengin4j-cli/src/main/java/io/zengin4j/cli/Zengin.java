@@ -103,6 +103,27 @@ public final class Zengin implements Callable<Integer> {
         CommandLine commandLine = new CommandLine(new Zengin())
                 .setOut(out)
                 .setErr(err)
+                // No ANSI colour, ever. picocli's AUTO mode decided the Windows
+                // CI runners were a colour terminal and wrote escape codes into
+                // the usage text, where they are invisible to a person and very
+                // visible to anything reading the output.
+                //
+                // The obvious alternative — detect a terminal — is not portable
+                // across this project's own matrix. `System.console() != null`
+                // means "not redirected" on JDK 21, but JDK 22 changed it to
+                // return a Console even when redirected, with the real check
+                // moving to Console.isTerminal(); this module compiles with
+                // --release 21 and cannot call that. A heuristic that answers
+                // differently on JDK 21 and JDK 25 is the platform-dependence
+                // this library exists to pin down.
+                //
+                // And on the merits it is the right default anyway. This tool's
+                // output is a diagnostic dump that gets piped to files, diffed,
+                // and pasted into tickets and CI logs; escape codes are noise in
+                // all of those, and the field table carries its structure in the
+                // alignment rather than in colour. If colour is ever wanted, an
+                // explicit --color flag is the honest way to ask for it.
+                .setColorScheme(CommandLine.Help.defaultColorScheme(CommandLine.Help.Ansi.OFF))
                 .setCaseInsensitiveEnumValuesAllowed(true)
                 // Without this, a mistyped option produces a stack trace and a
                 // usage error is indistinguishable from a crash.
