@@ -95,16 +95,23 @@ jobs:
 
       - name: Run it end to end
         run: |
+          # GitHub runs this step with `bash -e`, and `set -uo pipefail` does
+          # not undo that. Several assertions below deliberately run a command
+          # that fails, so -e has to go explicitly or the script dies at the
+          # first one — which is exactly what it did.
+          set +e
           set -uo pipefail
+
           jar=$(ls zengin4j-cli/build/libs/*-all.jar)
           run() { java -jar "$jar" "$@"; }
 
           # Asserts an exit status, because the statuses are a contract that
-          # scripts branch on (R-CLI1, ADR-0025).
+          # scripts branch on (R-CLI1, ADR-0025). `|| got=$?` keeps the call in
+          # a condition context, so this stays correct if -e ever creeps back.
           expect() {
             local want=$1; shift
-            "$@" > /dev/null 2>&1
-            local got=$?
+            local got=0
+            "$@" > /dev/null 2>&1 || got=$?
             if [ "$got" -ne "$want" ]; then
               echo "expected exit $want, got $got: $*" >&2
               exit 1
@@ -121,15 +128,16 @@ jobs:
           expect 0 run inspect a.txt --annotate --allow-unverified
 
           # The calendar is checked by its stderr line rather than by an exit
-          # code. The fixture's value date is the yearless 0930, resolved
-          # forward from today, so whether it trips a V-5xx rule depends on what
-          # day CI runs — and an assertion that changes answer with the calendar
-          # date is a scheduled failure, not a test.
-          run validate a.txt --allow-unverified --calendar=bundled 2>&1 >/dev/null \
-            | grep -q "bundled Japanese bank calendar" \
+          # code: the fixture's value date is the yearless 0930 resolved forward
+          # from today, so whether it trips a V-5xx rule depends on the day CI
+          # runs. Stderr goes to a file rather than a pipe, because `validate`
+          # legitimately exits 1 for a warning and pipefail would report that as
+          # the grep having failed.
+          run validate a.txt --allow-unverified --calendar=bundled 2>cal.txt >/dev/null
+          grep -q "bundled Japanese bank calendar" cal.txt \
             || { echo "--calendar=bundled did not load"; exit 1; }
-          expect 0 run validate a.txt --allow-unverified --suppress=V-306
 
+          expect 0 run validate a.txt --allow-unverified --suppress=V-306
           expect 0 run diff a.txt a.txt --allow-unverified
           expect 1 run diff a.txt b.txt --allow-unverified
           expect 4 run validate nonexistent.txt
@@ -137,13 +145,13 @@ jobs:
           # R-CLI6: an unverified layout must not read without the flag.
           expect 2 run inspect a.txt
 
-          # The same seed must produce the same bytes on this machine too
-          # (R-CLI3) — the unit tests prove it in-process, this proves the jar.
-          run generate --format=kyuyo-furikomi --count=25 --seed=7 --out=a-again.txt > /dev/null
+          # The same seed must produce the same bytes here too (R-CLI3) — the
+          # unit tests prove it in-process, this proves the shipped jar.
+          run generate --format=kyuyo-furikomi --count=25 --seed=7 --out=a-again.txt >/dev/null
           cmp a.txt a-again.txt || { echo "generation is not reproducible"; exit 1; }
 
           # R-CLI4: account numbers must not reach a CI log by default.
-          run inspect a.txt --annotate --allow-unverified 2>/dev/null > dump.txt
+          run inspect a.txt --annotate --allow-unverified 2>/dev/null >dump.txt
           grep -q '(masked)' dump.txt || { echo "sensitive fields were not masked"; exit 1; }
 
   constant-memory:
