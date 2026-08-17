@@ -184,6 +184,24 @@ takes a `CharacterClass` for that reason.
 **Kanji is refused, never guessed** — 東 is ヒガシ, トウ or アズマ depending on whose name it is.
 There is no reading dictionary here and there will not be one.
 
+The builder can do the conversion for you, and hands back an account of what it changed:
+
+```java
+LossCollector loss = new LossCollector();
+
+ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+        .encoding(EncodingOptions.builder()
+                .characters(CharacterWritePolicy.TRANSLITERATE)
+                .build(), loss)
+        .payment(p -> p.set("beneficiaryName", "ガクブチ ジロウ"))   // written as ｶﾞｸﾌﾞﾁ ｼﾞﾛｳ
+        .build();
+
+loss.build().atLeast(LossSeverity.MATERIAL);   // whose name reads differently now
+```
+
+Without that call it refuses rather than converting, which is the right default: a value the
+standard forbids is one the caller can still fix.
+
 Runnable versions live in [`examples/`](examples/), the byte-level reference is
 [`docs/encoding.md`](docs/encoding.md), and the byte layout of every bundled format — generated
 from the descriptors the library actually uses — is in [`docs/formats/`](docs/formats/).

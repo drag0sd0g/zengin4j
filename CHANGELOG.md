@@ -297,6 +297,12 @@ A research pass against published sources. No parsed output changed, so no versi
 - **R-C18's write-side policies**, deferred from Epic 3 because `TRANSLITERATE` needed an engine
   that did not exist. `RecordEncoder` now takes `EncodingOptions`: `REJECT` (default),
   `TRANSLITERATE` and `REPLACE`, applied per field against that field's own character class.
+- **`ZenginFileBuilder.encoding(EncodingOptions, LossCollector)`**, so R-C18's policies are reachable
+  from the API callers actually use. They were on `RecordEncoder` and nothing reached them from the
+  builder, which made them unreachable in practice — getting transliteration meant assembling
+  records by hand and giving up the trailer arithmetic the builder exists for. The collector is
+  required rather than optional: every policy but `REJECT` alters somebody's name to make it fit,
+  and that should not be a decision nobody records (P5).
 - **`VoicingMarks` in `core`**, holding R-K7's ranges once. Validation rule `V-206` had the only
   copy; the transliterator needs the same fact, and two copies of it would eventually disagree —
   at which point the library would write files it rejects.
@@ -333,6 +339,11 @@ A research pass against published sources. No parsed output changed, so no versi
 - **`TRANSLITERATE` measured length in the wrong encoding.** It built its options without the
   encoder's charset, so it measured MS932 while the caller wrote UTF-8 — calling a 45-byte value a
   15-byte one and letting it overflow the field.
+- **The testkit's escape hatch is now held to earning its keep.** `dataUnchecked` exists so a
+  validator's suite can build the records the validator complains about, which makes it the one call
+  that deliberately writes an invalid file — and the obvious failure mode is habit: hit a refusal,
+  reach for the unchecked path, quietly stop testing what you meant to. `EscapeHatchIsEarnedTest`
+  reads every call site and fails if the ordinary encoder would have accepted the same value.
 - **`V-206` kept its own copy of R-K7's byte ranges** after `VoicingMarks` was introduced to hold
   them once. ADR-0029 said the duplication had been removed; it had not, until now.
 - **Truncation separated a kana from its mark when the file encoding was UTF-8.** The string-level
@@ -628,7 +639,7 @@ A research pass against published sources. No parsed output changed, so no versi
 (≥ 90% line and ≥ 85% branch on `core`; 90/80 on `validation`; 95/90 on `testkit`; 85/75 on `cli`),
 the ArchUnit module rules, descriptor consistency, that the committed generated sources match the
 descriptors, that `docs/cli.md` and `docs/validation-rules.md` match the code, and that the
-committed fuzzing corpora replay. Current figures: 760 tests — 464 in `core`, 135 in `cli`, 94 in
+committed fuzzing corpora replay. Current figures: 780 tests — 473 in `core`, 135 in `cli`, 105 in
 `validation`, 48 in `testkit`, 19 in `codegen` — alongside 847 corpus replays in the non-mutating
 `fuzz` task, and property runs covering INV-1, INV-2, INV-4, INV-6 and INV-8. `core` 95.9% line
 and 90.0% branch; `testkit` 96.1% and 100%; `validation` 93.1% and 81.6%; `cli` 92.9% and 79.9%.
