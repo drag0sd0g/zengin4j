@@ -144,6 +144,105 @@ in both directions.
 systems emit in practice, and because being the superset it fails to decode
 less.
 
+## Truncation is the dangerous operation
+
+A voiced character is two bytes with one glyph, so a cut at a byte boundary can
+land between them. `ｶﾞ` is `B6 DE`; keep the `B6` and drop the `DE` and the file
+now says `ｶ`.
+
+```
+ｶﾞｸﾌﾞﾁ    B6 DE  B8  CC DE  C1      ← ガクブチ
+                        ↑
+                        a four-byte field cuts here
+ｶﾞｸﾌ      B6 DE  B8  CC              ← ガクフ, a different name
+```
+
+**Nothing in the file records that this happened.** The record is still the
+right length, every byte is still a legal character, every validation rule still
+passes. The payment is simply addressed to somebody else.
+
+So this library never truncates on its own. `KanaTransliterator.truncateSafe`
+moves the cut back past the base kana when it would land on a mark, and the
+default policy does not truncate at all:
+
+| Policy | What it does |
+|---|---|
+| `REJECT_IF_TOO_LONG` | Refuses. The default — shortening a payee's name is the caller's decision |
+| `TRUNCATE_SAFE` | Shortens, never severing a pair, and records a `MATERIAL` loss |
+| `TRUNCATE_WITH_MARKER` | The same, plus a marker so a reader can see something went |
+
+A field too small for even one character is refused outright: text that cannot
+be shortened to fit is not a truncation problem.
+
+**The marker has to be a character the field admits**, which rules out more than
+it looks. `*` — the obvious choice — is permitted by *no* name class, and
+`PAYROLL_NAME` admits no symbol at all, so marked truncation is impossible in a
+payroll name. The default is `-`, and a marker the field would refuse is refused
+rather than written.
+
+### A mark at the start means the damage already happened
+
+Text beginning with `ﾞ` or `ﾟ` has a mark modifying nothing. It is almost always
+the far side of a truncation somebody else performed — they kept the tail rather
+than the head. The kana it belonged to cannot be recovered, because several
+would fit, so this library reports it rather than guessing
+(`OrphanedVoicingMarkException`).
+
+### Only some kana can carry a mark
+
+`ﾞ` may follow the か, さ, た and は rows, and `ｳ`. `ﾟ` may follow the は row and
+nothing else. `ﾜﾞ` is not a character — it is a mark stranded after a kana with
+no voiced reading.
+
+This matters when converting: Unicode happily decomposes `ヷ` (the archaic VA)
+into `ﾜ` + `ﾞ`, and the standard has nowhere to put the result. The
+transliterator refuses rather than write a sequence validation rule `V-206`
+would then report.
+
+## Converting into these files
+
+Full-width text has to be narrowed before it can go in a field, and two of the
+obvious mappings are wrong.
+
+| Input | Naive | This library | Why |
+|---|---|---|---|
+| `ガ` | `ｶﾞ` | `ｶﾞ` | Correct — decomposes to base plus mark |
+| `ー` | `ｰ` | `-` | `ｰ` is permitted in no field class |
+| `ャ` | `ｬ` | `ﾔ` | Small kana are permitted in no field class |
+| `ａ` | `a` | `A` | No field class permits a lowercase letter |
+| `東` | — | refused | A kanji's reading is ambiguous |
+
+The last is the important one. 東 is ヒガシ, トウ or アズマ depending on whose
+name it is, and a wrong reading sends money to the wrong place. This library
+ships no reading dictionary and will not guess (P4).
+
+### The target field changes the answer
+
+`ー` becomes `-`, and `PAYROLL_NAME` admits no symbols at all. So **ヨーコ can be
+written into a 総合振込 file and cannot be written into a 給与振込 one**:
+
+```java
+KanaTransliterator.toHalfWidth("ヨーコ", partyName);    // ﾖ-ｺ
+KanaTransliterator.toHalfWidth("ヨーコ", payrollName);  // refused
+```
+
+Which is why transliteration takes a `CharacterClass` rather than just a string.
+A converter that did not know the destination would be wrong for one of them.
+
+### Everything it changes, it records
+
+Every conversion returns the text *and* an account of what it cost:
+
+```java
+Transliteration result = KanaTransliterator.toHalfWidth("キャノン", options);
+result.text();                  // ｷﾔﾉﾝ
+result.isMateriallyChanged();   // true — キャノン and キヤノン read differently
+```
+
+Narrowing and case folding are `INFORMATIONAL`; anything that changes how a name
+reads is `MATERIAL`. The distinction is about consequences, not about how many
+bytes moved.
+
 ## Choosing an encoding
 
 | You have | Use |

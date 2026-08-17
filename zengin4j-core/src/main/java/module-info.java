@@ -21,6 +21,9 @@ module io.zengin4j.core {
     exports io.zengin4j.core.error;
     exports io.zengin4j.core.format;
     exports io.zengin4j.core.format.generated;
+    exports io.zengin4j.core.kana;
+    exports io.zengin4j.core.kana.generated;
+    exports io.zengin4j.core.loss;
     exports io.zengin4j.core.model;
     exports io.zengin4j.core.model.generated;
     exports io.zengin4j.core.time;

@@ -97,7 +97,7 @@ class RuleCatalogueTest {
     @Test
     void v202_reportsACharacterTheFieldMayNotCarry() {
         // The long vowel mark in a party name: the mistake that looks correct.
-        byte[] data = KIT.data("ﾔﾏﾀﾞｰﾀﾛｳ", SougouFurikomiFixtures.AMOUNT, "9876543");
+        byte[] data = KIT.dataUnchecked("ﾔﾏﾀﾞｰﾀﾛｳ", SougouFurikomiFixtures.AMOUNT, "9876543");
         byte[] file = SyntheticRecords.file(
                 List.of(KIT.header(), data,
                         KIT.trailer(1, SougouFurikomiFixtures.AMOUNT), KIT.end()),
@@ -113,7 +113,7 @@ class RuleCatalogueTest {
     @Test
     void v206_reportsAnIllegalVoicingMark() {
         // ｱ followed by a dakuten — a byte pair no reader can pronounce.
-        byte[] data = KIT.data("ｱﾞﾔﾏﾀﾞ", SougouFurikomiFixtures.AMOUNT, "9876543");
+        byte[] data = KIT.dataUnchecked("ｱﾞﾔﾏﾀﾞ", SougouFurikomiFixtures.AMOUNT, "9876543");
         byte[] file = SyntheticRecords.file(
                 List.of(KIT.header(), data,
                         KIT.trailer(1, SougouFurikomiFixtures.AMOUNT), KIT.end()),

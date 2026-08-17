@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.zengin4j.core.codec.ByteOrderMarkPolicy;
 import io.zengin4j.core.codec.ReaderOptions;
 import io.zengin4j.core.codec.WriterOptions;
-import io.zengin4j.core.codec.ZenginFileBuilder;
 import io.zengin4j.core.codec.ZenginReaders;
 import io.zengin4j.core.codec.ZenginWriters;
 import io.zengin4j.core.format.FormatDescriptor;

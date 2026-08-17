@@ -1,0 +1,92 @@
+# Transliteration substitutions — the judgement calls (R-K9).
+#
+# This file holds what a person had to DECIDE. It deliberately does not hold the
+# mechanical full-width/half-width correspondence — ア↔ｱ, ガ↔ｶ+ﾞ, Ａ↔A — because
+# that is defined by Unicode's compatibility decompositions and derived from
+# them at build time. Transcribing two hundred such pairs by hand is the same
+# error-prone work R-F2 forbids for byte offsets, and a mistake in it would be
+# invisible: ｼ for ｿ reads as a plausible name.
+#
+# What is left here is the set of characters the standard's own field rules
+# refuse, together with what to write instead. Those are not derivable from
+# anything; somebody read the rules and decided.
+#
+# **Why these characters need substituting at all.** R-K2 of the build
+# specification says to map ー to ｰ and ャ to ｬ. Both are wrong, and this
+# library's own validator says so: CharacterClass excludes the prolonged sound
+# mark ｰ (0xB0) and every small kana (0xA7–0xAF) from every field class, so a
+# transliterator following R-K2 would emit text that V-202 rejects. The
+# specification predates the source research in Epic 3; the research wins. See
+# docs/adr/0028.
+#
+# Applied to the input before the mechanical narrowing, so a caller who already
+# has half-width text gets the same treatment as one who has full-width text.
+#
+# Byte offsets do not appear in this file, and neither do byte values: the
+# generator resolves every character to its JIS X 0201 byte and fails the build
+# if any replacement is not a single byte.
+
+version: 1
+
+substitutions:
+
+  # ---------------------------------------------------------------- long vowel
+  #
+  # The standard writes a long vowel as an ASCII hyphen. Material rather than
+  # informational: ﾖ-ｺ and ﾖｺ are different strings to anyone matching a payment
+  # against an invoice, and the hyphen is not universally permitted either —
+  # PAYROLL_NAME admits no symbols at all, so in a payroll file this
+  # substitution produces a character the field still refuses, and the
+  # unmappable-character policy decides what happens next.
+  - from: "ー"
+    to: "-"
+    severity: MATERIAL
+    why-en: "the prolonged sound mark is not permitted in any field; the standard writes a long vowel as a hyphen"
+    why-ja: "長音は使用できません。標準ではハイフンで表記します"
+  - from: "ｰ"
+    to: "-"
+    severity: MATERIAL
+    why-en: "the prolonged sound mark is not permitted in any field; the standard writes a long vowel as a hyphen"
+    why-ja: "長音は使用できません。標準ではハイフンで表記します"
+
+  # ---------------------------------------------------------------- small kana
+  #
+  # No field class admits a small kana, so each becomes its full-size form.
+  # Material: キャノン becomes キヤノン, which a human reconciling the payment
+  # will notice even though the money still arrives. This library found its own
+  # fixtures violating this rule in Epic 4 — ﾃｽﾄｼｮｳｼﾞ had to become ﾃｽﾄｼﾖｳｼﾞ.
+  #
+  # Both widths are listed. A caller may hand us either, and the answer is the
+  # same.
+  - { from: "ァ", to: "ア", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ィ", to: "イ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ゥ", to: "ウ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ェ", to: "エ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ォ", to: "オ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ッ", to: "ツ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ャ", to: "ヤ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ュ", to: "ユ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ョ", to: "ヨ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+
+  # ヮ, ヵ and ヶ have no half-width form at all, so they are substituted here
+  # rather than left for the narrowing step to fail on.
+  - { from: "ヮ", to: "ワ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ヵ", to: "カ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ヶ", to: "ケ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+
+  # The same nine, as half-width input.
+  - { from: "ｧ", to: "ア", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ｨ", to: "イ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ｩ", to: "ウ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ｪ", to: "エ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ｫ", to: "オ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ｯ", to: "ツ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ｬ", to: "ヤ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ｭ", to: "ユ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+  - { from: "ｮ", to: "ヨ", severity: MATERIAL, why-en: "small kana are not permitted; written full size", why-ja: "小書き文字は使用できません。並字で表記します" }
+
+  # ------------------------------------------------------------------- ヴ
+  #
+  # ヴ decomposes mechanically to ｳ + ﾞ, and ｳ is one of the five bases that may
+  # legally take a dakuten (R-K7), so no substitution is needed. Listed here
+  # only so a reader does not go looking for it.

@@ -5,6 +5,7 @@ import io.zengin4j.core.error.AmountOverflowException;
 import io.zengin4j.core.error.FormatDescriptorException;
 import io.zengin4j.core.error.UnverifiedFormatException;
 import io.zengin4j.core.format.FieldFormat;
+import io.zengin4j.core.loss.LossCollector;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
@@ -68,6 +69,10 @@ public final class ZenginFileBuilder {
 
     private ZenginCharset charset = ZenginCharset.defaultCharset();
     private FileFraming framing = FileFraming.conventional();
+
+    // Refuse anything the field cannot hold, until a caller says otherwise.
+    private EncodingOptions encodingOptions = EncodingOptions.defaults();
+    private LossCollector loss = new LossCollector();
     private boolean allowUnverifiedFormats;
 
     private final List<PendingBatch> batches = new ArrayList<>();
@@ -119,6 +124,43 @@ public final class ZenginFileBuilder {
      */
     public ZenginFileBuilder charset(ZenginCharset value) {
         this.charset = Objects.requireNonNull(value, "charset");
+        return this;
+    }
+
+    /**
+     * Sets what to do with values a field cannot hold (R-C18).
+     *
+     * <p>Without this the builder refuses them, which is the right default and
+     * was for a while the only behaviour available: the policies existed on
+     * {@link RecordEncoder} and nothing reached them from here, so a caller who
+     * wanted transliteration had to assemble records by hand and give up the
+     * trailer arithmetic this class exists for.
+     *
+     * <p><strong>The collector is required, not optional.</strong> Every policy
+     * other than {@code REJECT} changes somebody's name to make it fit, and a
+     * caller who has chosen that should have to hold the account of what
+     * changed (P5). Passing one is the smallest way to make that deliberate.
+     *
+     * <pre>{@code
+     * LossCollector loss = new LossCollector();
+     * ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+     *         .encoding(EncodingOptions.builder()
+     *                 .characters(CharacterWritePolicy.TRANSLITERATE)
+     *                 .build(), loss)
+     *         .payment(p -> p.set("beneficiaryName", "ガクブチ ジロウ"))
+     *         .build();
+     *
+     * loss.build().atLeast(LossSeverity.MATERIAL);   // whose name changed
+     * }</pre>
+     *
+     * @param options how to treat values the field cannot hold
+     * @param loss    collects everything the policy changes
+     * @return this builder
+     * @since 0.4.0
+     */
+    public ZenginFileBuilder encoding(EncodingOptions options, LossCollector loss) {
+        this.encodingOptions = Objects.requireNonNull(options, "options");
+        this.loss = Objects.requireNonNull(loss, "loss");
         return this;
     }
 
@@ -289,7 +331,7 @@ public final class ZenginFileBuilder {
     }
 
     private ZenginRecord materialise(RecordDescriptor record, Map<String, String> values, Cursor cursor) {
-        byte[] frame = RecordEncoder.encode(record, charset, values);
+        byte[] frame = RecordEncoder.encode(record, charset, values, encodingOptions, loss);
         int number = cursor.nextRecordNumber();
         long offset = cursor.nextOffset(frame.length, framing);
         RecordView view = RecordView.wellFormed(frame, 0, frame.length, descriptor, record,

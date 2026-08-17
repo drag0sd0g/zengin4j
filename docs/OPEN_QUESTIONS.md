@@ -78,6 +78,26 @@ index exists so that whoever picks up an epic sees those tasks without reading t
   `--as-of=YYYY-MM-DD` would close it, and would also let a stored file be re-validated as of the
   day it was sent. Found by a CLI test that would have started failing on 1 October 2026.
 
+### Epic 6 — transliteration
+
+**Completed 2026-08-17.** Four questions raised, one requirement contradicted.
+
+- **R-K2's two named mappings are wrong**, and this library's own `V-202` says so: `ｰ` and small
+  kana are permitted in no field class. Implemented as `ー`→`-` and `ャ`→`ヤ`, both `MATERIAL`.
+  → [ADR-0028](adr/0028-the-specifications-kana-mappings-are-wrong.md). **The build specification
+  still says otherwise** and has not been edited; the disagreement is recorded rather than
+  smoothed over.
+- **§7 places `kana` and `loss` in `iso20022`, and they cannot go there.** R-C18 puts
+  transliteration on `core`'s write path, and `checkPomHasNoDependencies` forbids `core` depending
+  on anything at all. → [ADR-0029](adr/0029-transliteration-lives-in-core.md).
+- **A long vowel has no legal form in a payroll name.** `ー` becomes `-`, and `PAYROLL_NAME` admits
+  no symbols, so ヨーコ cannot be written into a 給与振込 file at all. Refused by default, droppable
+  by policy. Whether institutions in practice accept some other spelling is unconfirmed — no source
+  consulted addresses it, and a bank's own guidance would settle it.
+- **Whether `ｦ` should be reachable by transliteration.** `ヲ` narrows to `ｦ`, which only
+  `EDI_INFORMATION` permits — so a name containing ヲ is refused for every other field. That is the
+  conservative reading of D-001; a source saying otherwise would change it.
+
 ### Epic 7 — ISO 20022
 
 - **`zengin convert` and `zengin dryrun`**, the two commands §27 lists that Epic 5 could not build.

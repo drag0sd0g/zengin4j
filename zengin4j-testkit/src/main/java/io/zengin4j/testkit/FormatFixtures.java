@@ -80,6 +80,21 @@ public interface FormatFixtures {
     byte[] data(String name, long amount, String accountNumber);
 
     /**
+     * Builds a data record whose name the standard would refuse.
+     *
+     * <p>The escape hatch a validator's test suite needs: a record carrying a
+     * long vowel mark, a small kana or anything else the field rules forbid, so
+     * that the rule which reports it has something to report.
+     *
+     * @param name          the counterparty name, valid or not
+     * @param amount        the amount in yen
+     * @param accountNumber the seven-digit account number
+     * @return the record bytes
+     * @since 0.4.0
+     */
+    byte[] dataUnchecked(String name, long amount, String accountNumber);
+
+    /**
      * Builds a trailer record.
      *
      * <p>Where a format's trailer carries result totals — 預金口座振替 has four

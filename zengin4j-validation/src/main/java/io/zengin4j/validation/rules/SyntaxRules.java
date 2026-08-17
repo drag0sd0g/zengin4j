@@ -6,6 +6,7 @@ import io.zengin4j.core.charset.CharacterViolation;
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.format.CodeList;
 import io.zengin4j.core.format.FieldDescriptor;
+import io.zengin4j.core.charset.VoicingMarks;
 import io.zengin4j.core.format.FieldType;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.model.ZenginRecord;
@@ -288,9 +289,6 @@ public final class SyntaxRules {
      */
     static final class VoicingMarksAreLegal extends AbstractRule {
 
-        private static final int DAKUTEN = 0xDE;
-        private static final int HANDAKUTEN = 0xDF;
-
         VoicingMarksAreLegal() {
             super("V-206", Severity.ERROR, RuleScope.FIELD);
         }
@@ -304,16 +302,16 @@ public final class SyntaxRules {
                 for (int i = 0; i < field.length(); i++) {
                     int at = field.offset() + i;
                     int mark = bytes[at] & 0xFF;
-                    if (mark != DAKUTEN && mark != HANDAKUTEN) {
+                    if (!VoicingMarks.isMark(mark)) {
                         continue;
                     }
                     int base = i == 0 ? -1 : bytes[at - 1] & 0xFF;
-                    if (legal(base, mark)) {
+                    if (VoicingMarks.isLegal(base, mark)) {
                         continue;
                     }
                     out.accept(Messages.format(id() + ".message",
                                     field.id(),
-                                    mark == DAKUTEN ? "dakuten" : "handakuten",
+                                    mark == VoicingMarks.DAKUTEN ? "dakuten" : "handakuten",
                                     describeBase(base))
                             .into(finding().at(record.recordNumber(), record.byteOffset())
                                     .field(field.id(), at))
@@ -321,22 +319,6 @@ public final class SyntaxRules {
                             .build());
                 }
             });
-        }
-
-        /**
-         * Dakuten after ｶ-ｺ, ｻ-ｿ, ﾀ-ﾄ, ﾊ-ﾎ or ｳ; handakuten only after ﾊ-ﾎ
-         * (R-K7).
-         */
-        private static boolean legal(int base, int mark) {
-            boolean ha = base >= 0xCA && base <= 0xCE;
-            if (mark == HANDAKUTEN) {
-                return ha;
-            }
-            boolean ka = base >= 0xB6 && base <= 0xBA;
-            boolean sa = base >= 0xBB && base <= 0xBF;
-            boolean ta = base >= 0xC0 && base <= 0xC4;
-            boolean u = base == 0xB3;
-            return ka || sa || ta || ha || u;
         }
 
         private static String describeBase(int base) {

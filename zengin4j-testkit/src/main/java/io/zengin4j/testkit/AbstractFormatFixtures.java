@@ -94,6 +94,12 @@ abstract class AbstractFormatFixtures implements FormatFixtures {
     }
 
     @Override
+    public final byte[] dataUnchecked(String name, long amount, String accountNumber) {
+        return SyntheticRecords.encodeUnchecked(descriptor.record(RecordKind.DATA), charset,
+                dataValues(name, amount, accountNumber));
+    }
+
+    @Override
     public final byte[] trailer(int recordCount, long totalAmount) {
         return SyntheticRecords.encode(descriptor.record(RecordKind.TRAILER), charset,
                 trailerValues(recordCount, totalAmount));

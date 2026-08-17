@@ -1,7 +1,9 @@
 package io.zengin4j.testkit;
 
 import io.zengin4j.core.charset.ZenginCharset;
+import io.zengin4j.core.codec.EncodingOptions;
 import io.zengin4j.core.codec.RecordEncoder;
+import io.zengin4j.core.loss.LossCollector;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.model.SeparatorStyle;
 import java.io.ByteArrayOutputStream;
@@ -39,6 +41,30 @@ public final class SyntheticRecords {
      */
     public static byte[] encode(RecordDescriptor descriptor, ZenginCharset charset, Map<String, String> values) {
         return RecordEncoder.encode(descriptor, charset, values);
+    }
+
+    /**
+     * Encodes a record <em>without</em> checking its characters.
+     *
+     * <p>For building files that are deliberately wrong. A validator's test
+     * suite has to be able to produce the records the validator exists to
+     * complain about — a name carrying a long vowel mark, say — and the
+     * ordinary encoder refuses them, which is what it is for.
+     *
+     * <p>Everything else still applies: field ids are checked, values still have
+     * to fit, padding is still the encoder's.
+     *
+     * @param descriptor the record layout
+     * @param charset    the encoding to write text fields in
+     * @param values     field values keyed by field id
+     * @return the record bytes, exactly {@code descriptor.recordLength()} long
+     * @since 0.4.0
+     */
+    public static byte[] encodeUnchecked(RecordDescriptor descriptor, ZenginCharset charset,
+            Map<String, String> values) {
+        return RecordEncoder.encode(descriptor, charset, values,
+                EncodingOptions.builder().withoutCharacterChecks().build(),
+                new LossCollector());
     }
 
     /**
