@@ -31,11 +31,21 @@ ZEDI のプロファイルは、Business Application Header と電文本体を *
 > パーサーに渡すと即座に失敗し、汎用の ISO 20022 ライブラリでは読み取れません。
 
 宣言境界での分割と、バイト単位で同一のフレーミングによる再構成を正しく扱うことは、本ライブラリが
-存在する具体的な理由のひとつです。ISO 20022 レイヤー（Epic 7）で提供します。
+存在する具体的な理由のひとつであり、すでに動作します。
+
+```java
+ZediFile file = ZediEnvelopeReader.read(Path.of("payments.xml"));
+
+for (ZediMessage message : file.messages()) {
+    Pain001Document payments = Pain001Document.from(message.body());
+}
+
+assert Arrays.equals(ZediEnvelopeWriter.toByteArray(file), original);   // バイト単位で同一
+```
 
 ## 現在の状況
 
-本リポジトリは **Epic 6（半角カナ変換）** の段階です。
+本リポジトリは **Epic 7（ISO 20022）** の段階です。
 
 | | |
 |---|---|
@@ -57,7 +67,10 @@ ZEDI のプロファイルは、Business Application Header と電文本体を *
 | ✅ | 4 フォーマットすべての合成テストデータ生成（Java からも CLI からも） |
 | ✅ | 半角カナ変換。変換によって生じた差異はすべて記録されます |
 | ✅ | 濁点を壊さない切り詰め。基底文字と濁点・半濁点が分離されることはありません |
-| ⬜ | `pain.001` の双方向変換と損失レポート — Epic 7 |
+| ✅ | ZEDI エンベロープ: 複数の XML 宣言を分割し、バイト単位で同一に書き戻します |
+| ✅ | `pain.001.001.03` の双方向変換。変換ごとに損失レポートを必ず返します |
+| ✅ | `zengin convert` / `zengin dryrun`、および変換の代償を示す往復変換 |
+| ⬜ | 受信系 `pain.002` / `camt.052` / `camt.054`、および 200 バイト系 — Epic 8 |
 
 ## クイックスタート
 
@@ -182,6 +195,30 @@ result.isMateriallyChanged();   // false — 半角化だけでは氏名は変�
 [`docs/encoding.md`](docs/encoding.md) にあります。各フォーマットのバイト配置は
 [`docs/formats/`](docs/formats/) にあり、ライブラリが実際に使用する定義から生成しています。
 
+ISO 20022 への変換は、電文と**その代償**を必ず同時に返します。片方だけを返す API は存在しません。
+
+```java
+MappingContext context = MappingContext.builder("9900000001", LocalDate.of(2026, 9, 1))
+        .targetFormat(descriptor)
+        .build();                       // 既定では CRITICAL の損失で変換を中止します
+
+MappingResult<ZediFile> converted = Iso20022Mapper.create().toIso(file, context);
+
+ZediEnvelopeWriter.write(converted.output(), Path.of("payments.xml"));
+System.out.print(converted.loss().toText(Locale.JAPANESE));
+```
+
+変換が全単射でないことは、議論するより実行して確かめてください。
+
+```java
+RoundTripResult round = Iso20022Mapper.create().roundTrip(file, context);
+
+round.isByteIdentical();   // false。差異はすべて損失レポートに記載されます
+```
+
+損失の種類とその意味は [`docs/loss.md`](docs/loss.md)、マッピングの全行は
+[`docs/mapping.md`](docs/mapping.md) にあります。**検証済みの行は 1 行もありません。**
+
 ## コマンドラインから
 
 ```sh
@@ -248,6 +285,15 @@ ISO 20022 へ移行しておらず、実装の根拠となる公開プロファ�
 - **長さはすべてバイト数です。** `ﾃｽﾄｷﾞﾝｺｳ` は 7 文字に見えて 8 バイトです。ｷﾞ が基底文字と独立した
   濁点の 2 バイトで構成されるためです。その間で切ると ギ が キ になり、ファイル上には何の痕跡も
   残りません。
+
+- **変換は失ったものを必ず返します。** ISO 20022 レイヤーには、変換結果のみを返すメソッドが
+  存在しません（リフレクションによる検査で担保しています）。両形式は同型ではなく — 任意文字
+  140 文字は半角カナ 30 バイトに収まらず、全銀側で表現できる通貨は JPY のみです — 呼び出し側が
+  それを忘れられる API は、最も重要な点について嘘をつくことになります。
+- **検証済みのマッピング行はありません。** 全銀項目と ISO 20022 要素の対応はデータとして宣言し、
+  [`docs/mapping.md`](docs/mapping.md) に生成しています（件数もそちらに記載されます）。いずれの
+  行も公開プロファイル文書との照合を経ていません（R-I19）。最も影響が大きいのは清算機関識別子
+  `JPZGN` です。
 
 設計判断の記録は [`docs/adr/`](docs/adr/) にあります。
 

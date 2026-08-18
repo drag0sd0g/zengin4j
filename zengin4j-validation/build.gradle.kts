@@ -34,6 +34,11 @@ tasks.test {
     inputs.file(rootProject.file("README.md"))
             .withPropertyName("readme")
             .withPathSensitivity(PathSensitivity.RELATIVE)
+    // ModuleDescriptorTest checks every module's descriptor, including one this
+    // module does not depend on, so Gradle cannot infer that editing it matters.
+    inputs.dir(rootProject.file("zengin4j-iso20022/src/main/java"))
+            .withPropertyName("iso20022Sources")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 // R-T16 sets its coverage floor on `core`. Validation gets one too, because a

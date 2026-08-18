@@ -34,12 +34,22 @@ declaration granularity**. The consequence:
 > libraries cannot read these files at all.
 
 Handling that correctly — splitting on declaration boundaries, and reassembling with byte-identical
-framing — is one of the concrete reasons this library exists. It arrives with the ISO 20022 layer
-in Epic 7; see [Status](#status).
+framing — is one of the concrete reasons this library exists, and it works today:
+
+```java
+ZediFile file = ZediEnvelopeReader.read(Path.of("payments.xml"));
+
+for (ZediMessage message : file.messages()) {
+    message.header().map(BusinessApplicationHeader::businessMessageIdentifier).ifPresent(System.out::println);
+    Pain001Document payments = Pain001Document.from(message.body());
+}
+
+assert Arrays.equals(ZediEnvelopeWriter.toByteArray(file), original);   // byte for byte
+```
 
 ## Status
 
-This repository is at **Epic 6 — transliteration**. What works today:
+This repository is at **Epic 7 — ISO 20022**. What works today:
 
 | | |
 |---|---|
@@ -61,7 +71,10 @@ This repository is at **Epic 6 — transliteration**. What works today:
 | ✅ | Deterministic synthetic fixtures for all four formats, from Java or the CLI |
 | ✅ | Half-width katakana transliteration, with everything it changes recorded |
 | ✅ | Dakuten-safe truncation: a cut never separates a kana from its voicing mark |
-| ⬜ | ISO 20022 `pain.001` in both directions, with loss reporting — Epic 7 |
+| ✅ | ZEDI envelopes: multiple XML declarations split, and written back byte for byte |
+| ✅ | `pain.001.001.03` in both directions, with a loss report every conversion returns |
+| ✅ | `zengin convert` and `zengin dryrun`, and a round trip that shows what conversion costs |
+| ⬜ | Inbound `pain.002` / `camt.052` / `camt.054`, and the 200-byte formats — Epic 8 |
 
 ## Quickstart
 
@@ -206,6 +219,51 @@ Runnable versions live in [`examples/`](examples/), the byte-level reference is
 [`docs/encoding.md`](docs/encoding.md), and the byte layout of every bundled format — generated
 from the descriptors the library actually uses — is in [`docs/formats/`](docs/formats/).
 
+Converting to ISO 20022 returns the message **and** what it cost. There is no method that returns
+one without the other:
+
+```java
+MappingContext context = MappingContext.builder("9900000001", LocalDate.of(2026, 9, 1))
+        .targetFormat(descriptor)
+        .build();                       // refuses on CRITICAL loss unless told otherwise
+
+MappingResult<ZediFile> converted = Iso20022Mapper.create().toIso(file, context);
+
+ZediEnvelopeWriter.write(converted.output(), Path.of("payments.xml"));
+System.out.print(converted.loss().toText());
+```
+
+And the honest demonstration that the conversion is not bijective — run it on a real file rather
+than taking anyone's word for it:
+
+```java
+RoundTripResult round = Iso20022Mapper.create().roundTrip(file, context);
+
+round.isByteIdentical();   // false, and every difference has a line in the report
+System.out.print(round.loss().toText());
+```
+
+```
+INFORMATIONAL TRANSLITERATED [CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/Nm]:
+  'ﾔﾏﾀﾞ ﾀﾛｳ' was widened to 'ヤマダ　タロウ' for display. Widening is not reversible:
+  several full-width characters narrow to the same half-width sequence.
+MATERIAL DEFAULTED [CstmrCdtTrfInitn/PmtInf/ReqdExctnDt]:
+  振込指定日 carries no year; 2026 was supplied from the reference date.
+INFORMATIONAL DROPPED:
+  被仕向支店名, not carried. The branch is already identified by its code, which is
+  the part a payment depends on.
+INFORMATIONAL DROPPED [header.valueDate]:
+  振込指定日 is MMDD, so the year 2026 was dropped. A reader of the resulting file
+  has to supply one again, and may supply a different one.
+```
+
+The bracketed name is the element or field the entry is about, spelled exactly as
+[`docs/mapping.md`](docs/mapping.md) spells it — so a line in a report can be looked up in the
+reference page, and a test keeps the two in step.
+
+What each kind of loss means, and what to do about it, is in [`docs/loss.md`](docs/loss.md); every
+mapping row is in [`docs/mapping.md`](docs/mapping.md).
+
 ## From the command line
 
 ```sh
@@ -278,6 +336,18 @@ scope of this library. It never opens a network socket either: files in, files o
 - **Every length is a byte count.** `ﾃｽﾄｷﾞﾝｺｳ` renders as seven characters and occupies eight bytes,
   because the ｷﾞ is a base kana followed by a standalone dakuten. Truncating between them turns
   ギ into キ, and nothing in the file would indicate it.
+
+- **A conversion always returns what it lost.** There is no method anywhere in the ISO 20022 layer
+  that hands back a converted file on its own, and a test asserts that by reflection. The two
+  formats are not isomorphic — 140 characters of any script do not fit in 30 bytes of half-width
+  katakana, and JPY is the only currency one side can express — so an API that let you forget would
+  be lying about the thing that matters. By default a conversion **refuses** when the loss could
+  misroute money; see [`docs/loss.md`](docs/loss.md).
+- **No mapping row is verified.** Every correspondence between a Zengin field and an ISO 20022
+  element is declared as data and generated into [`docs/mapping.md`](docs/mapping.md) — which
+  counts them, so this page does not have to — and every one is marked unverified: none has been
+  checked against published profile documentation (R-I19). The most load-bearing of them is the
+  clearing-system identifier `JPZGN`.
 
 Architecture decision records live in [`docs/adr/`](docs/adr/).
 

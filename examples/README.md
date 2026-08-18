@@ -9,15 +9,34 @@ Runnable programs, one per use case in §4 of the build specification.
 | [`ValidateBeforeSubmitting.java`](ValidateBeforeSubmitting.java) | UC-1 — catch what a bank would reject, before sending | ✅ |
 | [`GenerateTestFixtures.java`](GenerateTestFixtures.java) | UC-6 — fixtures for every bundled format, reproducibly | ✅ |
 | [`TransliterateNames.java`](TransliterateNames.java) | §16 — getting names from a source system into a payment file | ✅ |
-| — | UC-3 — an ISO 20022 edge adapter | Epic 7 |
-| — | UC-4 — produce a ZEDI `pain.001` with its BAH | Epic 7 |
-| — | UC-5 — migration analysis with `dryRun` | Epic 7 |
+| [`ConvertToIso20022.java`](ConvertToIso20022.java) | UC-3 — an ISO 20022 edge adapter, and what conversion costs | ✅ |
+| [`CustomMappingRegistry.java`](CustomMappingRegistry.java) | R-X4 — using the bundled mapping with a descriptor of your own | ✅ |
 
-R-X5 asks for one worked custom implementation per SPI as well. The SPIs
-(`Rule`, `BusinessCalendar`, `ReferenceDataProvider`, `MappingRule`) arrive with
-their layers in Epics 4 and 7; registering a custom `FormatDescriptor`, which is
-available now, is shown in
-`GeneratedRecordsTest.fallsBackToDescriptorDrivenRecordsForRuntimeFormats`.
+`ConvertToIso20022.java` covers UC-4 (a ZEDI `pain.001` with its business
+application header) and UC-5 (migration analysis with `dryRun` and `roundTrip`)
+as well. They are the same program from three angles, and three programs that
+converted the same file would be three places to keep in step.
+
+R-X5 asks for one worked custom implementation per SPI as well, and that is not
+complete:
+
+| SPI | Worked example |
+|---|---|
+| `FormatDescriptor` (R-X1) | `GeneratedRecordsTest.fallsBackToDescriptorDrivenRecordsForRuntimeFormats` |
+| `MappingRegistry` (R-X4) | [`CustomMappingRegistry.java`](CustomMappingRegistry.java) |
+| `Rule` (R-X2) | **none yet** — a custom validation rule |
+| `BusinessCalendar`, `ReferenceDataProvider` (R-X3) | **none yet** |
+
+The three missing ones belong to the validation layer. An SPI with no worked
+example does not get used, which is what R-X5 says and why the gap is written
+down here rather than left to be noticed.
+
+That last one is worth reading for what it says it *cannot* do. Mapping rows are
+a declaration rather than an executable rule interface, so registering one makes
+the mapper accept a format id it would otherwise refuse and does not change how
+any field is mapped — see
+[ADR-0035](../docs/adr/0035-the-mapping-is-data-not-a-rule-engine.md), which
+records where that diverges from §15.3 and what it costs.
 
 ## Running them
 

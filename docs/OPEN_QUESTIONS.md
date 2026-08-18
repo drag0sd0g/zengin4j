@@ -6,8 +6,9 @@ meantime, which is always the more conservative reading (§0.6).
 Resolutions become ADRs in [`adr/`](adr/).
 
 A research pass on **2026-08-15** closed six of these against published sources and narrowed two
-more. Closed entries are kept rather than deleted: the reasoning is why the code looks the way it
-does, and a future reader deserves the evidence, not just the outcome.
+more; Epic 7 closed one more and raised one. Closed entries are kept rather than deleted: the
+reasoning is why the code looks the way it does, and a future reader deserves the evidence, not just
+the outcome.
 
 | | Question | State |
 |---|---|---|
@@ -21,6 +22,8 @@ does, and a future reader deserves the evidence, not just the outcome.
 | OQ-8 | 金融EDI情報 overlay | **Confirmed against the standard** — and now the only thing holding four formats unverified |
 | OQ-9 | 預金種目 narrower set | **Closed** — master list of nine, narrowed per field, implemented in Epic 3 |
 | OQ-10 | Should writing gate on `verified` as reading does? | **Closed** — yes, on the builder ([ADR-0019](adr/0019-building-gates-on-verified.md)) |
+| OQ-11 | Should a conversion refuse on critical loss, or report it? | **Closed** — refuse, by default ([ADR-0033](adr/0033-critical-loss-fails-by-default.md)) |
+| OQ-12 | What `To` belongs in the business application header | Open (research) |
 
 ---
 
@@ -100,15 +103,18 @@ index exists so that whoever picks up an epic sees those tasks without reading t
 
 ### Epic 7 — ISO 20022
 
-- **`zengin convert` and `zengin dryrun`**, the two commands §27 lists that Epic 5 could not build.
-  `dryrun` serves UC-5 and returns only the loss report (R-I17).
-- **Model the 金融EDI情報 overlay** — a conditional descriptor field, or a derived accessor reading
-  the twenty bytes when 識別表示 is `Y`. → [OQ-8](#oq-8--the-金融edi情報-overlay-is-not-modelled)
-- **Preserve the Base64 encoding exactly**, including the 76-character line split across `<Ustrd>`
-  elements and the three MIME headers. Re-encoding produces different XML for identical content
-  (R-I12). → [OQ-8](#oq-8--the-金融edi情報-overlay-is-not-modelled)
-- **Confirm `JPZGN`** against the ISO 20022 External Code Sets before any mapping row claims
-  verification. → [Q8](#q8--jpzgn-pending-primary-confirmation)
+**Completed 2026-08-18.** Two questions closed, one narrowed, one raised.
+
+- `zengin convert` and `zengin dryrun` are built, with the context as flags rather than a file
+  ([ADR-0034](adr/0034-the-mapping-context-is-flags-not-a-file.md)).
+- The 金融EDI情報 overlay is read as a derived property of the record rather than modelled in the
+  descriptor schema — the smaller of the two changes OQ-8 weighed, and the one that does not
+  require the schema to express a condition. **The descriptor question is still open**; nothing yet
+  writes the overlay back on the downward leg, because twenty bytes cannot hold a base64 payload.
+  → [OQ-8](#oq-8--the-金融edi情報-overlay-is-not-modelled)
+- The Base64 encoding is preserved exactly, line splitting and padding included (R-I12).
+- **`JPZGN` is still unconfirmed** and is now load-bearing. → [Q8](#q8--jpzgn-pending-primary-confirmation)
+- **What belongs in the header's `To`** is a new question. → [OQ-12](#oq-12--what-belongs-in-the-headers-to)
 
 ### Epic 8 — 200-byte formats
 
@@ -369,14 +375,48 @@ wrong remedy costs more than one that says nothing. See
 
 ---
 
+## Raised during Epic 7
+
+### OQ-11 — Should a conversion refuse on critical loss, or only report it?
+
+R-I14 makes the loss report impossible to *miss* by putting it in the return type. R-I16 says
+`CRITICAL` is *configurable* to hard-fail, and does not say which way the default goes.
+
+**Closed 2026-08-18: it refuses.** `MappingContext.failOnSeverity` defaults to `CRITICAL`, and
+`acceptAnyLoss()` is the way out — named so that it reads as what it is at the call site. See
+[ADR-0033](adr/0033-critical-loss-fails-by-default.md).
+
+`dryRun` and `roundTrip` never refuse whatever the threshold says, because their whole purpose is
+to show the loss.
+
+### OQ-12 — What belongs in the header's `To`
+
+`head.001` requires `To`, and no Zengin field says outright who a file is addressed to.
+
+**Implemented:** the file's own 仕向銀行番号. A 総合振込 file goes to the originator's own bank, and
+that bank's code is in the header record — so the default is derived from the file rather than
+invented. `MappingContext.receiver(...)` overrides it, and a file with no header record produces an
+envelope that omits `To` and says so in the loss report, rather than one carrying a placeholder that
+looks structurally fine and means nothing.
+
+**Open, and researchable.** In the live profile the recipient is presumably 全銀ネット or the
+originating bank's ZEDI endpoint, and it is presumably identified by something other than a
+four-digit bank code. Which, and in which of `OrgId` or `FIId`, is not settled here — no source
+consulted addresses it, and a ZEDI participant's own connection guide would.
+
+The same uncertainty covers the whole business application header: `BizSvc`, `Prty` and
+`Rltd` are not modelled at all, because nothing seen says whether the profile uses them.
+
+---
+
 ## Carried from the build specification (§30)
 
 | # | Question | Status |
 |---|---|---|
 | Q1 | Project name and Maven coordinate | Placeholder `io.zengin4j` retained; check before publishing (R-B3) |
-| Q2 | Where `EndToEndId` goes on the inverse leg | Epic 7. Design decision, not researchable |
+| Q2 | Where `EndToEndId` goes on the inverse leg | **Answered — the caller chooses. See below** |
 | Q3 | Bundle bank/branch reference data, or require it? | Epic 4. `zengin-code/source-data` is the obvious dataset — see OQ-5 |
-| Q4 | Hiragana input handling | Epic 6. Design decision |
+| Q4 | Hiragana input handling | **Answered** — `HiraganaPolicy`, defaulting to convert (Epic 6) |
 | Q5 | Exact permitted symbol set for `C` fields | **Answered 2026-08-15 — see below** |
 | Q6 | 振替結果コード list and per-institution variation | **Answered 2026-08-15 — see below** |
 | Q7 | 200-byte format layouts | **Available** — JBA §§1–2. See OQ-2 |
@@ -422,6 +462,27 @@ a code integrators rely on. §0.2 earning its keep again.
 合計金額, 振替済件数 N(6), 振替済金額 N(12), 振替不能件数 N(6), 振替不能金額 N(12), ダミー C(65).
 Epic 3 must not derive it from 総合振込.
 
+### Q2, answered — `EndToEndId` has no right home, so the caller picks one
+
+`EndToEndId` is mandatory in ISO 20022, is 35 characters, and is the reference the debtor and the
+creditor reconcile against. The Zengin formats have no field for it. The nearest thing is a
+顧客コード — ten bytes, and already carrying whatever the originator puts there.
+
+There is no default that is right, so `EndToEndIdPolicy` makes the caller choose, and every option
+reports what it costs:
+
+| Policy | Cost |
+|---|---|
+| `CUSTOMER_CODE_1` | Truncation, reported `CRITICAL`. A cut reference looks usable and matches the wrong payment. |
+| `CUSTOMER_CODE_2` | The same, for the other field. |
+| `DROP` | Reported `MATERIAL`, and honest: the creditor has nothing to reconcile against. |
+
+Going up, a reference that was never supplied is written as `NOTPROVIDED` — the value the standard
+defines for exactly that — and is not reported as lost, because nothing was.
+
+The default is `CUSTOMER_CODE_1`, which is where §15.9 puts it. Under the default refusal threshold
+a reference that does not fit **stops the conversion**, so the truncation cannot happen by accident.
+
 ### Q8 — `JPZGN`, pending primary confirmation
 
 `JPZGN` is the ISO 20022 External Clearing System Identification code for the Zengin system, with
@@ -431,6 +492,17 @@ table in §15.9, which shows `MmbId` as `0009123`.
 **Not yet confirmed against a primary source.** This came from secondary references, and the
 authority is the ISO 20022 External Code Sets published by iso20022.org. Confirm there before the
 mapping row is marked anything but `verified: false` (R-I19).
+
+**Implemented in Epic 7, and it is the single most load-bearing unverified value in the mapping.**
+`ClrSysId/Cd` names the scheme that every bank code in the file belongs to, so getting it wrong
+makes each of them ambiguous. It is written rather than omitted because omitting it would be no
+safer — an unqualified `MmbId` is not more correct, only less legible.
+
+The seven-digit structure is implemented as Q8 describes it: `MmbId` is 銀行番号 followed by
+支店番号, because `MmbId` means "identifier within the named clearing system" and within
+全銀システム a participant is an office rather than an institution. `BrnchId` is therefore not used.
+Coming back, a member id that is not four digits plus three cannot be taken apart, and 支店番号 is
+left empty and reported `CRITICAL` rather than guessed at.
 
 ### Q9, answered — 給与振込 is not 総合振込 with three fields renamed
 

@@ -73,14 +73,22 @@ public record LossEntry(
     /**
      * Returns a copy of this entry located at a source and target path.
      *
-     * @param source the path the value came from
-     * @param target the field it was going to
+     * <p>Blank is the same as absent. A loss that has a source but no target —
+     * a dropped field is exactly that — would otherwise render as an empty
+     * {@code []}, which reads like a bug in the report rather than a field that
+     * does not exist.
+     *
+     * @param source the path the value came from, or null or blank for none
+     * @param target the field it was going to, or null or blank for none
      * @return a located copy
      */
     public LossEntry at(String source, String target) {
-        return new LossEntry(kind, severity,
-                Optional.ofNullable(source), Optional.ofNullable(target),
+        return new LossEntry(kind, severity, present(source), present(target),
                 originalValue, resultingValue, explanationEn, explanationJa);
+    }
+
+    private static Optional<String> present(String value) {
+        return Optional.ofNullable(value).filter(text -> !text.isBlank());
     }
 
     /**

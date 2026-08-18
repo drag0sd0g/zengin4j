@@ -7,7 +7,6 @@ import io.zengin4j.cli.internal.RecordAlignment;
 import io.zengin4j.core.codec.ZenginReaders;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
-import io.zengin4j.core.model.Batch;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.ZenginRecord;
 import java.io.PrintWriter;
@@ -122,17 +121,7 @@ public final class DiffCommand implements Callable<Integer> {
     }
 
     private static List<byte[]> bytesOf(ZenginFile file) {
-        List<ZenginRecord> records = new ArrayList<>(file.totalRecords());
-        for (Batch batch : file.batches()) {
-            records.add(batch.header());
-            records.addAll(batch.data());
-            records.addAll(batch.malformed());
-            batch.trailer().ifPresent(records::add);
-        }
-        file.endRecord().ifPresent(records::add);
-        records.addAll(file.unbatched());
-        records.sort(java.util.Comparator.comparingInt(ZenginRecord::recordNumber));
-        return records.stream().map(ZenginRecord::rawBytes).toList();
+        return file.recordsInOrder().stream().map(ZenginRecord::rawBytes).toList();
     }
 
     // ------------------------------------------------------------------ text

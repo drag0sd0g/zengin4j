@@ -2,6 +2,8 @@ package io.zengin4j.core.model;
 
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.FormatId;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -71,5 +73,32 @@ public record ZenginFile(
      */
     public List<DataRecord> allData() {
         return batches.stream().flatMap(batch -> batch.data().stream()).toList();
+    }
+
+    /**
+     * Returns every record in the file, in position order.
+     *
+     * <p>The file's structure is batches, and most code wants it that way. Some
+     * code wants the flat sequence instead — anything that reasons about
+     * position rather than membership, such as a structural rule, a diff, or a
+     * mapping that has to report which record a loss came from. Sorting by
+     * record number rather than by traversal order is what keeps a malformed
+     * record in the place it actually occupied.
+     *
+     * @return every record, ascending by record number
+     * @since 0.5.0
+     */
+    public List<ZenginRecord> recordsInOrder() {
+        List<ZenginRecord> records = new ArrayList<>(totalRecords());
+        for (Batch batch : batches) {
+            records.add(batch.header());
+            records.addAll(batch.data());
+            records.addAll(batch.malformed());
+            batch.trailer().ifPresent(records::add);
+        }
+        endRecord.ifPresent(records::add);
+        records.addAll(unbatched);
+        records.sort(Comparator.comparingInt(ZenginRecord::recordNumber));
+        return List.copyOf(records);
     }
 }

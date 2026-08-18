@@ -585,6 +585,166 @@ A research pass against published sources. No parsed output changed, so no versi
   needs its apostrophes doubled; a `.description` is returned verbatim and must not. Getting it
   backwards is invisible until somebody reads a SARIF document.
 
+### Added — Epic 7, ISO 20022
+
+- **The ZEDI envelope.** `ZediEnvelopeReader` splits a file on XML-declaration boundaries into
+  `(head.001, body)` pairs, each independently parseable, and handles several message groups in one
+  file (R-I5, R-I7). A ZEDI file contains multiple XML declarations and is therefore **not a
+  well-formed XML document**, which is why generic ISO 20022 tooling cannot read one at all.
+  `ZediEnvelopeWriter` reproduces what was read byte for byte (R-I6) — by concatenating the slices
+  the file was cut into, so identity follows from the construction rather than from a framing model
+  that has to be got right.
+- **The split is checked rather than assumed** (ADR-0032). R-I8's argument — that the base64
+  alphabet contains no `<` — is true and does not cover comments or CDATA sections, where `<?xml`
+  is legal. So every segment must parse as a well-formed document on its own, and the diagnostic
+  for a segment that does not names that possibility explicitly.
+- **`pain.001.001.03`, both directions, with a loss report every conversion returns.**
+  `Iso20022Mapper.toIso` / `toZengin`, plus `dryRun` (R-I17) and `roundTrip` (R-I18).
+- **There is no API that returns converted output without its loss report** (R-I14), and a test
+  asserts that by reflection — so a helpful convenience method cannot quietly be added later.
+- **A critical loss stops the conversion by default** (ADR-0033). `MappingContext.failOnSeverity`
+  defaults to `CRITICAL`; `acceptAnyLoss()` is the way out, named so that it reads as what it is at
+  the call site.
+- **The mapping is data.** Declared in `zengin4j-iso20022/mappings/`, compiled to Java and
+  generated into [`docs/mapping.md`](docs/mapping.md) with each row's verification status (R-I19).
+  The status is not on the honour system: a row marked `verified: true` must cite at least two
+  independent published sources or the build fails, which is the bar R-0.1 already sets for a
+  format descriptor and which nothing enforced for a mapping row until now.
+  A test converts a real file and compares what came out against what was declared, **both ways** —
+  every declared element is emitted, and nothing is emitted that was not declared. It found three
+  undeclared elements the first time it ran.
+- **`MappingContext` is required on the inverse leg and never defaulted** (R-I20). A `pain.001` does
+  not carry 委託者コード, does not say which Zengin format to produce, and does not say what to do
+  when a name will not fit.
+- **Deterministic by default.** `CreDtTm` and `MsgId` derive from the reference date rather than the
+  clock, so the same input converts to the same bytes — which is what makes the committed golden
+  conversion meaningful.
+- **`EdiAttachment`** models the 金融EDI payload as MIME headers plus base64 lines, preserving the
+  encoding **exactly**, line splitting and padding included (R-I10–R-I12). Re-encoding the same
+  bytes produces different XML, which would break a byte-identical round trip.
+- **`zengin convert` and `zengin dryrun`**, the two commands §27 lists that Epic 5 could not build.
+  Their settings are flags rather than a context file (ADR-0034), and `--as-of` makes a conversion
+  reproducible.
+- **[`docs/loss.md`](docs/loss.md)** (R-I13): what each kind of loss is, what it costs, and the
+  `remt.001` trade-off the profile made, stated neutrally.
+- **XSD validation as an opt-in task.** The ISO 20022 schemas are not redistributed here, so
+  `validateAgainstXsd -Pxsd.dir=…` validates against your own copy and skips loudly without one. It
+  is deliberately not in `check`: a gate that passes silently when its input is missing reads like
+  coverage nobody has.
+- **`zengin4j-iso20022` publishes, with no third-party dependencies.** The XML is read with StAX and
+  written by hand against `java.xml` (ADR-0031), and a build task fails if the published POM ever
+  says otherwise.
+- **Properties over generated files, not just fixtures.** Two hundred randomly generated 総合振込
+  files per property: converting one never fails in an undeclared way, every message parses back to
+  the tree it was written from, a round trip keeps every payment, and every amount survives or the
+  report says `CRITICAL`. Every defect this epic's audit found was a legitimate input no fixture
+  happened to contain, which is what these are for. A guard test asserts the generator actually
+  varies, because a property test over two hundred identical inputs looks exactly like a thorough
+  one.
+- **Thread safety, asserted rather than claimed** (R-T1, R-T3). Sixteen threads share one mapper and
+  must get byte-identical output and identical reports; a shared `LossCollector` would show up as
+  reports of differing length.
+- **Two fuzz targets over the envelope reader** (R-T9): that arbitrary bytes never make it misbehave,
+  and that anything it accepts, the writer reproduces exactly. They found two defects that no
+  fixture would have — mixed content and a DTD the JDK's parser cannot describe — and both crashing
+  inputs are committed, so the non-mutating `fuzz` task replays them on every build.
+- **`MappingRegistry.withMapping(...)` / `without(...)`** (R-X4). An institution's own 総合振込
+  variant has its own `FormatId`, so the bundled mapping does not cover it; registering the bundled
+  rows under that id makes the conversion work, and genuinely does work when the variant keeps the
+  standard field ids. Worked example in
+  [`examples/CustomMappingRegistry.java`](examples/CustomMappingRegistry.java) (R-X5), including
+  what it deliberately cannot do.
+- **`ZenginFile.recordsInOrder()`**, which three call sites had each open-coded.
+
+Everything new here is tagged `@since 0.5.0`. §26 calls Epic 7's milestone `0.3.0`, which was
+already spent: the CLI took it and transliteration took `0.4.0`. Numbering this epic `0.3.0` to
+match the plan would have the ISO 20022 API claiming to predate the transliteration engine it
+depends on.
+
+### Fixed — Epic 7
+
+- **`CreDtTm` was written without seconds.** `OffsetDateTime.toString()` omits them when they are
+  zero, and `xs:dateTime` does not allow that — a value that parses back perfectly and is invalid on
+  the wire. Only a schema notices, which is why `IsoDateTime` now exists and why the opt-in XSD task
+  does.
+- **`MmbId` carried the bank code alone.** `ClrSysMmbId/MmbId` means "identifier within the named
+  clearing system", and within 全銀システム a participant is an office — 銀行番号 followed by
+  支店番号, seven digits, as §15.9 and Q8 both give it. A four-digit bank code identifies an
+  institution rather than a participant. Coming back, a member id of another shape is not taken
+  apart at a guessed boundary: 支店番号 is left empty and reported `CRITICAL`.
+- **A converted file tripped this library's own validator.** The inverse leg wrote 振込指定区分 as
+  the field's numeric default of 0, which the bundled code list does not carry. Both readings are
+  defensible — several institutions require 0 for an unused field — so the value stands and the
+  loss report now says which you are looking at. Found by converting a file and validating the
+  result, which is now a test.
+- **A refusal escaped the loss model.** `TruncationPolicy.REJECT_IF_TOO_LONG` threw a bare
+  `IllegalArgumentException` while every other refusal in the same method threw a typed one, so the
+  mapper's catch missed it and the conversion blew up instead of reporting. `ValueTooLongException`
+  now sits beside `FieldTooSmallException`, and the distinction between them — no policy can help,
+  versus a policy would — is the point of having two.
+- **A blank loss location rendered as `[]`.** `LossEntry.at` treated an empty string as a present
+  location, so a dropped field with a source and no target printed an empty bracket that read like
+  a defect in the report.
+- **`--loss-format=json` wrote JSON to a stream that already carried warnings**, so it could not be
+  parsed. `--loss-out=FILE` gives the report a destination of its own.
+- **`Iso20022Mapper.using(MappingRegistry)` could not be called.** `MappingRegistry` had a private
+  constructor and one factory, so the only obtainable instance was the one `create()` already uses —
+  a public method no caller outside the package could reach, and R-X4's "the registry accepts
+  overrides" unimplemented. `examples/README.md` meanwhile claimed a custom mapping was "a YAML file
+  rather than a class", which was not true of anything a consumer could do.
+- **`EndToEndIdPolicy.CUSTOMER_CODE_2` dropped 顧客コード1 silently.** The reference went to
+  `EndToEndId` and no remittance information was written at all, so the other 顧客コード vanished
+  from the message with no loss entry — a payment reference gone, in the one policy branch nothing
+  exercised. Whichever code is not the reference now goes to `RmtInf`, under every policy.
+- **An identifier longer than its Zengin field threw out of the encoder.** ISO 20022 gives an
+  account number thirty-four characters and a member id thirty-five, against seven, four and three;
+  `Tp/Prtry` gives 預金種目 thirty-five against one. Each was an untyped
+  `IllegalArgumentException` losing a whole file to one payment. Identifiers are now reported
+  `CRITICAL` and never shortened — half an account number is a different account.
+- **The inbound leg never checked the document against its own header.** The outbound leg has
+  cross-checked the Zengin trailer since this epic started; `GrpHdr/NbOfTxs` and `CtrlSum` were
+  computed on write and never compared on read, so a `pain.001` contradicting itself converted
+  without comment.
+- **Mixed content crashed the XML reader.** `<a>text<b/></a>` is legal XML that no ISO 20022
+  element uses, and the parser built elements with the same builder the writer does — so reading
+  one threw the `IllegalStateException` that builder raises for a *mapping mistake*, straight past
+  the declared exception hierarchy, on input a sender can simply write. Found by fuzzing after 116
+  runs; now refused as `MalformedXmlException`, saying which text and which element.
+- **The JDK's own parser could throw past its declared exceptions.** A DTD containing an invalid
+  character sends Xerces looking for the message key `InvalidCharInDTD`, which is missing from its
+  own bundle, so it raises `MissingResourceException` from inside the error reporter. Forty-two
+  bytes, found by fuzzing. The contract is absolute — any byte sequence either parses or raises
+  `MalformedXmlException` — so the net now covers whatever the parser does, with the cause kept.
+- **Records the reader could not parse vanished from the conversion.** A lenient read surfaces a
+  malformed record as data; the mapper ignored `Batch.malformed()` and `ZenginFile.unbatched()`
+  entirely, so a damaged file converted to a message quietly missing payments. Now `CRITICAL`, with
+  a count.
+- **`PmtId/InstrId` was read and silently discarded** on the downward leg — the debtor's own
+  reference, distinct from `EndToEndId`. It is now a declared row and a reported loss. The general
+  form of that gap is now a test: every element of an inbound document must be carried, declared as
+  something that only exists going the other way, or named in the report.
+- **An amount too large to render was a denial of service.** `xs:decimal` admits `1e2000000000` —
+  thirteen bytes that parse in microseconds and exhaust a heap the moment anything renders them.
+  Bounded at the parse boundary; an unreadable amount becomes ISO 4217's `XXX` rather than a silent
+  zero, and three further amount shapes a `pain.001` can legitimately carry — too many digits,
+  negative, unreadable — are reported instead of throwing.
+- **Flattening several `PmtInf` blocks was always reported `MATERIAL`**, even when the blocks agreed
+  on execution date, debit account and originating bank and nothing was actually lost. Now
+  `INFORMATIONAL` when they agree and `CRITICAL` when they do not — the first block's values are
+  applied to payments that asked for something else, which is not a note about structure.
+- **Loss entries named ISO elements by a path `docs/mapping.md` does not use.** A report saying
+  `[CdtTrfTxInf/Cdtr/Nm]` sent a reader to a reference page that calls it
+  `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/Nm`, where they would find nothing. One convention now,
+  held by a test that checks every location a report can name against the declared rows.
+- **An absent agent was reported as a malformed member id.** "This is not four digits plus three"
+  for an element that was never there sends a reader looking for a defect in a value that does not
+  exist.
+- **`--charset` reached the reader and not the mapper.** A file read as UTF-8 was then decoded field
+  by field as MS932, so every name came out wrong while the command looked like it worked.
+- **The default `MsgId` embedded a bare eight-digit date**, which the repository's identifier scan
+  reads as a possible account number — correctly, because a digit run that means a date is
+  indistinguishable from one that means an account. The date keeps its hyphens.
+
 ### Known limitations
 
 - **Every bundled format descriptor is `verified: false`**, though not for want of evidence: the
@@ -594,7 +754,21 @@ A research pass against published sources. No parsed output changed, so no versi
   institution's specification. See [DISCLAIMER.md](DISCLAIMER.md).
 - **The 200-byte formats (振込入金通知, 入出金取引明細) are not implemented.** They carry 和暦 dates
   and vary more between institutions than the 120-byte ones; Epic 8.
-- No ISO 20022 mapping. Epic 7.
+- **No mapping row is verified** (R-I19). Every row follows §15.9 and the shape of the message
+  definition, and none has been checked against published profile documentation — which does not
+  exist in any copy this project has. The most load-bearing of them is the clearing-system
+  identifier `JPZGN` (Q8): it names the scheme every bank code in the file belongs to.
+- **The business application header is a guess in its routing fields.** `Fr` and `To` are modelled
+  and populated — `To` from the file's own 仕向銀行番号 — but which identifier the live profile
+  expects, and in which of `OrgId` or `FIId`, is unsettled (OQ-12). `BizSvc` and `Prty` are not
+  modelled at all.
+- **Only 総合振込 maps.** 給与振込, 賞与振込 and 預金口座振替 have no mapping declaration. The last
+  of them has no official ISO 20022 profile at all (R-I4) and belongs in `experimental` when it
+  arrives.
+- **The inbound messages are not implemented.** `pain.002`, `camt.052` and `camt.054` are Epic 8.
+- **A ZEDI file is read whole.** The envelope reader parses every segment before any is used, so
+  memory is proportional to the file. The fixed-length side's constant-memory guarantee (R-P2) does
+  not extend to the XML side.
 - **`V-4xx` needs reference data you supply**, and `V-5xx` needs the calendar switched on. Both are
   optional by design (R-V5, R-V6); neither runs by default.
 - **`zengin validate` is not reproducible across dates for a yearless value
@@ -636,17 +810,23 @@ A research pass against published sources. No parsed output changed, so no versi
 ### Quality gates
 
 `./gradlew build` enforces, on every run: the Java 21 baseline, the tests, the coverage floors
-(≥ 90% line and ≥ 85% branch on `core`; 90/80 on `validation`; 95/90 on `testkit`; 85/75 on `cli`),
-the ArchUnit module rules, descriptor consistency, that the committed generated sources match the
-descriptors, that `docs/cli.md` and `docs/validation-rules.md` match the code, and that the
-committed fuzzing corpora replay. Current figures: 780 tests — 473 in `core`, 135 in `cli`, 105 in
-`validation`, 48 in `testkit`, 19 in `codegen` — alongside 847 corpus replays in the non-mutating
-`fuzz` task, and property runs covering INV-1, INV-2, INV-4, INV-6 and INV-8. `core` 95.9% line
-and 90.0% branch; `testkit` 96.1% and 100%; `validation` 93.1% and 81.6%; `cli` 92.9% and 79.9%.
+(≥ 90% line and ≥ 85% branch on `core` and `iso20022`; 90/80 on `validation`; 95/90 on `testkit`;
+85/75 on `cli`), the ArchUnit module rules for `core` and `iso20022`, descriptor consistency, that
+the committed generated sources and `docs/mapping.md` match the declarations, that `docs/cli.md`
+and `docs/validation-rules.md` match the code, that `zengin4j-core`'s published POM declares no
+dependencies and `zengin4j-iso20022`'s declares no third-party ones, and that the committed fuzzing
+corpora replay. Property runs cover INV-1, INV-2, INV-4, INV-6 and INV-8.
 
-Fuzzing stays pointed at `core`. The CLI adds no parser of its own — picocli does the argument
-parsing and the record parsing is `core`'s, already fuzzed — so a fuzz target here would exercise
-somebody else's code.
+Two checks are worth naming because they found real defects rather than confirming health. The
+mapping-declaration test converts a file and compares the emitted elements against the declared rows
+in both directions; it caught three elements nothing documented. `ConvertedFilesValidateTest`
+converts a file and runs the validator over the result; it caught a converted file this library's
+own rules objected to.
+
+Fuzzing points at the two modules that parse untrusted bytes: `core`'s record framer, and
+`iso20022`'s envelope splitter, which scans a file for a cut point and is the more attackable of the
+two. The CLI adds no parser of its own — picocli does the argument parsing and the record parsing is
+`core`'s — so a fuzz target there would exercise somebody else's code.
 
 Mutating fuzz runs are not part of `check` — they are nightly, via `fuzzAll`. Replaying what
 fuzzing has already found is, because it is deterministic and costs about two seconds.

@@ -7,7 +7,6 @@ import io.zengin4j.core.codec.ZenginReaders;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
-import io.zengin4j.core.model.Batch;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.ZenginRecord;
 import java.io.PrintWriter;
@@ -120,17 +119,7 @@ public final class InspectCommand implements Callable<Integer> {
     }
 
     private static List<ZenginRecord> inOrder(ZenginFile file) {
-        List<ZenginRecord> records = new ArrayList<>(file.totalRecords());
-        for (Batch batch : file.batches()) {
-            records.add(batch.header());
-            records.addAll(batch.data());
-            records.addAll(batch.malformed());
-            batch.trailer().ifPresent(records::add);
-        }
-        file.endRecord().ifPresent(records::add);
-        records.addAll(file.unbatched());
-        records.sort(java.util.Comparator.comparingInt(ZenginRecord::recordNumber));
-        return records;
+        return file.recordsInOrder();
     }
 
     // ------------------------------------------------------------------ text

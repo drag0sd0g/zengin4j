@@ -174,14 +174,19 @@ class CliReferenceTest {
     }
 
     /**
-     * The page says {@code convert} and {@code dryrun} are not here, because
-     * they are in the §27 synopsis and a reader will look for them.
+     * Every command §27 names exists.
+     *
+     * <p>This used to assert the opposite for {@code convert} and
+     * {@code dryrun} — that they were absent and the page said so — which was
+     * the honest thing to check while they were absent. They arrived in Epic 7,
+     * and the check that replaces it is the one worth keeping: the synopsis in
+     * the specification is now implemented in full, and a command quietly
+     * disappearing would be a regression nothing else notices.
      */
     @Test
-    void theCommandsThatDoNotExistYetAreAccountedFor() throws IOException {
-        String text = reference();
-
-        assertThat(text).contains("convert", "dryrun", "Epic 7");
-        assertThat(parser().getSubcommands()).doesNotContainKeys("convert", "dryrun");
+    void everyCommandTheSpecificationNamesExists() {
+        assertThat(parser().getSubcommands())
+                .containsKeys("validate", "inspect", "convert", "dryrun",
+                        "generate", "diff", "explain");
     }
 }

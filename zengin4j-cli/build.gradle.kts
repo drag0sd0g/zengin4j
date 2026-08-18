@@ -1,8 +1,9 @@
-description = "Command line interface: validate / inspect / generate / diff / explain. Epic 5."
+description = "Command line interface: validate / inspect / convert / dryrun / generate / diff / explain."
 
 dependencies {
     implementation(project(":zengin4j-core"))
     implementation(project(":zengin4j-validation"))
+    implementation(project(":zengin4j-iso20022"))
     // Not test-scoped: `zengin generate` is a shipped command, so the fixture
     // generator is part of this application's runtime (R-M4).
     implementation(project(":zengin4j-testkit"))
