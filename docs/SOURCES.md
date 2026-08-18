@@ -180,11 +180,39 @@ and immediately gives the alternative reading 「※EDI 情報 `C(20)`」 for wh
 項番15 識別表示 carries `Y`. §4 gives 社員番号/所属コード as `N(10)`; §15 gives
 預金口座振替's 顧客番号 as `N(20)`. Retrieved 2026-08-16. This settles D-002.
 
+## ISO 20022 (Epic 7)
+
+**The mapping is built from no source at all, and says so.** Every row of
+[mapping.md](mapping.md) is `verified: false`: it follows the illustrative table in §15.9 of the
+build specification and the shape of the `pain.001.001.03` message definition, and neither of those
+is a published profile document. R-I19 permits a row to be marked conformant only once it has been
+checked against one.
+
+Two things would change that, and they are the ones to look for:
+
+| What | Where | What it would settle |
+|---|---|---|
+| The ZEDI XML format documentation | 全銀ネット, for participants | Which elements the profile requires, what belongs in the header's `Fr` and `To` (OQ-12), and whether the 金融EDI payload is framed as this library assumes |
+| The External Code Sets | iso20022.org | Whether `JPZGN` is the clearing-system identifier, and whether `MmbId` is 銀行番号 + 支店番号 (Q8) |
+
+**The message schemas are not redistributed here.** The XSDs are published by ISO 20022 under terms
+this repository is not in a position to redistribute under, so the library models the subset it needs
+by hand ([ADR-0031](adr/0031-hand-written-iso20022-xml.md)) and schema validation is a task you point
+at your own copy:
+
+```sh
+./gradlew :zengin4j-iso20022:validateAgainstXsd -Pxsd.dir=/path/to/schemas
+```
+
+Download `pain.001.001.03.xsd` and `head.001.001.01.xsd` from the message catalogue at
+[iso20022.org](https://www.iso20022.org/iso-20022-message-definitions) into a directory of your own.
+
 ## Where to look next
 
 Per Appendix B of the build specification:
 
-- **全銀ネット** — ZEDI connection guidance and XML format documentation, for the Epic 7 mapping layer.
+- **全銀ネット** — ZEDI connection guidance and XML format documentation. This is the document that
+  would let any mapping row become `verified: true`; without it, none can.
 - **Institution-published format guides** — at least three independent institutions per format.
   Regional banks and 信用金庫 publish the most complete documents.
 - **ISO 20022** — the iso20022.org message catalogue and XSDs.

@@ -35,6 +35,11 @@ implementing. An implementation that makes twenty undocumented judgement calls i
 | [0028](0028-the-specifications-kana-mappings-are-wrong.md) | Two of the specification's kana mappings are wrong | Accepted |
 | [0029](0029-transliteration-lives-in-core.md) | Transliteration and the loss vocabulary live in `core` | Accepted |
 | [0030](0030-kana-tables-are-derived-not-transcribed.md) | The kana tables are derived; only the judgement calls are declared | Accepted |
+| [0031](0031-hand-written-iso20022-xml.md) | ISO 20022 XML is written by hand, not bound from schemas | Accepted |
+| [0032](0032-splitting-on-declaration-boundaries.md) | The ZEDI envelope is split on declaration boundaries, and the split is checked | Accepted |
+| [0033](0033-critical-loss-fails-by-default.md) | A critical loss stops the conversion by default | Accepted |
+| [0034](0034-the-mapping-context-is-flags-not-a-file.md) | The mapping context is command-line flags, not a context file | Accepted |
+| [0035](0035-the-mapping-is-data-not-a-rule-engine.md) | The mapping is declared data, not an executable rule interface | Accepted |
 
 ## Template
 

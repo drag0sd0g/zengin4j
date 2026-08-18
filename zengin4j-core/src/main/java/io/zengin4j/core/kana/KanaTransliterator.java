@@ -127,10 +127,8 @@ public final class KanaTransliterator {
         }
 
         return switch (options.truncation()) {
-            case REJECT_IF_TOO_LONG -> throw new IllegalArgumentException(
-                    "'" + narrowed.text() + "' is " + bytes.length + " bytes and does not fit a "
-                            + maxBytes + "-byte field. Shorten it deliberately, or choose a"
-                            + " TruncationPolicy — a payee's name is not a codec's to cut.");
+            case REJECT_IF_TOO_LONG ->
+                    throw new ValueTooLongException(narrowed.text(), bytes.length, maxBytes);
             case TRUNCATE_SAFE -> truncated(narrowed.text(), maxBytes, "", options, loss);
             case TRUNCATE_WITH_MARKER -> truncated(narrowed.text(), maxBytes,
                     options.truncationMarker(), options, loss);

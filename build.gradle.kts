@@ -42,7 +42,8 @@ allprojects {
 //
 // zengin4j-codegen builds the descriptors and never ships; benchmarks measure
 // and never ship.
-val publishedModules = setOf("zengin4j-core", "zengin4j-testkit", "zengin4j-validation")
+val publishedModules =
+    setOf("zengin4j-core", "zengin4j-testkit", "zengin4j-validation", "zengin4j-iso20022")
 
 subprojects {
     apply(plugin = "java-library")
@@ -174,6 +175,12 @@ subprojects {
                                 "Structured validation of Zengin files: byte-level findings in " +
                                     "English and Japanese, JSON and SARIF reports, and a Japanese " +
                                     "bank calendar. Depends only on zengin4j-core."
+                            "zengin4j-iso20022" ->
+                                "Bidirectional mapping between Zengin fixed-length files and " +
+                                    "ISO 20022 pain.001 for the ZEDI profile, including the " +
+                                    "multi-declaration envelope. Every conversion returns a loss " +
+                                    "report. No third-party dependencies: the XML is read and " +
+                                    "written against java.xml."
                             else ->
                                 "Synthetic fixtures and deterministic generators for testing " +
                                     "against Zengin fixed-length bank file formats."
@@ -271,6 +278,7 @@ val runExamples by tasks.registering {
         project(":zengin4j-core").tasks.named("jar"),
         project(":zengin4j-testkit").tasks.named("jar"),
         project(":zengin4j-validation").tasks.named("jar"),
+        project(":zengin4j-iso20022").tasks.named("jar"),
     )
     dependsOn(classpath)
     inputs.files(examples)

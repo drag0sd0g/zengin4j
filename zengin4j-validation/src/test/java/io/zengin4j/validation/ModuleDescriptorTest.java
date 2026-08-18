@@ -29,6 +29,16 @@ class ModuleDescriptorTest {
     private static final Pattern EXPORTS = Pattern.compile("^\\s*exports\\s+([\\w.]+)\\s*;",
             Pattern.MULTILINE);
 
+    /**
+     * Every module that publishes a descriptor.
+     *
+     * <p>Checked from here rather than from each module because the failure is
+     * the same everywhere and the check is worth having in one place. The build
+     * declares the sources as inputs so that editing one of them re-runs this.
+     */
+    private static final List<String> MODULES = List.of(
+            "zengin4j-core", "zengin4j-validation", "zengin4j-testkit", "zengin4j-iso20022");
+
     private static Path sourceRoot(String module) {
         return Path.of("..", module, "src", "main", "java");
     }
@@ -70,7 +80,7 @@ class ModuleDescriptorTest {
 
     @Test
     void everyPackageWithPublicTypesIsExported() throws IOException {
-        for (String module : List.of("zengin4j-validation", "zengin4j-core", "zengin4j-testkit")) {
+        for (String module : MODULES) {
             assertThat(exported(module))
                     .as("%s/module-info.java must export every package holding public types —"
                             + " otherwise a modular consumer cannot reach them", module)
@@ -80,7 +90,7 @@ class ModuleDescriptorTest {
 
     @Test
     void nothingIsExportedThatDoesNotExist() throws IOException {
-        for (String module : List.of("zengin4j-validation", "zengin4j-core", "zengin4j-testkit")) {
+        for (String module : MODULES) {
             for (String exported : exported(module)) {
                 Path directory = sourceRoot(module)
                         .resolve(exported.replace('.', java.io.File.separatorChar));

@@ -20,11 +20,25 @@ zengin diff     <a> <b> [--out-format=text|json] [--format=ID] [--charset=NAME]
                         [--allow-unverified] [--lenient] [--unsafe-print]
 zengin explain          [--format=ID] [--field=ID] [--record=KIND]
                         [--out-format=text|json]
+zengin convert  <file>  --to=pain.001|zengin [--out=FILE] [--as-of=YYYY-MM-DD]
+                        [--originator-code=CODE] [--target-format=ID]
+                        [--message-id=ID] [--receiver=ID] [--truncate=POLICY]
+                        [--unmappable=POLICY] [--end-to-end=POLICY]
+                        [--accept-loss] [--loss-format=text|json] [--loss-out=FILE]
+                        [--language=en|ja] [--format=ID] [--charset=NAME]
+                        [--allow-unverified] [--lenient]
+zengin dryrun   <file>  [--to=pain.001] [--out-format=text|json]
+                        [--as-of=YYYY-MM-DD] [--originator-code=CODE]
+                        [--target-format=ID] [--message-id=ID] [--receiver=ID]
+                        [--truncate=POLICY] [--unmappable=POLICY]
+                        [--end-to-end=POLICY] [--accept-loss]
+                        [--language=en|ja] [--format=ID] [--charset=NAME]
+                        [--allow-unverified] [--lenient]
 ```
 
-`convert` and `dryrun` are not here yet. Both are mappings to ISO 20022 and
-arrive with that module in Epic 7, rather than as stubs that print "not
-implemented".
+`convert` and `dryrun` arrived in Epic 7 with the ISO 20022 module. §27 sketches
+their settings as a YAML context file; they are flags instead, for the reason in
+[ADR-0034](adr/0034-the-mapping-context-is-flags-not-a-file.md).
 
 ## Running it
 
@@ -217,6 +231,89 @@ nothing. Files that differ *throughout* at that size are refused with a message
 rather than attempted — see
 [ADR-0027](adr/0027-diff-aligns-records-rather-than-positions.md) for why the
 refusal matters more than the limit.
+
+## `convert`
+
+Converts a Zengin file to ISO 20022 `pain.001`, or a `pain.001` back to a Zengin
+file, and says what the conversion cost.
+
+```sh
+zengin convert payments.txt --to=pain.001 --as-of=2026-09-01 \
+    --allow-unverified --out=payments.xml
+```
+
+```
+INFORMATIONAL TRANSLITERATED [CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/Nm]:
+  'ﾔﾏﾀﾞ ﾀﾛｳ' was widened to 'ヤマダ　タロウ' for display. Widening is not
+  reversible: several full-width characters narrow to the same half-width
+  sequence.
+MATERIAL DEFAULTED [CstmrCdtTrfInitn/PmtInf/ReqdExctnDt]:
+  振込指定日 carries no year; 2026 was supplied from the reference date.
+INFORMATIONAL DROPPED:
+  新規コード says whether this beneficiary is new or changed since the last file —
+  a statement about the originator's own history, not about the payment.
+```
+
+The bracketed name is spelled exactly as [mapping.md](mapping.md) spells it, so a
+line here can be looked up there.
+
+**The loss report is always produced.** There is no flag that turns it off — the
+library has no API that returns converted output without it (R-I14), and a
+command that discarded it would undo that at the last step. `--loss-out` says
+where it goes.
+
+By default it goes to stderr and the converted file goes to `--out`, or to
+standard output when there is none, so `> out.xml` produces a usable file and
+still tells you what it cost. The reader's own warnings go to stderr as well —
+fine for reading, no good for parsing, which is what `--loss-out=report.json`
+is for.
+
+Going the other way needs three things the XML cannot supply (R-I20):
+
+```sh
+zengin convert payments.xml --to=zengin \
+    --originator-code=9900000001 --target-format=sougou-furikomi \
+    --as-of=2026-09-01 --out=payments.txt
+```
+
+- `--originator-code` is 委託者コード. An initiating party identifier in the XML
+  is not required to be the code the receiving bank knows you by, so this is
+  never inferred.
+- `--target-format` says which Zengin format to produce. 総合振込 and 給与振込
+  have different fields and different character rules; the XML does not choose.
+- `--as-of` supplies the year that `MMDD` fields lack, and is the basis of
+  `MsgId` and `CreDtTm`. **Set it if you want the same input to produce the same
+  bytes** — it defaults to today, which makes a conversion depend on when it
+  was run.
+- `--truncate` decides what happens when a name will not fit thirty bytes. The
+  default refuses; `TRUNCATE_SAFE` cuts without separating a kana from its
+  voicing mark.
+- `--end-to-end` decides where `EndToEndId` lands: `CUSTOMER_CODE_1` (the
+  default), `CUSTOMER_CODE_2`, or `DROP`. Thirty-five characters into ten
+  truncates, and a truncated reconciliation reference matches the wrong payment.
+- `--accept-loss` converts anyway when the loss could misroute money. Without
+  it, the command stops and prints why.
+- `--receiver` and `--message-id` override values that are otherwise derived
+  from the file and from `--as-of`.
+
+The mapping itself — every row, in both directions, with what each one costs —
+is in [mapping.md](mapping.md). **No row of it is verified.**
+
+## `dryrun`
+
+What would converting this file cost? The loss report, and no file.
+
+```sh
+zengin dryrun payments.txt --as-of=2026-09-01 --allow-unverified
+```
+
+The command to run over a month of real files before committing to an
+integration. It never refuses whatever it finds — the point is to see the loss,
+and stopping at the first critical entry would hide the rest of the answer.
+
+`--out-format=json` gives a pipeline something to branch on. Exit status is the
+usual: `0` lossless, `1` something was lost, `2` something was lost that could
+misroute money.
 
 ## `explain`
 

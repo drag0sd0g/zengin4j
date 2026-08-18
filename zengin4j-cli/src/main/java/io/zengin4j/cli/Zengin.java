@@ -1,6 +1,8 @@
 package io.zengin4j.cli;
 
+import io.zengin4j.cli.command.ConvertCommand;
 import io.zengin4j.cli.command.DiffCommand;
+import io.zengin4j.cli.command.DryrunCommand;
 import io.zengin4j.cli.command.ExplainCommand;
 import io.zengin4j.cli.command.GenerateCommand;
 import io.zengin4j.cli.command.InspectCommand;
@@ -44,6 +46,8 @@ import picocli.CommandLine;
         subcommands = {
             ValidateCommand.class,
             InspectCommand.class,
+            ConvertCommand.class,
+            DryrunCommand.class,
             GenerateCommand.class,
             DiffCommand.class,
             ExplainCommand.class,

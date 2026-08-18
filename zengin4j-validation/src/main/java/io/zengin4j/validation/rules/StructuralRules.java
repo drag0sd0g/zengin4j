@@ -11,7 +11,6 @@ import io.zengin4j.validation.api.Rule;
 import io.zengin4j.validation.api.RuleScope;
 import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.engine.ValidationContext;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -48,17 +47,7 @@ public final class StructuralRules {
 
     /** Every record in the file, in position order. */
     static List<ZenginRecord> inOrder(ZenginFile file) {
-        List<ZenginRecord> records = new ArrayList<>(file.totalRecords());
-        for (Batch batch : file.batches()) {
-            records.add(batch.header());
-            records.addAll(batch.data());
-            records.addAll(batch.malformed());
-            batch.trailer().ifPresent(records::add);
-        }
-        file.endRecord().ifPresent(records::add);
-        records.addAll(file.unbatched());
-        records.sort(java.util.Comparator.comparingInt(ZenginRecord::recordNumber));
-        return records;
+        return file.recordsInOrder();
     }
 
     /** V-101. */

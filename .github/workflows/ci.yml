@@ -154,6 +154,33 @@ jobs:
           run inspect a.txt --annotate --allow-unverified 2>/dev/null >dump.txt
           grep -q '(masked)' dump.txt || { echo "sensitive fields were not masked"; exit 1; }
 
+          # The conversion commands, on the shipped jar. --as-of is pinned so
+          # the run does not depend on the day: without it the year supplied to
+          # MMDD fields comes from the clock.
+          run generate --format=sougou-furikomi --count=5 --seed=7 --out=c.txt >/dev/null
+
+          # Exit 1, not 0: this conversion is never lossless, and a pipeline
+          # that treats 1 as failure stopping on every conversion is roughly
+          # the correct outcome.
+          expect 1 run convert c.txt --to=pain.001 --as-of=2026-09-01 \
+            --allow-unverified --out=c.xml
+          grep -q 'pain.001.001.03' c.xml || { echo "no pain.001 namespace"; exit 1; }
+
+          # A ZEDI file carries the header and the body as two concatenated XML
+          # documents, so it has two declarations and is not a single
+          # well-formed document. That is the property the library exists for.
+          declarations=$(grep -c '<?xml' c.xml)
+          [ "$declarations" -eq 2 ] \
+            || { echo "expected 2 XML declarations, found $declarations"; exit 1; }
+
+          expect 1 run dryrun c.txt --as-of=2026-09-01 --allow-unverified
+          expect 3 run convert c.xml --to=zengin --as-of=2026-09-01   # R-I20: needs a context
+          expect 1 run convert c.xml --to=zengin --originator-code=9900000001 \
+            --target-format=sougou-furikomi --as-of=2026-09-01 --out=c-back.txt
+
+          # Anything this library writes, it accepts.
+          expect 1 run validate c-back.txt --allow-unverified
+
   constant-memory:
     name: 1 GB under a 64 MB heap
     runs-on: ubuntu-latest

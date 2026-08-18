@@ -204,10 +204,15 @@ class TruncationTest {
     void theDefaultPolicyRefusesRatherThanShortenAName() {
         TransliterationOptions options = TransliterationOptions.defaults();
 
-        assertThatIllegalArgumentException()
+        assertThatExceptionOfType(ValueTooLongException.class)
                 .isThrownBy(() -> KanaTransliterator.toHalfWidth("ガクブチ", 4, options))
                 .withMessageContaining("does not fit")
-                .withMessageContaining("not a codec's to cut");
+                .withMessageContaining("not a codec's to cut")
+                .satisfies(refused -> {
+                    assertThat(refused.maxBytes()).isEqualTo(4);
+                    assertThat(refused.byteLength()).isEqualTo(6);
+                    assertThat(refused.text()).isEqualTo("ｶﾞｸﾌﾞﾁ");
+                });
     }
 
     @Test

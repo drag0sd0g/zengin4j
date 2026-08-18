@@ -26,6 +26,10 @@ val docsOutDir = rootProject.layout.projectDirectory.dir("docs/formats")
 // build input, compiled to Java, never packaged (R-K9, ADR-0016).
 val kanaDir = rootProject.layout.projectDirectory.dir("zengin4j-core/kana")
 
+// The ISO 20022 correspondences, on the same footing (R-I19).
+val mappingsDir = rootProject.layout.projectDirectory.dir("zengin4j-iso20022/mappings")
+val isoJavaOutDir = rootProject.layout.projectDirectory.dir("zengin4j-iso20022/src/main/java")
+
 fun codegenTask(
     taskName: String,
     mode: String,
@@ -42,9 +46,12 @@ fun codegenTask(
         "--java-out", javaOutDir.asFile.absolutePath,
         "--docs-out", docsOutDir.asFile.absolutePath,
         "--kana", kanaDir.asFile.absolutePath,
+        "--mappings", mappingsDir.asFile.absolutePath,
+        "--iso-java-out", isoJavaOutDir.asFile.absolutePath,
     )
     inputs.dir(formatsDir).withPropertyName("descriptors")
     inputs.dir(kanaDir).withPropertyName("kanaSubstitutions")
+    inputs.dir(mappingsDir).withPropertyName("mappingDeclarations")
     if (outputDir != null) {
         outputs.dir(outputDir).withPropertyName("generated")
     } else {
