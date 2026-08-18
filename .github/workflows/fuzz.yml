@@ -37,7 +37,7 @@ jobs:
       # shallow inputs every night. Restoring the corpus is what lets each run
       # begin where the last one stopped, which is where the value is.
       - name: Restore the corpus
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: |
             zengin4j-core/.cifuzz-corpus
@@ -54,7 +54,7 @@ jobs:
 
       - name: Save the corpus
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: |
             zengin4j-core/.cifuzz-corpus
