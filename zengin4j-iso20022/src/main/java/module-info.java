@@ -1,14 +1,12 @@
-/**
- * Bidirectional mapping between Zengin records and the ISO 20022 messages of
- * the ZEDI profile, with mandatory loss reporting.
- *
- * <p>The XML is read and written by hand against {@code java.xml}, so this
- * module has no runtime dependencies either — see
- * {@code docs/adr/0031-hand-written-iso20022-xml.md}. R-M3 permits it an XML
- * dependency; it turns out not to need one.
- *
- * @since 0.5.0
- */
+/// Bidirectional mapping between Zengin records and the ISO 20022 messages of
+/// the ZEDI profile, with mandatory loss reporting.
+///
+/// The XML is read and written by hand against `java.xml`, so this
+/// module has no runtime dependencies either — see
+/// `docs/adr/0031-hand-written-iso20022-xml.md`. R-M3 permits it an XML
+/// dependency; it turns out not to need one.
+///
+/// @since 0.5.0
 // javac warns that a module name component should avoid terminal digits, in case
 // a trailing number is mistaken for a version. Here "20022" is the standard's
 // name, not a version, and every package in this module is already called that.

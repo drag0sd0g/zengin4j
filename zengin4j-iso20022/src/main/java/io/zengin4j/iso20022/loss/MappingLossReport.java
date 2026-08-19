@@ -1,31 +1,27 @@
 package io.zengin4j.iso20022.loss;
 
+import module java.base;
 import io.zengin4j.core.loss.LossEntry;
 import io.zengin4j.core.loss.LossKind;
 import io.zengin4j.core.loss.LossReport;
 import io.zengin4j.core.loss.LossSeverity;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
 
-/**
- * What a conversion could not carry across.
- *
- * <p>Every conversion returns one of these alongside its output, and there is
- * no API that returns the output alone (R-I14). That is the single most
- * important design decision in this module: the formats are not isomorphic, so
- * every conversion loses something, and an API that let a caller ignore the
- * report would let them believe otherwise.
- *
- * <p>This adds two things to the {@link LossReport} the transliteration engine
- * already produces: a Japanese rendering, and JSON for a pipeline to branch on.
- * The vocabulary itself — {@link LossKind}, {@link LossSeverity},
- * {@link LossEntry} — lives in {@code core}, because transliteration on the
- * write path needs it too (ADR-0029), and two sets of loss types that meant
- * almost the same thing would be worse than one in a slightly odd place.
- *
- * @since 0.5.0
- */
+/// What a conversion could not carry across.
+///
+/// Every conversion returns one of these alongside its output, and there is
+/// no API that returns the output alone (R-I14). That is the single most
+/// important design decision in this module: the formats are not isomorphic, so
+/// every conversion loses something, and an API that let a caller ignore the
+/// report would let them believe otherwise.
+///
+/// This adds two things to the [LossReport] the transliteration engine
+/// already produces: a Japanese rendering, and JSON for a pipeline to branch on.
+/// The vocabulary itself — [LossKind], [LossSeverity],
+/// [LossEntry] — lives in `core`, because transliteration on the
+/// write path needs it too (ADR-0029), and two sets of loss types that meant
+/// almost the same thing would be worse than one in a slightly odd place.
+///
+/// @since 0.5.0
 public final class MappingLossReport {
 
     private static final MappingLossReport LOSSLESS =
@@ -37,75 +33,63 @@ public final class MappingLossReport {
         this.report = report;
     }
 
-    /**
-     * Wraps a report from the transliteration engine.
-     *
-     * @param report the report
-     * @return the mapping report
-     */
+    /// Wraps a report from the transliteration engine.
+    ///
+    /// @param report the report
+    /// @return the mapping report
     public static MappingLossReport of(LossReport report) {
         Objects.requireNonNull(report, "report");
         return report.isLossless() ? LOSSLESS : new MappingLossReport(report);
     }
 
-    /**
-     * A report of no loss.
-     *
-     * @return the shared empty report
-     */
+    /// A report of no loss.
+    ///
+    /// @return the shared empty report
     public static MappingLossReport lossless() {
         return LOSSLESS;
     }
 
-    /** @return the entries, in the order they happened */
+    /// @return the entries, in the order they happened
     public List<LossEntry> entries() {
         return report.entries();
     }
 
-    /** @return true if nothing was lost */
+    /// @return true if nothing was lost
     public boolean isLossless() {
         return report.isLossless();
     }
 
-    /**
-     * The entries of exactly one severity.
-     *
-     * @param severity the severity
-     * @return the entries
-     */
+    /// The entries of exactly one severity.
+    ///
+    /// @param severity the severity
+    /// @return the entries
     public List<LossEntry> bySeverity(LossSeverity severity) {
         return report.bySeverity(severity);
     }
 
-    /**
-     * The entries at or above a severity.
-     *
-     * @param threshold the lowest severity to include
-     * @return the entries
-     */
+    /// The entries at or above a severity.
+    ///
+    /// @param threshold the lowest severity to include
+    /// @return the entries
     public List<LossEntry> atLeast(LossSeverity threshold) {
         return report.atLeast(threshold);
     }
 
-    /**
-     * Whether anything reached a severity.
-     *
-     * @param threshold the severity to test
-     * @return true if any entry is at or above it
-     */
+    /// Whether anything reached a severity.
+    ///
+    /// @param threshold the severity to test
+    /// @return true if any entry is at or above it
     public boolean hasAtLeast(LossSeverity threshold) {
         return report.hasAtLeast(threshold);
     }
 
-    /**
-     * Combines two reports, keeping order.
-     *
-     * <p>This is what {@code roundTrip} uses to accumulate loss across both
-     * legs (R-I18).
-     *
-     * @param other the report to append
-     * @return the combined report
-     */
+    /// Combines two reports, keeping order.
+    ///
+    /// This is what `roundTrip` uses to accumulate loss across both
+    /// legs (R-I18).
+    ///
+    /// @param other the report to append
+    /// @return the combined report
     public MappingLossReport and(MappingLossReport other) {
         Objects.requireNonNull(other, "other");
         if (other.isLossless()) {
@@ -117,32 +101,26 @@ public final class MappingLossReport {
         return of(report.and(other.report));
     }
 
-    /**
-     * The underlying report.
-     *
-     * @return the report, for code that works across the write path and the
-     *         mapping path
-     */
+    /// The underlying report.
+    ///
+    /// @return the report, for code that works across the write path and the
+    ///   mapping path
     public LossReport toLossReport() {
         return report;
     }
 
-    /**
-     * A human-readable rendering, one entry per line, in English.
-     *
-     * @return the text
-     */
+    /// A human-readable rendering, one entry per line, in English.
+    ///
+    /// @return the text
     public String toText() {
         return report.toText();
     }
 
-    /**
-     * A human-readable rendering, one entry per line.
-     *
-     * @param locale Japanese for the Japanese explanations, anything else for
-     *               English
-     * @return the text
-     */
+    /// A human-readable rendering, one entry per line.
+    ///
+    /// @param locale Japanese for the Japanese explanations, anything else for
+    ///   English
+    /// @return the text
     public String toText(Locale locale) {
         Objects.requireNonNull(locale, "locale");
         if (!Locale.JAPANESE.getLanguage().equals(locale.getLanguage())) {
@@ -160,17 +138,15 @@ public final class MappingLossReport {
         return out.toString();
     }
 
-    /**
-     * The report as JSON, for a pipeline that branches on it.
-     *
-     * <p>Written by hand, like the validation module's JSON and SARIF and for
-     * the same reason (ADR-0022): the structure is fixed and shallow, and the
-     * alternative is a dependency in a module whose value is partly that it has
-     * none. The escaping is checked by parsing the output with a real parser in
-     * the tests.
-     *
-     * @return the JSON text
-     */
+    /// The report as JSON, for a pipeline that branches on it.
+    ///
+    /// Written by hand, like the validation module's JSON and SARIF and for
+    /// the same reason (ADR-0022): the structure is fixed and shallow, and the
+    /// alternative is a dependency in a module whose value is partly that it has
+    /// none. The escaping is checked by parsing the output with a real parser in
+    /// the tests.
+    ///
+    /// @return the JSON text
     public String toJson() {
         StringBuilder out = new StringBuilder("{\n");
         out.append("  \"lossless\": ").append(report.isLossless()).append(",\n");

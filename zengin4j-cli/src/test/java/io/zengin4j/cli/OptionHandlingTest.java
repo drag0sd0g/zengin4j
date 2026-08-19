@@ -1,22 +1,18 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.testkit.SougouFurikomiFixtures;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * The options that change what a command does, rather than whether it works.
- *
- * <p>Each of these is a switch somebody will reach for on a bad afternoon:
- * a Japanese report, a suppressed rule, a calendar of their own, a file in an
- * encoding the default does not read.
- */
+/// The options that change what a command does, rather than whether it works.
+///
+/// Each of these is a switch somebody will reach for on a bad afternoon:
+/// a Japanese report, a suppressed rule, a calendar of their own, a file in an
+/// encoding the default does not read.
 class OptionHandlingTest {
 
     @TempDir
@@ -82,17 +78,15 @@ class OptionHandlingTest {
         assertThat(result.err()).contains("bundled Japanese bank calendar", "valid to 2027");
     }
 
-    /**
-     * A calendar of the caller's own is read, and its holidays are applied.
-     *
-     * <p>The holiday is declared for every year in range rather than for one.
-     * The fixture's value date is the yearless {@code 0930}, and the reader
-     * resolves it <em>forward from today</em> — so a CSV naming only
-     * {@code 2026-09-30} silently stops matching on 1 October 2026, and this
-     * test would have begun failing six weeks after it was written. A test that
-     * expires is worse than no test: it fails long after the change that would
-     * explain it.
-     */
+    /// A calendar of the caller's own is read, and its holidays are applied.
+    ///
+    /// The holiday is declared for every year in range rather than for one.
+    /// The fixture's value date is the yearless `0930`, and the reader
+    /// resolves it *forward from today* — so a CSV naming only
+    /// `2026-09-30` silently stops matching on 1 October 2026, and this
+    /// test would have begun failing six weeks after it was written. A test that
+    /// expires is worse than no test: it fails long after the change that would
+    /// explain it.
     @Test
     void aCalendarOfYourOwnCanBeSupplied() throws Exception {
         StringBuilder csv = new StringBuilder("# a calendar of my own\nhorizon=2099-12-31\n");
@@ -172,16 +166,14 @@ class OptionHandlingTest {
         assertThat(result.out()).contains("ﾔﾏﾀﾞ ﾀﾛｳ");
     }
 
-    /**
-     * UTF-8 does not fit these formats, and the library says so rather than
-     * truncating.
-     *
-     * <p>Half-width katakana is one byte in Shift_JIS and <em>three</em> in
-     * UTF-8, so ﾃｽﾄｷﾞﾝｺｳ needs 24 bytes in a 15-byte 被仕向銀行名. This is the
-     * concrete reason {@code docs/encoding.md} warns against choosing UTF-8 for
-     * a fixed-length payment file, and it is worth pinning: the failure mode if
-     * the codec ever truncated instead would be a silently shortened bank name.
-     */
+    /// UTF-8 does not fit these formats, and the library says so rather than
+    /// truncating.
+    ///
+    /// Half-width katakana is one byte in Shift_JIS and *three* in
+    /// UTF-8, so ﾃｽﾄｷﾞﾝｺｳ needs 24 bytes in a 15-byte 被仕向銀行名. This is the
+    /// concrete reason `docs/encoding.md` warns against choosing UTF-8 for
+    /// a fixed-length payment file, and it is worth pinning: the failure mode if
+    /// the codec ever truncated instead would be a silently shortened bank name.
     @Test
     void utf8DoesNotFitAFixedLengthNameFieldAndIsRefusedRatherThanTruncated() {
         assertThat(org.assertj.core.api.Assertions.catchThrowable(() ->

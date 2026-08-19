@@ -1,5 +1,6 @@
 package io.zengin4j.validation.rules;
 
+import module java.base;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.model.Batch;
 import io.zengin4j.core.model.MalformedRecord;
@@ -11,29 +12,23 @@ import io.zengin4j.validation.api.Rule;
 import io.zengin4j.validation.api.RuleScope;
 import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.engine.ValidationContext;
-import java.util.List;
-import java.util.function.Consumer;
 
-/**
- * Tier 1 — is this a Zengin file at all? (§14.3, {@code V-1xx})
- *
- * <p>These run first and, under fail-fast, alone. If the records are not the
- * length the format declares, every field offset in every later tier is reading
- * the wrong bytes, and the hundreds of findings that would follow describe the
- * misalignment rather than the file.
- *
- * @since 0.2.0
- */
+/// Tier 1 — is this a Zengin file at all? (§14.3, `V-1xx`)
+///
+/// These run first and, under fail-fast, alone. If the records are not the
+/// length the format declares, every field offset in every later tier is reading
+/// the wrong bytes, and the hundreds of findings that would follow describe the
+/// misalignment rather than the file.
+///
+/// @since 0.2.0
 public final class StructuralRules {
 
     private StructuralRules() {
     }
 
-    /**
-     * Every rule in this tier.
-     *
-     * @return the rules, never {@code null}
-     */
+    /// Every rule in this tier.
+    ///
+    /// @return the rules, never `null`
     public static List<Rule> all() {
         return List.of(
                 new RecordLength(),
@@ -45,12 +40,12 @@ public final class StructuralRules {
                 new FileNotEmpty());
     }
 
-    /** Every record in the file, in position order. */
+    /// Every record in the file, in position order.
     static List<ZenginRecord> inOrder(ZenginFile file) {
         return file.recordsInOrder();
     }
 
-    /** V-101. */
+    /// V-101.
     static final class RecordLength extends AbstractRule {
 
         RecordLength() {
@@ -74,7 +69,7 @@ public final class StructuralRules {
         }
     }
 
-    /** V-102: the discriminator byte names a record kind this format declares. */
+    /// V-102: the discriminator byte names a record kind this format declares.
     static final class KnownDataKubun extends AbstractRule {
 
         KnownDataKubun() {
@@ -114,11 +109,9 @@ public final class StructuralRules {
         }
     }
 
-    /**
-     * V-103. The reader already places data records inside a batch, so a data
-     * record preceding every header shows up as an unbatched record rather than
-     * as a batch member.
-     */
+    /// V-103. The reader already places data records inside a batch, so a data
+    /// record preceding every header shows up as an unbatched record rather than
+    /// as a batch member.
     static final class DataFollowsHeader extends AbstractRule {
 
         DataFollowsHeader() {
@@ -137,7 +130,7 @@ public final class StructuralRules {
         }
     }
 
-    /** V-104. */
+    /// V-104.
     static final class OneTrailerPerHeader extends AbstractRule {
 
         OneTrailerPerHeader() {
@@ -159,7 +152,7 @@ public final class StructuralRules {
         }
     }
 
-    /** V-105. */
+    /// V-105.
     static final class EndRecordPresent extends AbstractRule {
 
         EndRecordPresent() {
@@ -178,7 +171,7 @@ public final class StructuralRules {
         }
     }
 
-    /** V-106. */
+    /// V-106.
     static final class NothingAfterEnd extends AbstractRule {
 
         NothingAfterEnd() {
@@ -196,7 +189,7 @@ public final class StructuralRules {
                     .filter(record -> record.recordNumber() > endAt)
                     .toList();
             if (!after.isEmpty()) {
-                ZenginRecord first = after.get(0);
+                ZenginRecord first = after.getFirst();
                 out.accept(Messages.format(id() + ".message", after.size())
                         .into(finding().at(first.recordNumber(), first.byteOffset()))
                         .actual(after.size() + " record(s)")
@@ -206,7 +199,7 @@ public final class StructuralRules {
         }
     }
 
-    /** V-107. */
+    /// V-107.
     static final class FileNotEmpty extends AbstractRule {
 
         FileNotEmpty() {

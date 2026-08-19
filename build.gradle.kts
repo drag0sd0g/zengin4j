@@ -55,9 +55,10 @@ subprojects {
     }
 
     tasks.withType<JavaCompile>().configureEach {
-        // R-M7: Java 21 baseline. Compiled with --release so that a JDK 21 or 25
-        // build produces identical, 21-compatible bytecode.
-        options.release = 21
+        // Java 25 baseline. R-M7 says 21; see ADR-0036 for why that changed and
+        // what it costs. Compiled with --release so the bytecode is what a
+        // JDK 25 accepts regardless of which JDK ran the build.
+        options.release = 25
         options.encoding = "UTF-8"
         // -serial is excluded because every exception in the hierarchy is
         // Serializable by inheritance and none is designed to be serialised.
@@ -66,10 +67,9 @@ subprojects {
 
     tasks.withType<Javadoc>().configureEach {
         // A module whose only source is module-info.java has nothing to
-        // document. JDK 21's javadoc calls that an error; JDK 25's does not.
-        // The §7 skeleton modules have exactly that shape until their epic
-        // fills them in, so skip rather than fail — and keep the JDK 21 leg of
-        // the CI matrix meaningful.
+        // document. JDK 25's javadoc tolerates that where 21's did not, but the
+        // guard stays: the §7 skeleton modules have exactly that shape until
+        // their epic fills them in, and skipping is cheaper than explaining.
         onlyIf { source.files.any { file -> file.name != "module-info.java" } }
 
         (options as StandardJavadocDocletOptions).apply {
@@ -285,7 +285,7 @@ val runExamples by tasks.registering {
     inputs.files(classpath)
     outputs.upToDateWhen { false }
 
-    // The JVM running Gradle, which the build already requires to be 21+.
+    // The JVM running Gradle, which the build already requires to be 25+.
     val javaHome = providers.systemProperty("java.home")
 
     doLast {

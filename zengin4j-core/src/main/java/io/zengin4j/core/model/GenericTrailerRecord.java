@@ -1,29 +1,25 @@
 package io.zengin4j.core.model;
 
+import module java.base;
 import io.zengin4j.core.format.RecordDescriptor;
-import java.util.Map;
 
-/**
- * Descriptor-driven fallback for a trailer record.
- *
- * @since 0.1.0
- */
+/// Descriptor-driven fallback for a trailer record.
+///
+/// @since 0.1.0
 public final class GenericTrailerRecord extends GenericRecord implements TrailerRecord {
 
     private final int recordCount;
     private final long totalAmount;
 
-    /**
-     * Creates a fallback trailer record.
-     *
-     * @param descriptor   the layout the record was decoded with
-     * @param recordNumber the 1-based position of the record in the file
-     * @param byteOffset   the record's byte offset within the file
-     * @param rawBytes     the record's bytes
-     * @param values       decoded field values keyed by field id
-     * @param recordCount  the declared 合計件数
-     * @param totalAmount  the declared 合計金額
-     */
+    /// Creates a fallback trailer record.
+    ///
+    /// @param descriptor   the layout the record was decoded with
+    /// @param recordNumber the 1-based position of the record in the file
+    /// @param byteOffset   the record's byte offset within the file
+    /// @param rawBytes     the record's bytes
+    /// @param values       decoded field values keyed by field id
+    /// @param recordCount  the declared 合計件数
+    /// @param totalAmount  the declared 合計金額
     public GenericTrailerRecord(
             RecordDescriptor descriptor,
             int recordNumber,

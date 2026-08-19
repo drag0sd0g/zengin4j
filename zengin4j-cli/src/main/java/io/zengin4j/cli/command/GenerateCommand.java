@@ -1,32 +1,27 @@
 package io.zengin4j.cli.command;
 
+import module java.base;
 import io.zengin4j.cli.ExitCode;
 import io.zengin4j.cli.internal.Json;
 import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.testkit.FormatFixtures;
 import io.zengin4j.testkit.ZenginGenerator;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-/**
- * {@code zengin generate} — writes a synthetic file.
- *
- * <p><strong>Every value it produces is invented</strong> (R-L1). Bank
- * {@code 9999}, branch {@code 999} and accounts beginning {@code 9} are outside
- * the ranges Japanese institutions use, and the names are obviously fictional.
- * Nothing this command writes resembles a real payment instruction, which is
- * the point: test files end up in repositories.
- *
- * <p><strong>The same seed produces the same bytes</strong> on every platform
- * and every JDK (R-CLI3), so a generated file can be committed as a fixture and
- * regenerated years later to the byte.
- *
- * @since 0.3.0
- */
+/// `zengin generate` — writes a synthetic file.
+///
+/// **Every value it produces is invented** (R-L1). Bank
+/// `9999`, branch `999` and accounts beginning `9` are outside
+/// the ranges Japanese institutions use, and the names are obviously fictional.
+/// Nothing this command writes resembles a real payment instruction, which is
+/// the point: test files end up in repositories.
+///
+/// **The same seed produces the same bytes** on every platform
+/// and every JDK (R-CLI3), so a generated file can be committed as a fixture and
+/// regenerated years later to the byte.
+///
+/// @since 0.3.0
 @CommandLine.Command(
         name = "generate",
         mixinStandardHelpOptions = true,

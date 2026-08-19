@@ -1,27 +1,25 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import io.zengin4j.core.format.RecordKind;
-import java.util.Optional;
 
-/**
- * The record-sequence state machine of §12.4.
- *
- * <p>Multiple header/data/trailer groups in one file are accepted here even
- * where a particular institution forbids them; enforcing single-batch is a
- * validation rule, not a parsing rule (R-C1).
- */
+/// The record-sequence state machine of §12.4.
+///
+/// Multiple header/data/trailer groups in one file are accepted here even
+/// where a particular institution forbids them; enforcing single-batch is a
+/// validation rule, not a parsing rule (R-C1).
 enum ParserState {
 
-    /** Nothing read yet, or the file has only just begun. */
+    /// Nothing read yet, or the file has only just begun.
     EXPECT_HEADER("a header record (データ区分 '1')"),
 
-    /** Inside a batch: data records, then a trailer. */
+    /// Inside a batch: data records, then a trailer.
     IN_BATCH("a data record ('2') or a trailer record ('8')"),
 
-    /** A trailer closed the batch: another header, or the end record. */
+    /// A trailer closed the batch: another header, or the end record.
     BATCH_CLOSED("a header record ('1') or the end record ('9')"),
 
-    /** The end record was read; nothing may follow it. */
+    /// The end record was read; nothing may follow it.
     DONE("end of file");
 
     private final String expected;
@@ -30,12 +28,10 @@ enum ParserState {
         this.expected = expected;
     }
 
-    /**
-     * Applies a record kind to this state.
-     *
-     * @param kind the kind of the record just read
-     * @return the next state, or empty if the record may not appear here
-     */
+    /// Applies a record kind to this state.
+    ///
+    /// @param kind the kind of the record just read
+    /// @return the next state, or empty if the record may not appear here
     Optional<ParserState> next(RecordKind kind) {
         return switch (this) {
             case EXPECT_HEADER -> kind == RecordKind.HEADER ? Optional.of(IN_BATCH) : Optional.empty();
@@ -53,11 +49,9 @@ enum ParserState {
         };
     }
 
-    /**
-     * Describes what may legally appear next, for diagnostics.
-     *
-     * @return a human-readable description
-     */
+    /// Describes what may legally appear next, for diagnostics.
+    ///
+    /// @return a human-readable description
     String expected() {
         return expected;
     }

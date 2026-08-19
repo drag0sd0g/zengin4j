@@ -1,5 +1,6 @@
 package io.zengin4j.iso20022.api;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -32,23 +33,14 @@ import io.zengin4j.iso20022.pain001.RemittanceInformation;
 import io.zengin4j.iso20022.xml.XmlElement;
 import io.zengin4j.testkit.FormatFixtures;
 import io.zengin4j.testkit.SyntheticRecords;
-import java.io.ByteArrayInputStream;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/**
- * The cases a real file eventually produces and a fixture never does.
- *
- * <p>An empty batch, a date that is not a date, an account with no type, a name
- * with a quotation mark in it. None is exotic — each is a file somebody sends
- * on a Tuesday — and each is a branch that would otherwise be reached first in
- * production.
- */
+/// The cases a real file eventually produces and a fixture never does.
+///
+/// An empty batch, a date that is not a date, an account with no type, a name
+/// with a quotation mark in it. None is exotic — each is a file somebody sends
+/// on a Tuesday — and each is a branch that would otherwise be reached first in
+/// production.
 class EdgeCaseTest {
 
     private static final FormatId FORMAT = FormatId.of("sougou-furikomi");
@@ -101,15 +93,13 @@ class EdgeCaseTest {
 
     // ---------------------------------------------------------------- dates
 
-    /**
-     * 0229 in a year that has no 29 February.
-     *
-     * <p>A leap day is never resolved backwards (ADR-0014) and the resolver
-     * looks only one year ahead, so 0229 converted in 2026 — with 2026 and 2027
-     * both ordinary years — has no execution date at all. The reference date is
-     * used, and that is critical: the bank decides the timing of a payment file
-     * whose execution date was made up.
-     */
+    /// 0229 in a year that has no 29 February.
+    ///
+    /// A leap day is never resolved backwards (ADR-0014) and the resolver
+    /// looks only one year ahead, so 0229 converted in 2026 — with 2026 and 2027
+    /// both ordinary years — has no execution date at all. The reference date is
+    /// used, and that is critical: the bank decides the timing of a payment file
+    /// whose execution date was made up.
     @Test
     void aLeapDayInANonLeapYearFallsBackAndSaysItIsCritical() {
         MappingContext nonLeap = MappingContext.builder("9900000001", LocalDate.of(2026, 3, 1))
@@ -138,11 +128,9 @@ class EdgeCaseTest {
 
     // -------------------------------------------------------------- emptiness
 
-    /**
-     * A file with no batches has to be constructed rather than read — the
-     * reader refuses one, correctly — but the mapper still has to survive it,
-     * because a caller can build one and nothing stops them.
-     */
+    /// A file with no batches has to be constructed rather than read — the
+    /// reader refuses one, correctly — but the mapper still has to survive it,
+    /// because a caller can build one and nothing stops them.
     private static ZenginFile withoutBatches() {
         return new ZenginFile(fixtures().descriptor(), List.of(),
                 java.util.Optional.empty(), List.of(),
@@ -161,11 +149,9 @@ class EdgeCaseTest {
         assertThat(body.at("CstmrCdtTrfInitn").orElseThrow().childrenNamed("PmtInf")).isEmpty();
     }
 
-    /**
-     * A file whose header record never arrived names no recipient, and the
-     * business application header says so by omission rather than by inventing
-     * one.
-     */
+    /// A file whose header record never arrived names no recipient, and the
+    /// business application header says so by omission rather than by inventing
+    /// one.
     @Test
     void aFileWithNoHeaderRecordProducesAnEnvelopeThatAdmitsItHasNoRecipient() {
         ZenginFile empty = withoutBatches();
@@ -196,14 +182,12 @@ class EdgeCaseTest {
                         new Account("9876543", "1"), RemittanceInformation.NONE)));
     }
 
-    /**
-     * Instructions that agree lose only their grouping.
-     *
-     * <p>A Zengin batch has one execution date and one debit account. When
-     * every {@code PmtInf} names the same ones, flattening costs nothing a
-     * downstream system reads — so reporting it as material would send somebody
-     * hunting for a loss that did not happen.
-     */
+    /// Instructions that agree lose only their grouping.
+    ///
+    /// A Zengin batch has one execution date and one debit account. When
+    /// every `PmtInf` names the same ones, flattening costs nothing a
+    /// downstream system reads — so reporting it as material would send somebody
+    /// hunting for a loss that did not happen.
     @Test
     void instructionsThatAgreeFlattenWithoutMaterialLoss() {
         PaymentInstruction same = instructionOn(LocalDate.of(2026, 9, 30), "9000001");
@@ -219,13 +203,11 @@ class EdgeCaseTest {
                 .noneSatisfy(entry -> assertThat(entry.explanationEn()).contains("PmtInf blocks"));
     }
 
-    /**
-     * Instructions that disagree do not.
-     *
-     * <p>The first block's execution date and debit account are applied to
-     * every payment in the file, including ones that asked for something else.
-     * That is not a note about structure.
-     */
+    /// Instructions that disagree do not.
+    ///
+    /// The first block's execution date and debit account are applied to
+    /// every payment in the file, including ones that asked for something else.
+    /// That is not a note about structure.
     @Test
     void instructionsThatDisagreeAreFlattenedAndReportedCritical() {
         MappingResult<ZenginFile> result = Iso20022Mapper.create().toZengin(
@@ -239,12 +221,10 @@ class EdgeCaseTest {
                         .contains("do not agree on execution date"));
     }
 
-    /**
-     * {@code InstrId} has nowhere to go, and says so.
-     *
-     * <p>The debtor's own reference, distinct from the one the creditor
-     * reconciles against. Both 顧客コード fields are already spoken for.
-     */
+    /// `InstrId` has nowhere to go, and says so.
+    ///
+    /// The debtor's own reference, distinct from the one the creditor
+    /// reconciles against. Both 顧客コード fields are already spoken for.
     @Test
     void anInstructionIdThatCannotBeCarriedIsReported() {
         PaymentInstruction withInstrId = new PaymentInstruction("P-1",
@@ -271,11 +251,9 @@ class EdgeCaseTest {
                 .noneSatisfy(entry -> assertThat(entry.explanationEn()).contains("InstrId"));
     }
 
-    /**
-     * The context supplies 委託者コード and the XML's own identifier is replaced.
-     *
-     * <p>Reported only when they differ: when they agree, nothing was replaced.
-     */
+    /// The context supplies 委託者コード and the XML's own identifier is replaced.
+    ///
+    /// Reported only when they differ: when they agree, nothing was replaced.
     @Test
     void anOriginatorCodeTheContextOverridesIsReportedOnlyWhenItDiffers() {
         MappingResult<ZenginFile> differing = Iso20022Mapper.create().toZengin(
@@ -294,12 +272,10 @@ class EdgeCaseTest {
                         .contains("InitgPty identifier"));
     }
 
-    /**
-     * An account with no 預金種目 gets 普通預金 assumed, and that is critical.
-     *
-     * <p>An account type that is wrong sends the payment to a different account
-     * at the same branch — the same number can exist under two types.
-     */
+    /// An account with no 預金種目 gets 普通預金 assumed, and that is critical.
+    ///
+    /// An account type that is wrong sends the payment to a different account
+    /// at the same branch — the same number can exist under two types.
     @Test
     void anAccountWithNoTypeIsAssumedOrdinaryAndSaidToBeCritical() {
         PaymentInstruction untyped = new PaymentInstruction("P-1",
@@ -318,15 +294,13 @@ class EdgeCaseTest {
 
     // ---------------------------------------------------------------- amounts
 
-    /**
-     * Amounts a {@code pain.001} can legitimately carry and 振込金額 cannot.
-     *
-     * <p>Each of these threw an untyped exception out of the mapper before this
-     * test existed — an {@code ArithmeticException} from {@code longValueExact},
-     * and two {@code IllegalArgumentException}s from the encoder. A whole file
-     * failing because one payment is too large is the wrong outcome for a
-     * module whose entire design is "report it and let the threshold decide".
-     */
+    /// Amounts a `pain.001` can legitimately carry and 振込金額 cannot.
+    ///
+    /// Each of these threw an untyped exception out of the mapper before this
+    /// test existed — an `ArithmeticException` from `longValueExact`,
+    /// and two `IllegalArgumentException`s from the encoder. A whole file
+    /// failing because one payment is too large is the wrong outcome for a
+    /// module whose entire design is "report it and let the threshold decide".
     @Test
     void anAmountTheFieldCannotHoldIsReportedRatherThanThrown() {
         for (String impossible : List.of("99999999999", "1".repeat(25), "-500")) {
@@ -351,12 +325,10 @@ class EdgeCaseTest {
         }
     }
 
-    /**
-     * An amount nobody could read reaches the report rather than the file.
-     *
-     * <p>End to end, from XML a hostile sender could write: thirteen bytes that
-     * used to be an {@code OutOfMemoryError}.
-     */
+    /// An amount nobody could read reaches the report rather than the file.
+    ///
+    /// End to end, from XML a hostile sender could write: thirteen bytes that
+    /// used to be an `OutOfMemoryError`.
     @Test
     void anAmountTooLargeToRenderIsReportedRatherThanExhaustingMemory() {
         byte[] hostile = new String(io.zengin4j.iso20022.envelope.ZediEnvelopeWriter
@@ -380,7 +352,7 @@ class EdgeCaseTest {
                         .contains("too large to represent"));
     }
 
-    /** And under the default threshold, that stops the conversion. */
+    /// And under the default threshold, that stops the conversion.
     @Test
     void anImpossibleAmountStopsTheConversionByDefault() {
         PaymentInstruction instruction = new PaymentInstruction("P-1",
@@ -415,7 +387,7 @@ class EdgeCaseTest {
         assertThat(result.output().allData().get(0).amount()).isEqualTo(9_999_999_999L);
     }
 
-    /** A record whose データ区分 names no record kind this format has. */
+    /// A record whose データ区分 names no record kind this format has.
     private static byte[] unknownRecordKind() {
         byte[] record = new byte[120];
         java.util.Arrays.fill(record, (byte) '0');
@@ -425,13 +397,11 @@ class EdgeCaseTest {
 
     // ------------------------------------------------------------- reporting
 
-    /**
-     * A record the reader could not parse does not quietly vanish.
-     *
-     * <p>Lenient mode surfaces it as data rather than failing the read, and the
-     * conversion has nothing to map it to — so without this it would be absent
-     * from the message with nothing anywhere to say a payment had gone missing.
-     */
+    /// A record the reader could not parse does not quietly vanish.
+    ///
+    /// Lenient mode surfaces it as data rather than failing the read, and the
+    /// conversion has nothing to map it to — so without this it would be absent
+    /// from the message with nothing anywhere to say a payment had gone missing.
     @Test
     void recordsTheReaderCouldNotParseAreReportedRatherThanDroppedSilently() {
         ZenginFile lenient = ZenginReaders.readFile(
@@ -456,7 +426,7 @@ class EdgeCaseTest {
                         .contains("read as malformed", "may be a payment"));
     }
 
-    /** And under the default threshold, an unreadable record stops the conversion. */
+    /// And under the default threshold, an unreadable record stops the conversion.
     @Test
     void anUnreadableRecordStopsTheConversionByDefault() {
         ZenginFile lenient = ZenginReaders.readFile(
@@ -487,10 +457,8 @@ class EdgeCaseTest {
                         .contains("read as malformed"));
     }
 
-    /**
-     * One message names one initiating party, and a file may hold batches that
-     * disagree.
-     */
+    /// One message names one initiating party, and a file may hold batches that
+    /// disagree.
     @Test
     void batchesThatNameDifferentOriginatorsAreReported() {
         ZenginFile twoOriginators = read(SyntheticRecords.file(List.of(
@@ -510,7 +478,7 @@ class EdgeCaseTest {
                 .at("CstmrCdtTrfInitn").orElseThrow().childrenNamed("PmtInf")).hasSize(2);
     }
 
-    /** Dropping the reference is reported once, with a count, not once per payment. */
+    /// Dropping the reference is reported once, with a count, not once per payment.
     @Test
     void droppingTheReferenceIsReportedOnceForTheWholeFile() {
         MappingResult<ZediFile> result = Iso20022Mapper.create().toIso(
@@ -529,18 +497,16 @@ class EdgeCaseTest {
 
     // ------------------------------------------------------------ identifiers
 
-    /**
-     * An identifier that will not fit is dropped, never shortened.
-     *
-     * <p>ISO 20022 gives an account number thirty-four characters and a member
-     * id thirty-five; the Zengin fields are seven, four and three. Each of
-     * these threw an untyped {@code IllegalArgumentException} out of the
-     * encoder before this test existed — a whole file lost to one payment, in
-     * an exception outside this module's vocabulary.
-     *
-     * <p>Half an account number is a different account, and a file carrying one
-     * looks perfectly valid, so the field is emptied rather than cut.
-     */
+    /// An identifier that will not fit is dropped, never shortened.
+    ///
+    /// ISO 20022 gives an account number thirty-four characters and a member
+    /// id thirty-five; the Zengin fields are seven, four and three. Each of
+    /// these threw an untyped `IllegalArgumentException` out of the
+    /// encoder before this test existed — a whole file lost to one payment, in
+    /// an exception outside this module's vocabulary.
+    ///
+    /// Half an account number is a different account, and a file carrying one
+    /// looks perfectly valid, so the field is emptied rather than cut.
     @Test
     void anIdentifierTooLongForItsFieldIsDroppedRatherThanShortened() {
         PaymentInstruction longAccount = new PaymentInstruction("P-1",
@@ -565,10 +531,8 @@ class EdgeCaseTest {
                         .contains("An identifier is not shortened", "zeros, and is no safer"));
     }
 
-    /**
-     * And under the default threshold, that stops the conversion — which is the
-     * only reason a zeroed identifier is survivable.
-     */
+    /// And under the default threshold, that stops the conversion — which is the
+    /// only reason a zeroed identifier is survivable.
     @Test
     void anIdentifierThatCannotBeWrittenStopsTheConversionByDefault() {
         PaymentInstruction longAccount = new PaymentInstruction("P-1",
@@ -587,7 +551,7 @@ class EdgeCaseTest {
                 .isInstanceOf(MappingFailedException.class);
     }
 
-    /** A member id of an unexpected shape reaches the bank-code field the same way. */
+    /// A member id of an unexpected shape reaches the bank-code field the same way.
     @Test
     void aMemberIdTooLongForTheBankCodeFieldIsDropped() {
         PaymentInstruction longMember = new PaymentInstruction("P-1",
@@ -605,12 +569,10 @@ class EdgeCaseTest {
                 result.output().allData().get(0)).beneficiaryBankCode()).isEqualTo("0000");
     }
 
-    /**
-     * 預金種目 is one character and {@code Tp/Prtry} is thirty-five.
-     *
-     * <p>A sender writing {@code SAVINGS} is entirely plausible, and it used to
-     * throw out of the encoder.
-     */
+    /// 預金種目 is one character and `Tp/Prtry` is thirty-five.
+    ///
+    /// A sender writing `SAVINGS` is entirely plausible, and it used to
+    /// throw out of the encoder.
     @Test
     void aProprietaryAccountTypeThatIsNotOneCharacterIsAssumedOrdinary() {
         PaymentInstruction wordy = new PaymentInstruction("P-1",
@@ -631,15 +593,13 @@ class EdgeCaseTest {
 
     // ------------------------------------------------------- self-consistency
 
-    /**
-     * A document that contradicts its own header, on the way down.
-     *
-     * <p>The mirror of the trailer cross-check the upward leg has done since
-     * this epic started, and it was missing: {@code NbOfTxs} and
-     * {@code CtrlSum} are computed on write and were never compared on read.
-     * A {@code pain.001} that disagrees with itself is exactly as suspect as a
-     * Zengin file whose trailer does.
-     */
+    /// A document that contradicts its own header, on the way down.
+    ///
+    /// The mirror of the trailer cross-check the upward leg has done since
+    /// this epic started, and it was missing: `NbOfTxs` and
+    /// `CtrlSum` are computed on write and were never compared on read.
+    /// A `pain.001` that disagrees with itself is exactly as suspect as a
+    /// Zengin file whose trailer does.
     @Test
     void aGroupHeaderThatDisagreesWithItsOwnPaymentsIsReported() {
         byte[] inconsistent = withGroupHeaderClaiming("<NbOfTxs>5</NbOfTxs>"
@@ -683,7 +643,7 @@ class EdgeCaseTest {
                 .noneSatisfy(entry -> assertThat(entry.explanationEn()).contains("GrpHdr/NbOfTxs"));
     }
 
-    /** One payment of ¥1, with whatever the caller wants in the group header. */
+    /// One payment of ¥1, with whatever the caller wants in the group header.
     private static byte[] withGroupHeaderClaiming(String claimed) {
         PaymentInstruction one = new PaymentInstruction("P-1", LocalDate.of(2026, 9, 30),
                 Party.named("テストシヨウジ"), new Account("9000001", "1"),
@@ -700,10 +660,8 @@ class EdgeCaseTest {
 
     // ------------------------------------------------------------------ JSON
 
-    /**
-     * The hand-written JSON is checked by a real parser, quotes and all
-     * (ADR-0022).
-     */
+    /// The hand-written JSON is checked by a real parser, quotes and all
+    /// (ADR-0022).
     @Test
     void theJsonReportParsesAndKeepsWhatItSaid() throws Exception {
         MappingLossReport report = MappingLossReport.of(new LossReport(List.of(

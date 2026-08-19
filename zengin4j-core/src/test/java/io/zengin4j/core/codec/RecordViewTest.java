@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -12,19 +13,14 @@ import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.testing.Fixtures;
-import java.io.ByteArrayInputStream;
-import java.time.MonthDay;
-import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
 
-/**
- * The lazy view over the recycled buffer (R-MEM1 to R-MEM4).
- */
+/// The lazy view over the recycled buffer (R-MEM1 to R-MEM4).
 class RecordViewTest {
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
-    /** R-MEM2: a view retained across an iteration must fail loudly, not quietly. */
+    /// R-MEM2: a view retained across an iteration must fail loudly, not quietly.
     @Test
     void refusesToServeAStaleView() {
         try (ZenginReader reader = open(Fixtures.file(descriptor))) {
@@ -43,7 +39,7 @@ class RecordViewTest {
         }
     }
 
-    /** A materialised record survives the buffer moving on. */
+    /// A materialised record survives the buffer moving on.
     @Test
     void materialisedRecordsOutliveTheView() {
         try (ZenginReader reader = open(Fixtures.file(descriptor))) {
@@ -57,7 +53,7 @@ class RecordViewTest {
         }
     }
 
-    /** R-MEM4: a decoded string is computed once per view. */
+    /// R-MEM4: a decoded string is computed once per view.
     @Test
     void cachesDecodedStringsWithinTheView() {
         try (ZenginReader reader = open(Fixtures.file(descriptor))) {
@@ -147,7 +143,7 @@ class RecordViewTest {
         }
     }
 
-    /** A field that runs past a truncated record cannot be read from it. */
+    /// A field that runs past a truncated record cannot be read from it.
     @Test
     void refusesAFieldBeyondATruncatedRecord() {
         byte[] full = Fixtures.join(Fixtures.CRLF, Fixtures.header(descriptor), Fixtures.data(descriptor));

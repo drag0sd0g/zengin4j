@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -9,14 +10,10 @@ import io.zengin4j.core.error.MalformedFieldException;
 import io.zengin4j.core.format.FieldType;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.testing.Fixtures;
-import java.nio.charset.StandardCharsets;
-import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
 
-/**
- * Issue 1.7: allocation-free numeric decoding (§19.2, R-MEM3) and the two
- * padding conventions (§12.8).
- */
+/// Issue 1.7: allocation-free numeric decoding (§19.2, R-MEM3) and the two
+/// padding conventions (§12.8).
 class FieldCodecTest {
 
     @Test
@@ -66,7 +63,7 @@ class FieldCodecTest {
                 .isThrownBy(() -> FieldCodec.decodeNumeric(buffer, 0, 4));
     }
 
-    /** A C field loses its trailing pad; an N field keeps its leading zeros. */
+    /// A C field loses its trailing pad; an N field keeps its leading zeros.
     @Test
     void stripsOnlyThePaddingTheFieldTypeDefines() {
         var descriptor = Fixtures.descriptor().record(RecordKind.DATA);
@@ -127,7 +124,7 @@ class FieldCodecTest {
         assertThat(ZenginCharset.MS932.decode(buffer, 0, 6)).isEqualTo("000042");
     }
 
-    /** P5: never truncate silently. A name that does not fit is an error, not a shorter name. */
+    /// P5: never truncate silently. A name that does not fit is an error, not a shorter name.
     @Test
     void refusesTextThatDoesNotFit() {
         byte[] buffer = new byte[4];
@@ -139,7 +136,7 @@ class FieldCodecTest {
                 .withMessageContaining("does not fit a 4-byte field");
     }
 
-    /** The byte count, not the character count, is what has to fit (R-C15). */
+    /// The byte count, not the character count, is what has to fit (R-C15).
     @Test
     void measuresTheEncodedLengthInBytes() {
         byte[] buffer = new byte[10];

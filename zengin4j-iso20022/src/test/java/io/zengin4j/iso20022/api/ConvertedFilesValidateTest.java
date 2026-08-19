@@ -1,5 +1,6 @@
 package io.zengin4j.iso20022.api;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.codec.WriterOptions;
@@ -30,41 +31,33 @@ import io.zengin4j.testkit.FormatFixtures;
 import io.zengin4j.validation.ZenginValidator;
 import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.api.ValidationReport;
-import java.io.ByteArrayInputStream;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-/**
- * <strong>Anything this mapper writes, this library accepts.</strong>
- *
- * <p>The same promise {@code WrittenFilesValidateTest} makes for the encoder,
- * one layer up — and it was already broken when this was written. The inverse
- * leg produced files carrying a 振込指定区分 of 0, which is what the field's
- * numeric default is and what several institutions require, and which the
- * bundled code list does not contain. A warning rather than an error, but
- * nothing said so and nobody would have found it except by converting a file
- * and validating the result. So: convert a file and validate the result.
- *
- * <p>The bar is <em>no errors</em>, not <em>no findings</em>. A warning can be
- * correct — the 振込指定区分 one is — and the loss report is where the mapper
- * explains itself. An error means the file should not be sent, and a mapper
- * that produces one is broken.
- *
- * <p>It lives here because this is the only module that can see both sides:
- * the mapper writes, and {@code validation} judges.
- */
+/// **Anything this mapper writes, this library accepts.**
+///
+/// The same promise `WrittenFilesValidateTest` makes for the encoder,
+/// one layer up — and it was already broken when this was written. The inverse
+/// leg produced files carrying a 振込指定区分 of 0, which is what the field's
+/// numeric default is and what several institutions require, and which the
+/// bundled code list does not contain. A warning rather than an error, but
+/// nothing said so and nobody would have found it except by converting a file
+/// and validating the result. So: convert a file and validate the result.
+///
+/// The bar is *no errors*, not *no findings*. A warning can be
+/// correct — the 振込指定区分 one is — and the loss report is where the mapper
+/// explains itself. An error means the file should not be sent, and a mapper
+/// that produces one is broken.
+///
+/// It lives here because this is the only module that can see both sides:
+/// the mapper writes, and `validation` judges.
 class ConvertedFilesValidateTest {
 
     private static final FormatId FORMAT = FormatId.of("sougou-furikomi");
     private static final LocalDate REFERENCE = LocalDate.of(2026, 9, 1);
 
-    /** Names covering every conversion the engine performs on the way down. */
+    /// Names covering every conversion the engine performs on the way down.
     private static final List<String> NAMES = List.of(
             "ヤマダ　タロウ",
             "ガクブチ　ジロウ",
@@ -119,10 +112,8 @@ class ConvertedFilesValidateTest {
         return errors;
     }
 
-    /**
-     * Every name, every truncation policy: either refused, or written and
-     * accepted.
-     */
+    /// Every name, every truncation policy: either refused, or written and
+    /// accepted.
     @ParameterizedTest
     @EnumSource(TruncationPolicy.class)
     void whateverTheInverseLegWritesValidatesWithoutErrors(TruncationPolicy truncation) {
@@ -147,7 +138,7 @@ class ConvertedFilesValidateTest {
         }
     }
 
-    /** Including the amounts that cannot be represented at all. */
+    /// Including the amounts that cannot be represented at all.
     @Test
     void anAmountThatCannotBeRepresentedStillProducesAValidFile() {
         for (Money amount : List.of(
@@ -164,7 +155,7 @@ class ConvertedFilesValidateTest {
         }
     }
 
-    /** And every EndToEndId policy. */
+    /// And every EndToEndId policy.
     @ParameterizedTest
     @EnumSource(EndToEndIdPolicy.class)
     void everyReferencePolicyProducesAValidFile(EndToEndIdPolicy policy) {
@@ -177,19 +168,17 @@ class ConvertedFilesValidateTest {
                 .isEmpty();
     }
 
-    /**
-     * Under every policy, both 顧客コード survive the round trip or are reported.
-     *
-     * <p>This is the test that was missing. Under {@code CUSTOMER_CODE_2} the
-     * outbound leg sent 顧客コード2 to {@code EndToEndId} and wrote no
-     * remittance information at all, so 顧客コード1 disappeared from the message
-     * with no loss entry — a payment reference silently gone, in the one policy
-     * branch nothing exercised.
-     *
-     * <p>The rule is not "everything round-trips". It is that a value either
-     * comes back or the report names it, which is the promise this module makes
-     * about every field it touches.
-     */
+    /// Under every policy, both 顧客コード survive the round trip or are reported.
+    ///
+    /// This is the test that was missing. Under `CUSTOMER_CODE_2` the
+    /// outbound leg sent 顧客コード2 to `EndToEndId` and wrote no
+    /// remittance information at all, so 顧客コード1 disappeared from the message
+    /// with no loss entry — a payment reference silently gone, in the one policy
+    /// branch nothing exercised.
+    ///
+    /// The rule is not "everything round-trips". It is that a value either
+    /// comes back or the report names it, which is the promise this module makes
+    /// about every field it touches.
     @ParameterizedTest
     @EnumSource(EndToEndIdPolicy.class)
     void bothCustomerCodesEitherSurviveTheRoundTripOrAreReported(EndToEndIdPolicy policy) {
@@ -215,7 +204,7 @@ class ConvertedFilesValidateTest {
         }
     }
 
-    /** A payment with a distinguishable value in each 顧客コード. */
+    /// A payment with a distinguishable value in each 顧客コード.
     private static ZenginFile aFileWithBothCustomerCodes() {
         FormatFixtures fixtures = fixtures();
         byte[] data = io.zengin4j.testkit.SyntheticRecords.encode(
@@ -235,12 +224,10 @@ class ConvertedFilesValidateTest {
                 fixtures.readerOptions());
     }
 
-    /**
-     * A round trip lands somewhere the validator accepts.
-     *
-     * <p>Not byte-identical — it cannot be, and {@code RoundTripResult} says so
-     * — but a file a bank would take.
-     */
+    /// A round trip lands somewhere the validator accepts.
+    ///
+    /// Not byte-identical — it cannot be, and `RoundTripResult` says so
+    /// — but a file a bank would take.
     @Test
     void aRoundTrippedFileIsStillSubmittable() {
         ZenginFile original = ZenginReaders.readFile(
@@ -255,13 +242,11 @@ class ConvertedFilesValidateTest {
         assertThat(round.result().allData()).hasSize(5);
     }
 
-    /**
-     * And the message it passed through is well-formed XML with the right
-     * namespace.
-     *
-     * <p>The XSD check is opt-in because the schemas are not redistributed
-     * here; this is the part that can run on every build.
-     */
+    /// And the message it passed through is well-formed XML with the right
+    /// namespace.
+    ///
+    /// The XSD check is opt-in because the schemas are not redistributed
+    /// here; this is the part that can run on every build.
     @Test
     void theInterveningMessageIsWellFormedAndCorrectlyNamespaced() {
         ZenginFile original = ZenginReaders.readFile(

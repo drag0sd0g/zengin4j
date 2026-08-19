@@ -1,18 +1,13 @@
 package io.zengin4j.cli;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import module java.base;
 
-/**
- * Runs the real command line and captures what it produced.
- *
- * <p>Drives {@link Zengin#run}, which means the real parser, the real command
- * objects and the real exit-code mapping — everything except the
- * {@code System.exit} call. A CLI tested only by spawning processes is a CLI
- * whose edge cases go untested, because each case costs a JVM start.
- */
+/// Runs the real command line and captures what it produced.
+///
+/// Drives [Zengin#run], which means the real parser, the real command
+/// objects and the real exit-code mapping — everything except the
+/// `System.exit` call. A CLI tested only by spawning processes is a CLI
+/// whose edge cases go untested, because each case costs a JVM start.
 record Cli(int status, String out, String err) {
 
     static Cli run(String... args) {
@@ -28,7 +23,7 @@ record Cli(int status, String out, String err) {
         return new Cli(status, outBuffer.toString(), errBuffer.toString());
     }
 
-    /** Writes a synthetic file and returns its path, failing the test if generation did. */
+    /// Writes a synthetic file and returns its path, failing the test if generation did.
     static Path generate(Path directory, String name, String... extra) throws Exception {
         Path file = directory.resolve(name);
         String[] args = new String[extra.length + 2];
@@ -46,7 +41,7 @@ record Cli(int status, String out, String err) {
         return file;
     }
 
-    /** Everything the command printed, wherever it printed it. */
+    /// Everything the command printed, wherever it printed it.
     String all() {
         return out + err;
     }

@@ -1,5 +1,6 @@
 package io.zengin4j.core;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.codec.ByteOrderMarkPolicy;
@@ -16,58 +17,46 @@ import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.ZenginRecord;
 import io.zengin4j.core.testing.Fixtures;
 import io.zengin4j.core.testing.RandomZenginFiles;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Random;
 import org.junit.jupiter.api.Test;
 
-/**
- * Issue 2.5 — golden files (R-T8).
- *
- * <p>A committed file and a committed rendering of what parsing it produces.
- * Any change to how bytes are decoded shows up as a diff a reviewer can read,
- * rather than as a number moving in a coverage report.
- *
- * <p>The rendering is field-per-line rather than the JSON R-T8 names. See
- * {@code docs/adr/0018-golden-files-are-text-not-json.md}.
- *
- * <p>To update the goldens after an intentional change:
- *
- * <pre>./gradlew :zengin4j-core:test --tests '*GoldenFileTest*' -Pgolden.regenerate</pre>
- *
- * <p>Then read the diff before committing it. A golden updated without being
- * read is worse than no golden at all.
- */
+/// Issue 2.5 — golden files (R-T8).
+///
+/// A committed file and a committed rendering of what parsing it produces.
+/// Any change to how bytes are decoded shows up as a diff a reviewer can read,
+/// rather than as a number moving in a coverage report.
+///
+/// The rendering is field-per-line rather than the JSON R-T8 names. See
+/// `docs/adr/0018-golden-files-are-text-not-json.md`.
+///
+/// To update the goldens after an intentional change:
+///
+/// ```
+/// ./gradlew :zengin4j-core:test --tests '*GoldenFileTest*' -Pgolden.regenerate
+/// ```
+///
+/// Then read the diff before committing it. A golden updated without being
+/// read is worse than no golden at all.
 class GoldenFileTest {
 
-    /**
-     * The corpus lives under {@code input/} because the identifier scan cannot
-     * read a fixed-length file: fields abut with no separator, so every digit
-     * run begins with a データ区分 constant rather than with the 9 the
-     * convention requires (R-L5). {@code input/} is excluded there; the
-     * rendering below — one field per line — is not, so every value in the
-     * corpus is still scanned, in the form where scanning works.
-     */
+    /// The corpus lives under `input/` because the identifier scan cannot
+    /// read a fixed-length file: fields abut with no separator, so every digit
+    /// run begins with a データ区分 constant rather than with the 9 the
+    /// convention requires (R-L5). `input/` is excluded there; the
+    /// rendering below — one field per line — is not, so every value in the
+    /// corpus is still scanned, in the form where scanning works.
     private static final String INPUT = "/conformance/input/sougou-furikomi.txt";
 
     private static final String EXPECTED = "/conformance/sougou-furikomi.expected.txt";
 
-    /**
-     * Fixed: the corpus must not change when the generator's randomness is
-     * re-seeded.
-     *
-     * <p>Chosen to produce a corpus that exercises every record kind, which
-     * {@link #theCorpusIsRepresentative()} then holds it to. The previous seed
-     * silently degraded to a header, a trailer and an end record — no payments
-     * at all — when value generation changed and the draw shifted. A golden
-     * file whose diff cannot show a decoding change in a data record is a
-     * golden file doing half its job, and nothing said so.
-     */
+    /// Fixed: the corpus must not change when the generator's randomness is
+    /// re-seeded.
+    ///
+    /// Chosen to produce a corpus that exercises every record kind, which
+    /// [#theCorpusIsRepresentative()] then holds it to. The previous seed
+    /// silently degraded to a header, a trailer and an end record — no payments
+    /// at all — when value generation changed and the draw shifted. A golden
+    /// file whose diff cannot show a decoding change in a data record is a
+    /// golden file doing half its job, and nothing said so.
     private static final long GOLDEN_SEED = 20_260_831L;
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
@@ -96,19 +85,17 @@ class GoldenFileTest {
         assertThat(rendered).isEqualTo(expected);
     }
 
-    /**
-     * The corpus exercises every record kind.
-     *
-     * <p>A golden file earns its keep by turning a change in decoding into a
-     * diff a reviewer can read — and it can only do that for records it
-     * contains. The corpus is drawn from a seeded generator, so a change to how
-     * values are generated shifts the draw, and this corpus has already
-     * silently degraded once to a header, a trailer and an end record with no
-     * payments between them. Every test still passed.
-     *
-     * <p>So the corpus is held to being representative, rather than trusted to
-     * stay that way.
-     */
+    /// The corpus exercises every record kind.
+    ///
+    /// A golden file earns its keep by turning a change in decoding into a
+    /// diff a reviewer can read — and it can only do that for records it
+    /// contains. The corpus is drawn from a seeded generator, so a change to how
+    /// values are generated shifts the draw, and this corpus has already
+    /// silently degraded once to a header, a trailer and an end record with no
+    /// payments between them. Every test still passed.
+    ///
+    /// So the corpus is held to being representative, rather than trusted to
+    /// stay that way.
     @Test
     void theCorpusIsRepresentative() {
         ZenginFile parsed = ZenginReaders.readFile(new ByteArrayInputStream(corpus()), options);
@@ -123,7 +110,7 @@ class GoldenFileTest {
         assertThat(parsed.endRecord()).isPresent();
     }
 
-    /** INV-1 against a file that is committed rather than generated. */
+    /// INV-1 against a file that is committed rather than generated.
     @Test
     void theCorpusFileRoundTripsByteForByte() {
         byte[] bytes = corpus();
@@ -133,11 +120,9 @@ class GoldenFileTest {
         assertThat(ZenginWriters.toByteArray(parsed, WriterOptions.defaults())).isEqualTo(bytes);
     }
 
-    /**
-     * The corpus file is produced by the deterministic generator, so this also
-     * pins the generator: if it stops producing the same bytes for the same
-     * seed, the golden corpus stops being reproducible (R-CLI3).
-     */
+    /// The corpus file is produced by the deterministic generator, so this also
+    /// pins the generator: if it stops producing the same bytes for the same
+    /// seed, the golden corpus stops being reproducible (R-CLI3).
     @Test
     void theGeneratorStillProducesTheCorpusFile() {
         byte[] generated = generate();
@@ -149,11 +134,9 @@ class GoldenFileTest {
         assertThat(generated).isEqualTo(resource(INPUT));
     }
 
-    /**
-     * The corpus bytes. While regenerating they come from the generator, since
-     * the committed copy is what is being replaced — which keeps regeneration
-     * a single pass rather than a bootstrap dance.
-     */
+    /// The corpus bytes. While regenerating they come from the generator, since
+    /// the committed copy is what is being replaced — which keeps regeneration
+    /// a single pass rather than a bootstrap dance.
     private byte[] corpus() {
         return regenerating() ? generate() : resource(INPUT);
     }
@@ -164,10 +147,8 @@ class GoldenFileTest {
 
     // --------------------------------------------------------------- rendering
 
-    /**
-     * Renders a parsed file one field per line. Stable, diffable, and it never
-     * prints a value the record does not carry.
-     */
+    /// Renders a parsed file one field per line. Stable, diffable, and it never
+    /// prints a value the record does not carry.
     private String render(ZenginFile file) {
         StringBuilder out = new StringBuilder();
         out.append("format          ").append(file.format()).append('\n')
@@ -233,7 +214,7 @@ class GoldenFileTest {
         }
     }
 
-    /** Writes back into the source tree, not the build output, so the diff is reviewable. */
+    /// Writes back into the source tree, not the build output, so the diff is reviewable.
     private static void write(String name, byte[] content) {
         Path path = Path.of("src/test/resources").resolve(name.substring(1));
         try {

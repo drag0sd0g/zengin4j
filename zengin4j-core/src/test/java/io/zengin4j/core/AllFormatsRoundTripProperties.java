@@ -1,5 +1,6 @@
 package io.zengin4j.core;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.codec.ByteOrderMarkPolicy;
@@ -15,30 +16,26 @@ import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.testing.Fixtures;
 import io.zengin4j.core.testing.RandomZenginFiles;
 import io.zengin4j.core.testing.Seeded;
-import java.io.ByteArrayInputStream;
-import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * The load-bearing invariants, for every bundled format.
- *
- * <p>{@link RoundTripProperties} runs these against 総合振込, in more shapes and
- * with more cases. This runs the same claims against all four, because until
- * now they were proven for one format of four and nothing said so — the
- * generator took a {@code FormatDescriptor} parameter while hard-coding
- * 総合振込's field ids, so passing any other descriptor failed outright. That
- * made the parameter a false generality, and R-T7 calls these the load-bearing
- * correctness guarantee.
- *
- * <p>The generator now derives its values from the descriptor, which is what
- * makes this file possible — and means these properties hold for a consumer's
- * own format too, not only the bundled ones.
- *
- * <p>給与振込 is not 総合振込 with three fields renamed, and 預金口座振替 moves
- * money the other way. Those differences are exactly why "it works for
- * 総合振込" was not evidence about the rest.
- */
+/// The load-bearing invariants, for every bundled format.
+///
+/// [RoundTripProperties] runs these against 総合振込, in more shapes and
+/// with more cases. This runs the same claims against all four, because until
+/// now they were proven for one format of four and nothing said so — the
+/// generator took a `FormatDescriptor` parameter while hard-coding
+/// 総合振込's field ids, so passing any other descriptor failed outright. That
+/// made the parameter a false generality, and R-T7 calls these the load-bearing
+/// correctness guarantee.
+///
+/// The generator now derives its values from the descriptor, which is what
+/// makes this file possible — and means these properties hold for a consumer's
+/// own format too, not only the bundled ones.
+///
+/// 給与振込 is not 総合振込 with three fields renamed, and 預金口座振替 moves
+/// money the other way. Those differences are exactly why "it works for
+/// 総合振込" was not evidence about the rest.
 class AllFormatsRoundTripProperties {
 
     private static final long SEED = 0x5A5A_2026L;
@@ -58,7 +55,7 @@ class AllFormatsRoundTripProperties {
         return FormatRegistry.defaults().byId(id).orElseThrow();
     }
 
-    /** INV-1 — {@code write(read(f))} equals {@code f}, byte for byte. */
+    /// INV-1 — `write(read(f))` equals `f`, byte for byte.
     @ParameterizedTest
     @MethodSource("formats")
     void inv1_roundTripsByteForByte(FormatId id) {
@@ -74,7 +71,7 @@ class AllFormatsRoundTripProperties {
                 });
     }
 
-    /** INV-2 — {@code read(write(f))} produces an equal file. */
+    /// INV-2 — `read(write(f))` produces an equal file.
     @ParameterizedTest
     @MethodSource("formats")
     void inv2_readingAFileJustWrittenReproducesIt(FormatId id) {
@@ -93,14 +90,12 @@ class AllFormatsRoundTripProperties {
                 });
     }
 
-    /**
-     * INV-6 — a built file's trailer agrees with the records it summarises.
-     *
-     * <p>Worth running per format rather than once: 預金口座振替's trailer has
-     * four counters the others do not, and 給与振込's data record has fourteen
-     * fields where 総合振込 has sixteen. A trailer computed against the wrong
-     * layout is the failure this catches.
-     */
+    /// INV-6 — a built file's trailer agrees with the records it summarises.
+    ///
+    /// Worth running per format rather than once: 預金口座振替's trailer has
+    /// four counters the others do not, and 給与振込's data record has fourteen
+    /// fields where 総合振込 has sixteen. A trailer computed against the wrong
+    /// layout is the failure this catches.
     @ParameterizedTest
     @MethodSource("formats")
     void inv6_theTrailerAgreesWithItsBatch(FormatId id) {
@@ -119,12 +114,10 @@ class AllFormatsRoundTripProperties {
                 });
     }
 
-    /**
-     * INV-8 — every record type's field lengths sum to the record length.
-     *
-     * <p>Enforced at build time for the bundled descriptors, and restated here
-     * per format so a hand-built descriptor cannot slip past.
-     */
+    /// INV-8 — every record type's field lengths sum to the record length.
+    ///
+    /// Enforced at build time for the bundled descriptors, and restated here
+    /// per format so a hand-built descriptor cannot slip past.
     @ParameterizedTest
     @MethodSource("formats")
     void inv8_fieldLengthsSumToTheRecordLength(FormatId id) {

@@ -1,36 +1,32 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.testkit.SougouFurikomiFixtures;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * Nothing this command prints contains a terminal escape sequence.
- *
- * <p>picocli's {@code Ansi.AUTO} decided the Windows CI runners were a colour
- * terminal and wrote escape codes into the usage text — so
- * {@code "Usage: zengin validate"} became
- * {@code "Usage: [1mzengin validate[21m[0m"} and two tests
- * failed on Windows and nowhere else. Invisible to a person reading a terminal;
- * very visible to anything else reading the output.
- *
- * <p><strong>These tests force ANSI on before running.</strong> Without that
- * they would pass everywhere except the platform that has the problem, which is
- * how the defect got in: the same code was green on Linux and macOS across two
- * JDKs. Forcing the property reproduces the Windows condition on every machine,
- * so this is a regression test rather than a coincidence.
- */
+/// Nothing this command prints contains a terminal escape sequence.
+///
+/// picocli's `Ansi.AUTO` decided the Windows CI runners were a colour
+/// terminal and wrote escape codes into the usage text — so
+/// `"Usage: zengin validate"` became
+/// `"Usage: [1mzengin validate[21m[0m"` and two tests
+/// failed on Windows and nowhere else. Invisible to a person reading a terminal;
+/// very visible to anything else reading the output.
+///
+/// **These tests force ANSI on before running.** Without that
+/// they would pass everywhere except the platform that has the problem, which is
+/// how the defect got in: the same code was green on Linux and macOS across two
+/// JDKs. Forcing the property reproduces the Windows condition on every machine,
+/// so this is a regression test rather than a coincidence.
 class NoAnsiEscapesTest {
 
-    /** picocli reads this to decide whether to emit colour. */
+    /// picocli reads this to decide whether to emit colour.
     private static final String ANSI_PROPERTY = "picocli.ansi";
 
     private static final char ESCAPE = 0x1B;
@@ -59,7 +55,7 @@ class NoAnsiEscapesTest {
         }
     }
 
-    /** Every invocation this test can think of, successful and failing alike. */
+    /// Every invocation this test can think of, successful and failing alike.
     private List<String[]> invocations() {
         String path = file.toString();
         return List.of(
@@ -97,12 +93,10 @@ class NoAnsiEscapesTest {
         }
     }
 
-    /**
-     * The usage text is readable as plain characters.
-     *
-     * <p>This is the assertion that actually failed on Windows, kept in the
-     * form that failed.
-     */
+    /// The usage text is readable as plain characters.
+    ///
+    /// This is the assertion that actually failed on Windows, kept in the
+    /// form that failed.
     @Test
     void theUsageTextIsPlainEnoughToMatchOn() {
         assertThat(Cli.run("--help").out()).contains("Usage: zengin");
@@ -115,7 +109,7 @@ class NoAnsiEscapesTest {
         }
     }
 
-    /** The forcing works, so the tests above are not passing vacuously. */
+    /// The forcing works, so the tests above are not passing vacuously.
     @Test
     void theAnsiPropertyIsActuallySetWhileTheseTestsRun() {
         assertThat(System.getProperty(ANSI_PROPERTY))

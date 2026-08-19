@@ -1,22 +1,18 @@
 package io.zengin4j.core.charset;
 
-import java.util.Objects;
+import module java.base;
 
-/**
- * One byte that a field's character class does not permit (R-C17).
- *
- * @param offset    where the byte is, relative to the buffer that was validated
- * @param value     the offending byte
- * @param permitted the class it failed
- * @since 0.1.0
- */
+/// One byte that a field's character class does not permit (R-C17).
+///
+/// @param offset    where the byte is, relative to the buffer that was validated
+/// @param value     the offending byte
+/// @param permitted the class it failed
+/// @since 0.1.0
 public record CharacterViolation(int offset, byte value, CharacterClass permitted) {
 
-    /**
-     * Validates the components.
-     *
-     * @throws IllegalArgumentException if the offset is negative
-     */
+    /// Validates the components.
+    ///
+    /// @throws IllegalArgumentException if the offset is negative
     public CharacterViolation {
         Objects.requireNonNull(permitted, "permitted");
         if (offset < 0) {
@@ -24,45 +20,37 @@ public record CharacterViolation(int offset, byte value, CharacterClass permitte
         }
     }
 
-    /**
-     * Returns the offending byte as an unsigned value.
-     *
-     * @return {@code 0}–{@code 255}
-     */
+    /// Returns the offending byte as an unsigned value.
+    ///
+    /// @return `0`–`255`
     public int unsignedValue() {
         return value & 0xFF;
     }
 
-    /**
-     * Whether this byte is the long vowel mark {@code ｰ} (0xB0).
-     *
-     * <p>Worth asking separately because it is the overwhelmingly common case
-     * and the one with a specific fix: the standard writes a long vowel as
-     * {@code -} (0x2D). The two glyphs are nearly identical, so the file looks
-     * right and is rejected.
-     *
-     * @return {@code true} if the byte is {@code ｰ}
-     */
+    /// Whether this byte is the long vowel mark `ｰ` (0xB0).
+    ///
+    /// Worth asking separately because it is the overwhelmingly common case
+    /// and the one with a specific fix: the standard writes a long vowel as
+    /// `-` (0x2D). The two glyphs are nearly identical, so the file looks
+    /// right and is rejected.
+    ///
+    /// @return `true` if the byte is `ｰ`
     public boolean isProlongedSoundMark() {
         return unsignedValue() == 0xB0;
     }
 
-    /**
-     * An English description naming the byte, its position and — where there is
-     * one — the correction.
-     *
-     * @return the description, never {@code null}
-     */
+    /// An English description naming the byte, its position and — where there is
+    /// one — the correction.
+    ///
+    /// @return the description, never `null`
     public String describeEn() {
         return "byte 0x%02X at offset %d is not permitted in %s%s"
                 .formatted(unsignedValue(), offset, permitted.nameEn(), adviceEn());
     }
 
-    /**
-     * A Japanese description naming the byte, its position and the correction.
-     *
-     * @return the description, never {@code null}
-     */
+    /// A Japanese description naming the byte, its position and the correction.
+    ///
+    /// @return the description, never `null`
     public String describeJa() {
         return "オフセット %d のバイト 0x%02X は%sでは使用できません%s"
                 .formatted(offset, unsignedValue(), permitted.nameJa(), adviceJa());

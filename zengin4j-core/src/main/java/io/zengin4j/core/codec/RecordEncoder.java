@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import io.zengin4j.core.charset.CharacterSet;
 import io.zengin4j.core.charset.CharacterViolation;
 import io.zengin4j.core.charset.VoicingMarks;
@@ -14,62 +15,53 @@ import io.zengin4j.core.loss.LossKind;
 import io.zengin4j.core.loss.LossSeverity;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
-/**
- * Builds a record's bytes from field values.
- *
- * <p>Fields left unset take their declared constant, or the pad byte their
- * type prescribes: zeros for {@code N}, spaces for {@code C}. An unknown field
- * id is rejected rather than ignored — silently dropping a misspelled field
- * would produce a record that is quietly missing a value, which is the class
- * of defect this library exists to prevent.
- *
- * <p>Encoding is deterministic (R-C19): the same values produce the same bytes
- * on every run, on every platform.
- *
- * @since 0.1.0
- */
+/// Builds a record's bytes from field values.
+///
+/// Fields left unset take their declared constant, or the pad byte their
+/// type prescribes: zeros for `N`, spaces for `C`. An unknown field
+/// id is rejected rather than ignored — silently dropping a misspelled field
+/// would produce a record that is quietly missing a value, which is the class
+/// of defect this library exists to prevent.
+///
+/// Encoding is deterministic (R-C19): the same values produce the same bytes
+/// on every run, on every platform.
+///
+/// @since 0.1.0
 public final class RecordEncoder {
 
     private RecordEncoder() {
     }
 
-    /**
-     * Encodes one record.
-     *
-     * @param descriptor the record layout
-     * @param charset    the encoding to write text fields in
-     * @param values     field values keyed by field id
-     * @return the record bytes, exactly {@code descriptor.recordLength()} long
-     * @throws IllegalArgumentException if a key names no field of this record,
-     *                                  or a value does not fit its field
-     */
+    /// Encodes one record.
+    ///
+    /// @param descriptor the record layout
+    /// @param charset    the encoding to write text fields in
+    /// @param values     field values keyed by field id
+    /// @return the record bytes, exactly `descriptor.recordLength()` long
+    /// @throws IllegalArgumentException if a key names no field of this record,
+    ///   or a value does not fit its field
     public static byte[] encode(
             RecordDescriptor descriptor, ZenginCharset charset, Map<String, String> values) {
         return encode(descriptor, charset, values, EncodingOptions.defaults(), new LossCollector());
     }
 
-    /**
-     * Encodes a record, applying a write policy to characters the fields cannot
-     * hold (R-C18).
-     *
-     * <p>The policy is applied per field, against that field's own character
-     * class — which is the only way it can be right, since a hyphen is fine in a
-     * party name and refused in a payroll one.
-     *
-     * @param descriptor the record layout
-     * @param charset    the encoding to write text fields in
-     * @param values     field values keyed by field id
-     * @param options    what to do with characters a field cannot hold
-     * @param loss       collects anything the policy changed
-     * @return the record bytes, exactly {@code descriptor.recordLength()} long
-     * @throws IllegalArgumentException if a key names no field of this record,
-     *                                  or a value does not fit its field
-     * @since 0.4.0
-     */
+    /// Encodes a record, applying a write policy to characters the fields cannot
+    /// hold (R-C18).
+    ///
+    /// The policy is applied per field, against that field's own character
+    /// class — which is the only way it can be right, since a hyphen is fine in a
+    /// party name and refused in a payroll one.
+    ///
+    /// @param descriptor the record layout
+    /// @param charset    the encoding to write text fields in
+    /// @param values     field values keyed by field id
+    /// @param options    what to do with characters a field cannot hold
+    /// @param loss       collects anything the policy changed
+    /// @return the record bytes, exactly `descriptor.recordLength()` long
+    /// @throws IllegalArgumentException if a key names no field of this record,
+    ///   or a value does not fit its field
+    /// @since 0.4.0
     public static byte[] encode(
             RecordDescriptor descriptor, ZenginCharset charset, Map<String, String> values,
             EncodingOptions options, LossCollector loss) {
@@ -104,13 +96,11 @@ public final class RecordEncoder {
         return frame;
     }
 
-    /**
-     * Applies the write policy to one field's value.
-     *
-     * <p>Numeric fields are left alone: their content is digits, and a digit is
-     * permitted everywhere a numeric field exists. Running text through the
-     * transliterator would be work with nothing to do.
-     */
+    /// Applies the write policy to one field's value.
+    ///
+    /// Numeric fields are left alone: their content is digits, and a digit is
+    /// permitted everywhere a numeric field exists. Running text through the
+    /// transliterator would be work with nothing to do.
     private static String applyPolicy(String value, FieldDescriptor field, ZenginCharset charset,
             EncodingOptions options, LossCollector loss) {
 
@@ -136,15 +126,13 @@ public final class RecordEncoder {
         };
     }
 
-    /**
-     * Refuses a replacement byte the field would not accept.
-     *
-     * <p>The same trap as the truncation marker, and just as quiet. {@code '?'}
-     * is the obvious choice and is permitted by no name class; {@code 0xDE} is
-     * a voicing mark and would strand itself after whatever kana it landed
-     * behind. Either way {@code REPLACE} — a policy for salvaging a value —
-     * would produce a field this library rejects.
-     */
+    /// Refuses a replacement byte the field would not accept.
+    ///
+    /// The same trap as the truncation marker, and just as quiet. `'?'`
+    /// is the obvious choice and is permitted by no name class; `0xDE` is
+    /// a voicing mark and would strand itself after whatever kana it landed
+    /// behind. Either way `REPLACE` — a policy for salvaging a value —
+    /// would produce a field this library rejects.
     private static void requireWritableReplacement(FieldDescriptor field, EncodingOptions options) {
         byte replacement = options.replacement();
         int unsigned = replacement & 0xFF;
@@ -166,15 +154,13 @@ public final class RecordEncoder {
         }
     }
 
-    /**
-     * Whether every voicing mark has a kana in front of it that can take one.
-     *
-     * <p>Checked alongside the character class because the class alone cannot
-     * see it: {@code ｱ} is permitted and {@code ﾞ} is permitted, so {@code ｱﾞ}
-     * passes character by character while being a sequence the standard does
-     * not recognise — the one validation rule {@code V-206} exists to report.
-     * Writing it would mean producing a file this library rejects.
-     */
+    /// Whether every voicing mark has a kana in front of it that can take one.
+    ///
+    /// Checked alongside the character class because the class alone cannot
+    /// see it: `ｱ` is permitted and `ﾞ` is permitted, so `ｱﾞ`
+    /// passes character by character while being a sequence the standard does
+    /// not recognise — the one validation rule `V-206` exists to report.
+    /// Writing it would mean producing a file this library rejects.
     private static boolean voicingMarksAreLegal(byte[] encoded) {
         for (int i = 0; i < encoded.length; i++) {
             int mark = encoded[i] & 0xFF;
@@ -188,15 +174,13 @@ public final class RecordEncoder {
         return true;
     }
 
-    /**
-     * Refuses a value the field cannot hold, naming what is wrong with it.
-     *
-     * <p>Until this existed, {@code REJECT} checked only the <em>length</em> of
-     * a value, so a full-width name that happened to fit the byte budget was
-     * written into a field that permits only half-width — producing exactly the
-     * file this library's own {@code V-202} rule rejects. The default policy has
-     * to be the one that cannot do that.
-     */
+    /// Refuses a value the field cannot hold, naming what is wrong with it.
+    ///
+    /// Until this existed, `REJECT` checked only the *length* of
+    /// a value, so a full-width name that happened to fit the byte budget was
+    /// written into a field that permits only half-width — producing exactly the
+    /// file this library's own `V-202` rule rejects. The default policy has
+    /// to be the one that cannot do that.
     private static IllegalArgumentException refusal(String value, FieldDescriptor field,
             byte[] encoded) {
 
@@ -207,7 +191,7 @@ public final class RecordEncoder {
             problem = "a voicing mark follows a kana that cannot take one, which is not a"
                     + " character the standard recognises (R-K7)";
         } else {
-            problem = violations.get(0).describeEn()
+            problem = violations.getFirst().describeEn()
                     + (violations.size() > 1 ? " (and " + (violations.size() - 1) + " more)" : "");
         }
 
@@ -239,13 +223,11 @@ public final class RecordEncoder {
         return result.text();
     }
 
-    /**
-     * Replaces every character the field refuses, one byte each.
-     *
-     * <p>Byte for byte rather than character for character, because a voiced
-     * kana is two bytes and replacing it with one would shift everything after
-     * it — turning a field-width problem into a silently different name.
-     */
+    /// Replaces every character the field refuses, one byte each.
+    ///
+    /// Byte for byte rather than character for character, because a voiced
+    /// kana is two bytes and replacing it with one would shift everything after
+    /// it — turning a field-width problem into a silently different name.
     private static String replace(String value, FieldDescriptor field,
             EncodingOptions options, LossCollector loss) {
 

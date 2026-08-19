@@ -1,5 +1,6 @@
 package io.zengin4j.iso20022.api;
 
+import module java.base;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.kana.KanaTransliterator;
 import io.zengin4j.core.kana.Transliteration;
@@ -26,33 +27,25 @@ import io.zengin4j.iso20022.pain001.Pain001Document;
 import io.zengin4j.iso20022.pain001.PaymentInstruction;
 import io.zengin4j.iso20022.pain001.Party;
 import io.zengin4j.iso20022.pain001.RemittanceInformation;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.MonthDay;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
-/**
- * The upward leg: a Zengin file becomes a {@code pain.001} document.
- *
- * <p>This direction loses less than the other one, and what it loses it loses
- * for a structural reason rather than a capacity one: the fixed-length record
- * has fields ISO 20022 has no element for — 手形交換所番号, 新規コード,
- * 振込指定区分 — and they are dropped rather than smuggled into a proprietary
- * element where nothing would read them.
- *
- * <p>The one thing it <em>adds</em> is a year. 振込指定日 is {@code MMDD}, so
- * {@code ReqdExctnDt} needs a year that is not in the file, and inventing one
- * is a {@code DEFAULTED} loss even when the answer is obviously right.
- */
+/// The upward leg: a Zengin file becomes a `pain.001` document.
+///
+/// This direction loses less than the other one, and what it loses it loses
+/// for a structural reason rather than a capacity one: the fixed-length record
+/// has fields ISO 20022 has no element for — 手形交換所番号, 新規コード,
+/// 振込指定区分 — and they are dropped rather than smuggled into a proprietary
+/// element where nothing would read them.
+///
+/// The one thing it *adds* is a year. 振込指定日 is `MMDD`, so
+/// `ReqdExctnDt` needs a year that is not in the file, and inventing one
+/// is a `DEFAULTED` loss even when the answer is obviously right.
 final class ZenginToPain001 {
 
     private final MappingContext context;
     private final ZenginFields fields;
     private final LossCollector loss = new LossCollector();
 
-    /** Counted rather than reported one at a time; see {@link #reportDroppedReferences()}. */
+    /// Counted rather than reported one at a time; see [#reportDroppedReferences()].
     private int droppedReferences;
 
     ZenginToPain001(MappingContext context, ZenginFields fields) {
@@ -82,23 +75,21 @@ final class ZenginToPain001 {
                 io.zengin4j.iso20022.loss.MappingLossReport.of(loss.build()));
     }
 
-    /**
-     * Who the message is addressed to.
-     *
-     * <p>{@code To} is mandatory in {@code head.001} and no Zengin field says
-     * it outright. It is not unknown, though: a 総合振込 file goes to the
-     * originator's own bank, whose code is 仕向銀行番号 in the header record. So
-     * the default is derived from the file rather than invented, and a file
-     * without one produces a header that says so by omission.
-     */
+    /// Who the message is addressed to.
+    ///
+    /// `To` is mandatory in `head.001` and no Zengin field says
+    /// it outright. It is not unknown, though: a 総合振込 file goes to the
+    /// originator's own bank, whose code is 仕向銀行番号 in the header record. So
+    /// the default is derived from the file rather than invented, and a file
+    /// without one produces a header that says so by omission.
     private String receiver(ZenginFile file) {
         Optional<String> declared = context.receiver();
         if (declared.isPresent()) {
             return declared.get();
         }
-        String originBank = file.batches().stream().findFirst()
-                .map(batch -> fields.text(batch.header(), RecordKind.HEADER, "originBankCode"))
-                .orElse("");
+        String originBank = file.batches().isEmpty() ? ""
+                : fields.text(file.batches().getFirst().header(), RecordKind.HEADER,
+                        "originBankCode");
         if (originBank.isBlank()) {
             loss.record(LossEntry.of(LossKind.DROPPED, LossSeverity.MATERIAL, "", "",
                     "the business application header names no recipient. head.001 requires To, "
@@ -112,23 +103,21 @@ final class ZenginToPain001 {
         return originBank;
     }
 
-    /**
-     * Records the reader could not parse, which are not in the document.
-     *
-     * <p>Lenient mode surfaces a record that does not fit the format as a
-     * {@link io.zengin4j.core.model.MalformedRecord} rather than failing the
-     * read (R-D8), so one bad record does not hide the other 9,999. The
-     * conversion has nothing to map them to — a record whose fields could not
-     * be located has no beneficiary and no amount — so they do not appear in
-     * the message at all.
-     *
-     * <p><strong>Reported {@code CRITICAL}.</strong> A malformed record may
-     * well be a payment, and a payment that silently fails to appear in the
-     * converted message is money that does not move with nothing to show for
-     * it. Under the default threshold this stops the conversion, which is the
-     * right outcome: a file that could not be read whole should not be
-     * converted in part.
-     */
+    /// Records the reader could not parse, which are not in the document.
+    ///
+    /// Lenient mode surfaces a record that does not fit the format as a
+    /// [io.zengin4j.core.model.MalformedRecord] rather than failing the
+    /// read (R-D8), so one bad record does not hide the other 9,999. The
+    /// conversion has nothing to map them to — a record whose fields could not
+    /// be located has no beneficiary and no amount — so they do not appear in
+    /// the message at all.
+    ///
+    /// **Reported `CRITICAL`.** A malformed record may
+    /// well be a payment, and a payment that silently fails to appear in the
+    /// converted message is money that does not move with nothing to show for
+    /// it. Under the default threshold this stops the conversion, which is the
+    /// right outcome: a file that could not be read whole should not be
+    /// converted in part.
     private void reportUnreadableRecords(ZenginFile file) {
         int inBatches = file.batches().stream().mapToInt(batch -> batch.malformed().size()).sum();
         int outside = file.unbatched().size();
@@ -153,14 +142,10 @@ final class ZenginToPain001 {
     // ------------------------------------------------------------ group header
 
     private GroupHeader groupHeader(ZenginFile file) {
-        Optional<HeaderRecord> first = file.batches().stream()
-                .findFirst()
-                .map(Batch::header);
-
-        String name = first
-                .map(header -> widen(fields.text(header, RecordKind.HEADER, "originatorName"),
-                        "header.originatorName", IsoPaths.INITIATING_PARTY_NAME))
-                .orElse("");
+        String name = file.batches().isEmpty() ? ""
+                : widen(fields.text(file.batches().getFirst().header(), RecordKind.HEADER,
+                        "originatorName"),
+                        "header.originatorName", IsoPaths.INITIATING_PARTY_NAME);
         return new GroupHeader(context.messageId(), context.creationDateTime(),
                 new Party(name, context.originatorCode()));
     }
@@ -189,14 +174,12 @@ final class ZenginToPain001 {
                 transactions);
     }
 
-    /**
-     * 振込指定日 has no year, so one is supplied and the fact is recorded.
-     *
-     * <p>Reported every time rather than only when the answer looks doubtful.
-     * The resolution is a guess whichever year it lands on — a correct guess is
-     * still a guess, and a report that only mentions the surprising cases
-     * teaches a reader that silence means certainty.
-     */
+    /// 振込指定日 has no year, so one is supplied and the fact is recorded.
+    ///
+    /// Reported every time rather than only when the answer looks doubtful.
+    /// The resolution is a guess whichever year it lands on — a correct guess is
+    /// still a guess, and a report that only mentions the surprising cases
+    /// teaches a reader that silence means certainty.
     private LocalDate executionDate(HeaderRecord header) {
         Optional<MonthDay> declared = header.effectiveDate();
         if (declared.isEmpty()) {
@@ -259,13 +242,11 @@ final class ZenginToPain001 {
                 remittance(record, customerCode1, customerCode2));
     }
 
-    /**
-     * Where the reference comes from, and what happens when it is not carried.
-     *
-     * <p>The upward leg never truncates an {@code EndToEndId} — ten bytes go
-     * into thirty-five with room to spare. The loss is on the way back, and the
-     * policy is declared here so both legs agree about which field it lives in.
-     */
+    /// Where the reference comes from, and what happens when it is not carried.
+    ///
+    /// The upward leg never truncates an `EndToEndId` — ten bytes go
+    /// into thirty-five with room to spare. The loss is on the way back, and the
+    /// policy is declared here so both legs agree about which field it lives in.
     private String endToEndId(String customerCode1, String customerCode2) {
         droppedReferences += context.endToEndPolicy() == EndToEndIdPolicy.DROP ? 1 : 0;
         return switch (context.endToEndPolicy()) {
@@ -275,13 +256,11 @@ final class ZenginToPain001 {
         };
     }
 
-    /**
-     * {@code EndToEndIdPolicy.DROP}, reported once for the file.
-     *
-     * <p>Once per payment would be the same sentence thirty thousand times, and
-     * the fact is a property of the policy rather than of any one payment. The
-     * count is what a reader actually needs.
-     */
+    /// `EndToEndIdPolicy.DROP`, reported once for the file.
+    ///
+    /// Once per payment would be the same sentence thirty thousand times, and
+    /// the fact is a property of the policy rather than of any one payment. The
+    /// count is what a reader actually needs.
     private void reportDroppedReferences() {
         if (droppedReferences == 0) {
             return;
@@ -299,14 +278,12 @@ final class ZenginToPain001 {
                 .at("data.customerCode1", IsoPaths.END_TO_END_ID));
     }
 
-    /**
-     * One message carries one initiating party, and a file may not.
-     *
-     * <p>Each Zengin batch has its own 委託者名; {@code GrpHdr/InitgPty} has room
-     * for one. The first batch's wins, which is right when they agree and is
-     * worth saying out loud when they do not — the message would name one
-     * originator and instruct payments from another.
-     */
+    /// One message carries one initiating party, and a file may not.
+    ///
+    /// Each Zengin batch has its own 委託者名; `GrpHdr/InitgPty` has room
+    /// for one. The first batch's wins, which is right when they agree and is
+    /// worth saying out loud when they do not — the message would name one
+    /// originator and instruct payments from another.
     private void reportDisagreeingOriginators(ZenginFile file) {
         List<String> names = file.batches().stream()
                 .map(batch -> fields.text(batch.header(), RecordKind.HEADER, "originatorName"))
@@ -316,7 +293,7 @@ final class ZenginToPain001 {
             return;
         }
         loss.record(LossEntry.of(LossKind.DROPPED, LossSeverity.MATERIAL,
-                        String.join(", ", names), names.get(0),
+                        String.join(", ", names), names.getFirst(),
                         "the file's batches name " + names.size() + " different originators and "
                                 + "GrpHdr/InitgPty holds one. The first was used; each batch keeps "
                                 + "its own name in PmtInf/Dbtr, so nothing is lost from the "
@@ -330,18 +307,16 @@ final class ZenginToPain001 {
                 .at("header.originatorName", IsoPaths.INITIATING_PARTY_NAME));
     }
 
-    /**
-     * The 顧客コード that is not the reference becomes remittance text.
-     *
-     * <p>Which one that is depends on {@link EndToEndIdPolicy}: under
-     * {@code CUSTOMER_CODE_1} the reference is 顧客コード1 and 顧客コード2 lands
-     * here, and under {@code CUSTOMER_CODE_2} it is the other way round. Both
-     * are carried either way — sending a fixed one regardless would drop the
-     * other with nothing to say so.
-     *
-     * <p>Unless 識別表示 says the two are one 金融EDI情報 field, in which case
-     * they are not customer codes at all.
-     */
+    /// The 顧客コード that is not the reference becomes remittance text.
+    ///
+    /// Which one that is depends on [EndToEndIdPolicy]: under
+    /// `CUSTOMER_CODE_1` the reference is 顧客コード1 and 顧客コード2 lands
+    /// here, and under `CUSTOMER_CODE_2` it is the other way round. Both
+    /// are carried either way — sending a fixed one regardless would drop the
+    /// other with nothing to say so.
+    ///
+    /// Unless 識別表示 says the two are one 金融EDI情報 field, in which case
+    /// they are not customer codes at all.
     private RemittanceInformation remittance(DataRecord record, String customerCode1,
             String customerCode2) {
         if (carriesEdiOverlay(record)) {
@@ -357,14 +332,12 @@ final class ZenginToPain001 {
                         : customerCode2);
     }
 
-    /**
-     * 識別表示 = Y means data fields 12 and 13 are one C(20) 金融EDI情報 field
-     * rather than two customer codes (OQ-8).
-     *
-     * <p>Read as a derived property of the record rather than modelled in the
-     * descriptor, which is the smaller of the two changes OQ-8 weighs and the
-     * one that does not require the descriptor schema to express a condition.
-     */
+    /// 識別表示 = Y means data fields 12 and 13 are one C(20) 金融EDI情報 field
+    /// rather than two customer codes (OQ-8).
+    ///
+    /// Read as a derived property of the record rather than modelled in the
+    /// descriptor, which is the smaller of the two changes OQ-8 weighs and the
+    /// one that does not require the descriptor schema to express a condition.
     private boolean carriesEdiOverlay(DataRecord record) {
         return fields.descriptor().record(RecordKind.DATA).find("identification").isPresent()
                 && "Y".equalsIgnoreCase(fields.text(record, RecordKind.DATA, "identification"));
@@ -372,14 +345,12 @@ final class ZenginToPain001 {
 
     // ------------------------------------------------------------ cross-checks
 
-    /**
-     * The trailer said one thing and the payments say another.
-     *
-     * <p>The computed value is written, because it is the one the payments
-     * actually add up to. The disagreement is {@code CRITICAL}: a file whose
-     * own trailer does not match it cannot be trusted for either number, and
-     * this is precisely what V-301 and V-302 catch on the fixed-length side.
-     */
+    /// The trailer said one thing and the payments say another.
+    ///
+    /// The computed value is written, because it is the one the payments
+    /// actually add up to. The disagreement is `CRITICAL`: a file whose
+    /// own trailer does not match it cannot be trusted for either number, and
+    /// this is precisely what V-301 and V-302 catch on the fixed-length side.
     private void crossCheckTrailers(ZenginFile file, Pain001Document document) {
         for (Batch batch : file.batches()) {
             Optional<TrailerRecord> trailer = batch.trailer();
@@ -417,7 +388,7 @@ final class ZenginToPain001 {
         assertDocumentAddsUp(document);
     }
 
-    /** A cheap guard against the document disagreeing with itself. */
+    /// A cheap guard against the document disagreeing with itself.
     private void assertDocumentAddsUp(Pain001Document document) {
         BigDecimal fromInstructions = document.payments().stream()
                 .map(PaymentInstruction::controlSum)
@@ -430,14 +401,12 @@ final class ZenginToPain001 {
 
     // --------------------------------------------------------- dropped fields
 
-    /**
-     * Fields the declaration says go nowhere.
-     *
-     * <p>Reported once per file rather than once per record. Thirty thousand
-     * identical "新規コード was dropped" entries would bury the one that matters,
-     * and the fact being reported is a property of the mapping, not of any
-     * particular payment.
-     */
+    /// Fields the declaration says go nowhere.
+    ///
+    /// Reported once per file rather than once per record. Thirty thousand
+    /// identical "新規コード was dropped" entries would bury the one that matters,
+    /// and the fact being reported is a property of the mapping, not of any
+    /// particular payment.
     private void reportDroppedFields(ZenginFile file) {
         boolean hasData = !file.allData().isEmpty();
         for (MappingRow row : fields.droppedRows()) {
@@ -457,14 +426,12 @@ final class ZenginToPain001 {
 
     // ------------------------------------------------------- transliteration
 
-    /**
-     * Half-width to full-width, recording what it changed.
-     *
-     * <p>Widening is the safe direction — every half-width kana has exactly one
-     * full-width form — so the loss is informational. It is recorded anyway,
-     * because the resulting name is not the string that was in the file, and a
-     * report that only mentions damage cannot be used to explain a difference.
-     */
+    /// Half-width to full-width, recording what it changed.
+    ///
+    /// Widening is the safe direction — every half-width kana has exactly one
+    /// full-width form — so the loss is informational. It is recorded anyway,
+    /// because the resulting name is not the string that was in the file, and a
+    /// report that only mentions damage cannot be used to explain a difference.
     private String widen(String text, String source, String target) {
         if (text.isEmpty()) {
             return text;

@@ -1,5 +1,6 @@
 package io.zengin4j.codegen;
 
+import module java.base;
 import io.zengin4j.core.format.CodeList;
 import io.zengin4j.core.format.CodeValue;
 import io.zengin4j.core.format.FieldDescriptor;
@@ -7,20 +8,13 @@ import io.zengin4j.core.format.FieldSpec;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
-/**
- * Emits reference documentation from the descriptors (R-F4).
- *
- * <p>Generated from the same source as the code, so the two cannot drift. The
- * verification state is rendered as a banner at the top of every page (R-F5):
- * a reader who skims one page must not come away believing a provisional
- * layout is a confirmed one.
- */
+/// Emits reference documentation from the descriptors (R-F4).
+///
+/// Generated from the same source as the code, so the two cannot drift. The
+/// verification state is rendered as a banner at the top of every page (R-F5):
+/// a reader who skims one page must not come away believing a provisional
+/// layout is a confirmed one.
 final class FormatDocGenerator {
 
     private static final String NL = "\n";
@@ -80,11 +74,9 @@ final class FormatDocGenerator {
         return new GeneratedFile(docsRoot.resolve(format.id().value() + ".md"), out.toString());
     }
 
-    /**
-     * Three states, not two. "Nobody has checked" and "everybody agrees except
-     * on one field" are both `verified: false`, and telling a reader they are
-     * the same thing wastes the work that produced the difference.
-     */
+    /// Three states, not two. "Nobody has checked" and "everybody agrees except
+    /// on one field" are both `verified: false`, and telling a reader they are
+    /// the same thing wastes the work that produced the difference.
     private void banner(StringBuilder out, FormatDescriptor format) {
         if (format.verified()) {
             out.append("> **Verified.** This layout has been confirmed against the independent")

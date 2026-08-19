@@ -1,26 +1,22 @@
 package io.zengin4j.core.format;
 
-import java.util.Objects;
+import module java.base;
 
-/**
- * Stable identifier for a format descriptor, for example
- * {@code sougou-furikomi}.
- *
- * <p>Deliberately not an enum. Consumers register descriptors for
- * institution-specific variants at runtime (R-F6, R-X1), and an enum would
- * force them to fork the library to name one.
- *
- * @param value the identifier: lower-case ASCII letters, digits and hyphens
- * @since 0.1.0
- */
+/// Stable identifier for a format descriptor, for example
+/// `sougou-furikomi`.
+///
+/// Deliberately not an enum. Consumers register descriptors for
+/// institution-specific variants at runtime (R-F6, R-X1), and an enum would
+/// force them to fork the library to name one.
+///
+/// @param value the identifier: lower-case ASCII letters, digits and hyphens
+/// @since 0.1.0
 public record FormatId(String value) implements Comparable<FormatId> {
 
-    /**
-     * Validates the identifier.
-     *
-     * @throws IllegalArgumentException if the value is blank or contains
-     *                                  characters outside {@code [a-z0-9-]}
-     */
+    /// Validates the identifier.
+    ///
+    /// @throws IllegalArgumentException if the value is blank or contains
+    ///   characters outside `[a-z0-9-]`
     public FormatId {
         Objects.requireNonNull(value, "value");
         if (value.isBlank()) {
@@ -37,23 +33,19 @@ public record FormatId(String value) implements Comparable<FormatId> {
         }
     }
 
-    /**
-     * Creates an identifier.
-     *
-     * @param value the identifier text
-     * @return the identifier
-     * @throws IllegalArgumentException if the value is not a valid identifier
-     */
+    /// Creates an identifier.
+    ///
+    /// @param value the identifier text
+    /// @return the identifier
+    /// @throws IllegalArgumentException if the value is not a valid identifier
     public static FormatId of(String value) {
         return new FormatId(value);
     }
 
-    /**
-     * Returns the identifier in upper camel case, for use in generated type
-     * names: {@code sougou-furikomi} becomes {@code SougouFurikomi}.
-     *
-     * @return the camel-case form
-     */
+    /// Returns the identifier in upper camel case, for use in generated type
+    /// names: `sougou-furikomi` becomes `SougouFurikomi`.
+    ///
+    /// @return the camel-case form
     public String toTypeNamePrefix() {
         StringBuilder result = new StringBuilder(value.length());
         boolean capitalise = true;

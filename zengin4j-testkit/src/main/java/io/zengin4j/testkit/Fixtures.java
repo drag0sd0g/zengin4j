@@ -1,19 +1,13 @@
 package io.zengin4j.testkit;
 
+import module java.base;
 import io.zengin4j.core.format.FormatId;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Supplier;
 
-/**
- * Looks up fixtures by format id.
- *
- * <p>The registry backing {@link FormatFixtures#forFormat}. Kept package-private
- * so there is one way in, and ordered so {@code zengin generate --help} lists
- * the formats the same way every time.
- */
+/// Looks up fixtures by format id.
+///
+/// The registry backing [FormatFixtures#forFormat]. Kept package-private
+/// so there is one way in, and ordered so `zengin generate --help` lists
+/// the formats the same way every time.
 final class Fixtures {
 
     private static final Map<FormatId, Supplier<FormatFixtures>> BY_ID = registry();

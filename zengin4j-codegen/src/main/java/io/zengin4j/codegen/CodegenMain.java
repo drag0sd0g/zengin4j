@@ -1,32 +1,20 @@
 package io.zengin4j.codegen;
 
+import module java.base;
 import io.zengin4j.core.format.CodeList;
 import io.zengin4j.core.format.FormatDescriptor;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 
-/**
- * Entry point for the descriptor-driven code and documentation generator.
- *
- * <pre>
- * --mode generate   rewrite the committed sources, docs and index
- * --mode verify     load every descriptor and fail on an inconsistency
- * --mode check      fail if the committed output differs from what the
- *                   descriptors currently produce
- * </pre>
- *
- * <p>Run through Gradle rather than directly:
- * {@code ./gradlew generateFormatSources}.
- */
+/// Entry point for the descriptor-driven code and documentation generator.
+///
+/// ```
+/// --mode generate   rewrite the committed sources, docs and index
+/// --mode verify     load every descriptor and fail on an inconsistency
+/// --mode check      fail if the committed output differs from what the
+///                   descriptors currently produce
+/// ```
+///
+/// Run through Gradle rather than directly:
+/// `./gradlew generateFormatSources`.
 public final class CodegenMain {
 
     private static final String CODE_LISTS_FILE = "code-lists.yaml";
@@ -36,13 +24,11 @@ public final class CodegenMain {
     private CodegenMain() {
     }
 
-    /**
-     * Runs the generator.
-     *
-     * @param args {@code --mode}, {@code --formats}, {@code --java-out},
-     *             {@code --docs-out}, {@code --kana}, {@code --mappings} and
-     *             {@code --iso-java-out}
-     */
+    /// Runs the generator.
+    ///
+    /// @param args `--mode`, `--formats`, `--java-out`,
+    ///   `--docs-out`, `--kana`, `--mappings` and
+    ///   `--iso-java-out`
     public static void main(String[] args) {
         Map<String, String> options = parse(args);
         String mode = required(options, "--mode");
@@ -185,7 +171,7 @@ public final class CodegenMain {
         System.out.println("committed generated output matches the descriptors");
     }
 
-    /** Line endings vary by check-out; content does not. */
+    /// Line endings vary by check-out; content does not.
     private static String normalise(String content) {
         return content.replace("\r\n", "\n");
     }

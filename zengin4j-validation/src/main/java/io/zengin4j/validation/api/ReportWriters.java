@@ -1,28 +1,25 @@
 package io.zengin4j.validation.api;
 
-import java.util.List;
-import java.util.Objects;
+import module java.base;
 
-/**
- * Renders a report as JSON and as SARIF (R-V4).
- *
- * <p><strong>Written by hand, because {@code zengin4j-validation} may depend
- * only on core (R-M2).</strong> That is a smaller undertaking than it sounds
- * and a different problem from the one ADR-0001 got wrong: <em>emitting</em>
- * JSON means escaping five characters and balancing brackets, against a
- * structure this code already knows. <em>Parsing</em> arbitrary JSON is where
- * the edge cases live, and nothing here parses anything.
- *
- * <p>SARIF is worth the trouble. GitHub, GitLab and Azure DevOps all render it
- * natively, so a validation run in CI becomes annotations on the diff — the
- * finding appears against the line of the file it concerns, which for a
- * fixed-length format is the closest thing to pointing at the byte.
- *
- * @since 0.2.0
- */
+/// Renders a report as JSON and as SARIF (R-V4).
+///
+/// **Written by hand, because `zengin4j-validation` may depend
+/// only on core (R-M2).** That is a smaller undertaking than it sounds
+/// and a different problem from the one ADR-0001 got wrong: *emitting*
+/// JSON means escaping five characters and balancing brackets, against a
+/// structure this code already knows. *Parsing* arbitrary JSON is where
+/// the edge cases live, and nothing here parses anything.
+///
+/// SARIF is worth the trouble. GitHub, GitLab and Azure DevOps all render it
+/// natively, so a validation run in CI becomes annotations on the diff — the
+/// finding appears against the line of the file it concerns, which for a
+/// fixed-length format is the closest thing to pointing at the byte.
+///
+/// @since 0.2.0
 public final class ReportWriters {
 
-    /** SARIF 2.1.0, which is what every consumer implements. */
+    /// SARIF 2.1.0, which is what every consumer implements.
     private static final String SARIF_VERSION = "2.1.0";
     private static final String SARIF_SCHEMA =
             "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json";
@@ -30,12 +27,10 @@ public final class ReportWriters {
     private ReportWriters() {
     }
 
-    /**
-     * Renders a report as JSON.
-     *
-     * @param report the report
-     * @return the JSON document, never {@code null}
-     */
+    /// Renders a report as JSON.
+    ///
+    /// @param report the report
+    /// @return the JSON document, never `null`
     public static String toJson(ValidationReport report) {
         Objects.requireNonNull(report, "report");
         Json json = new Json();
@@ -67,14 +62,12 @@ public final class ReportWriters {
         return json.toString();
     }
 
-    /**
-     * Renders a report as SARIF 2.1.0.
-     *
-     * @param report the report
-     * @param rules  the rules that ran, so the document can describe them
-     * @param fileUri the file the findings are about, for the location URIs
-     * @return the SARIF document, never {@code null}
-     */
+    /// Renders a report as SARIF 2.1.0.
+    ///
+    /// @param report the report
+    /// @param rules  the rules that ran, so the document can describe them
+    /// @param fileUri the file the findings are about, for the location URIs
+    /// @return the SARIF document, never `null`
     public static String toSarif(ValidationReport report, List<Rule> rules, String fileUri) {
         Objects.requireNonNull(report, "report");
         Objects.requireNonNull(rules, "rules");
@@ -136,7 +129,7 @@ public final class ReportWriters {
         return json.toString();
     }
 
-    /** Every finding id the given rules can produce, in ascending order. */
+    /// Every finding id the given rules can produce, in ascending order.
     private static List<String> declaredIds(List<Rule> rules) {
         return rules.stream()
                 .flatMap(rule -> rule.emits().stream())
@@ -167,13 +160,11 @@ public final class ReportWriters {
                 .orElse("warning");
     }
 
-    /**
-     * The smallest JSON writer that does the job correctly.
-     *
-     * <p>Tracks only what it must: whether a comma is due, and how deep to
-     * indent. Everything else is the caller's structure, expressed as nested
-     * lambdas that mirror the document.
-     */
+    /// The smallest JSON writer that does the job correctly.
+    ///
+    /// Tracks only what it must: whether a comma is due, and how deep to
+    /// indent. Everything else is the caller's structure, expressed as nested
+    /// lambdas that mirror the document.
     private static final class Json {
 
         private final StringBuilder out = new StringBuilder();
@@ -250,14 +241,12 @@ public final class ReportWriters {
             out.append('\n').append("  ".repeat(Math.max(depth, 0)));
         }
 
-        /**
-         * The five characters JSON requires escaped, plus control characters.
-         *
-         * <p>Japanese text passes through as itself: the output is UTF-8 and
-         * JSON permits any Unicode character in a string, so {@code \\u}
-         * escaping katakana would only make the document unreadable to the
-         * people most likely to read it.
-         */
+        /// The five characters JSON requires escaped, plus control characters.
+        ///
+        /// Japanese text passes through as itself: the output is UTF-8 and
+        /// JSON permits any Unicode character in a string, so `\\u`
+        /// escaping katakana would only make the document unreadable to the
+        /// people most likely to read it.
         private static String escape(String value) {
             StringBuilder escaped = new StringBuilder(value.length() + 8);
             for (int i = 0; i < value.length(); i++) {

@@ -1,6 +1,8 @@
 # 0002 — Java 21 baseline via `--release`, not a toolchain
 
-**Status:** Accepted
+**Status:** ~~Accepted~~ **Superseded by [ADR-0036](0036-java-25-baseline.md)** — the
+baseline moved to 25 in August 2026. The *mechanism* this record chose survives that
+change: `options.release` rather than a toolchain, for the reasons below.
 **Requirements:** R-M7, R-B1, R-B2
 
 ## Context

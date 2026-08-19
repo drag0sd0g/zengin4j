@@ -1,5 +1,6 @@
 package io.zengin4j.codegen;
 
+import module java.base;
 import io.zengin4j.core.charset.CharacterClass;
 import io.zengin4j.core.format.CodeList;
 import io.zengin4j.core.format.CodeValue;
@@ -11,34 +12,23 @@ import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
-/**
- * Reads format descriptors and code lists at build time.
- *
- * <p>This runs in the build, not in {@code zengin4j-core}, which is why it may
- * use SnakeYAML: R-M1 constrains what the published core artifact requires at
- * runtime. Core receives the result as generated Java (see
- * {@link BundledFormatsGenerator}) and needs no parser of its own.
- *
- * <p>The strictness lives here and in the descriptor model, not in the YAML
- * tokenizer: unknown keys, out-of-order sequence numbers, unresolvable code
- * lists and constants that contradict a record's discriminator are all
- * rejected, and the model itself refuses a layout whose field lengths do not
- * sum to the record length (R-F1) or a claim of verification without two
- * cited sources (R-0.1).
- */
+/// Reads format descriptors and code lists at build time.
+///
+/// This runs in the build, not in `zengin4j-core`, which is why it may
+/// use SnakeYAML: R-M1 constrains what the published core artifact requires at
+/// runtime. Core receives the result as generated Java (see
+/// [BundledFormatsGenerator]) and needs no parser of its own.
+///
+/// The strictness lives here and in the descriptor model, not in the YAML
+/// tokenizer: unknown keys, out-of-order sequence numbers, unresolvable code
+/// lists and constants that contradict a record's discriminator are all
+/// rejected, and the model itself refuses a layout whose field lengths do not
+/// sum to the record length (R-F1) or a claim of verification without two
+/// cited sources (R-0.1).
 final class YamlDescriptorReader {
 
     private static final Set<String> DOCUMENT_KEYS = Set.of("format");
@@ -101,12 +91,10 @@ final class YamlDescriptorReader {
         return readFormat(yaml, origin, codeLists, Map.of());
     }
 
-    /**
-     * Reads a descriptor, resolving {@code same-layout-as} against formats
-     * already read.
-     *
-     * @param known formats available to borrow a layout from, by id
-     */
+    /// Reads a descriptor, resolving `same-layout-as` against formats
+    /// already read.
+    ///
+    /// @param known formats available to borrow a layout from, by id
     static FormatDescriptor readFormat(
             String yaml, String origin, Map<String, CodeList> codeLists, Map<String, FormatDescriptor> known) {
         Map<String, Object> document = asMapping(parse(yaml, origin), origin, "document root");
@@ -153,21 +141,19 @@ final class YamlDescriptorReader {
         }
     }
 
-    /**
-     * Copies another format's records, rebinding them to this format's id and
-     * 種別コード.
-     *
-     * <p>For the case where the standard itself states that two businesses share
-     * a layout — 賞与振込 is 給与振込 with 種別コード 12, and it says so. Writing
-     * the layout twice would let the copies drift, and deriving a layout that
-     * the standard does <em>not</em> state to be shared is the mistake this
-     * project keeps finding in other implementations, so the mechanism is
-     * deliberately narrow: it borrows everything and changes only the two things
-     * that identify the format.
-     *
-     * <p>The 種別コード constant is rewritten, and nothing else is. A borrowed
-     * layout that needed any other change would be a different layout.
-     */
+    /// Copies another format's records, rebinding them to this format's id and
+    /// 種別コード.
+    ///
+    /// For the case where the standard itself states that two businesses share
+    /// a layout — 賞与振込 is 給与振込 with 種別コード 12, and it says so. Writing
+    /// the layout twice would let the copies drift, and deriving a layout that
+    /// the standard does *not* state to be shared is the mistake this
+    /// project keeps finding in other implementations, so the mechanism is
+    /// deliberately narrow: it borrows everything and changes only the two things
+    /// that identify the format.
+    ///
+    /// The 種別コード constant is rewritten, and nothing else is. A borrowed
+    /// layout that needed any other change would be a different layout.
     private static Map<RecordKind, RecordDescriptor> borrowLayout(
             String sourceId, FormatId id, String typeCode,
             Map<String, FormatDescriptor> known, String origin) {
@@ -217,7 +203,7 @@ final class YamlDescriptorReader {
             fields.add(readField(fieldNodes.get(i), i + 1, origin, codeLists));
         }
 
-        FieldSpec first = fields.get(0);
+        FieldSpec first = fields.getFirst();
         if (first.constant().isPresent() && first.length() == 1
                 && first.constant().get().charAt(0) != (char) discriminator) {
             throw new CodegenException(origin + ": record '" + kind.descriptorKey() + "' has discriminator '"

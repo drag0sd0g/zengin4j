@@ -1,27 +1,25 @@
 package io.zengin4j.core.charset;
 
-/**
- * Which kana may carry a voicing mark, and which may not (R-K7).
- *
- * <p>A fact about the encoding rather than a policy, which is why it lives
- * here: {@code ﾞ} and {@code ﾟ} are separate characters that modify the kana
- * before them, and only some kana have a voiced form for them to name. {@code ﾜﾞ}
- * is not a character — it is a mark stranded after a kana that has no voiced
- * reading.
- *
- * <p>Used on both sides. The transliterator refuses to <em>produce</em> such a
- * sequence, and validation rule {@code V-206} reports one it <em>finds</em>.
- * Keeping the ranges in one place is the point: two copies of this table would
- * eventually disagree, and then the library would write files it rejects.
- *
- * @since 0.4.0
- */
+/// Which kana may carry a voicing mark, and which may not (R-K7).
+///
+/// A fact about the encoding rather than a policy, which is why it lives
+/// here: `ﾞ` and `ﾟ` are separate characters that modify the kana
+/// before them, and only some kana have a voiced form for them to name. `ﾜﾞ`
+/// is not a character — it is a mark stranded after a kana that has no voiced
+/// reading.
+///
+/// Used on both sides. The transliterator refuses to *produce* such a
+/// sequence, and validation rule `V-206` reports one it *finds*.
+/// Keeping the ranges in one place is the point: two copies of this table would
+/// eventually disagree, and then the library would write files it rejects.
+///
+/// @since 0.4.0
 public final class VoicingMarks {
 
-    /** {@code ﾞ}, the voiced mark. */
+    /// `ﾞ`, the voiced mark.
     public static final int DAKUTEN = 0xDE;
 
-    /** {@code ﾟ}, the semi-voiced mark. */
+    /// `ﾟ`, the semi-voiced mark.
     public static final int HANDAKUTEN = 0xDF;
 
     // The four rows that have voiced forms, plus ｳ for ｳﾞ.
@@ -38,25 +36,21 @@ public final class VoicingMarks {
     private VoicingMarks() {
     }
 
-    /**
-     * Whether a byte is a voicing mark.
-     *
-     * @param unsigned the byte value, 0–255
-     * @return {@code true} for {@code 0xDE} or {@code 0xDF}
-     */
+    /// Whether a byte is a voicing mark.
+    ///
+    /// @param unsigned the byte value, 0–255
+    /// @return `true` for `0xDE` or `0xDF`
     public static boolean isMark(int unsigned) {
         return unsigned == DAKUTEN || unsigned == HANDAKUTEN;
     }
 
-    /**
-     * Whether a kana may carry a dakuten.
-     *
-     * <p>The か, さ, た and は rows, plus ｳ — which takes one to write ｳﾞ, the
-     * only way these files can spell a {@code v} sound.
-     *
-     * @param base the base kana's byte value, 0–255
-     * @return {@code true} if a dakuten may follow it
-     */
+    /// Whether a kana may carry a dakuten.
+    ///
+    /// The か, さ, た and は rows, plus ｳ — which takes one to write ｳﾞ, the
+    /// only way these files can spell a `v` sound.
+    ///
+    /// @param base the base kana's byte value, 0–255
+    /// @return `true` if a dakuten may follow it
     public static boolean takesDakuten(int base) {
         return (base >= KA_FIRST && base <= KA_LAST)
                 || (base >= SA_FIRST && base <= SA_LAST)
@@ -65,25 +59,21 @@ public final class VoicingMarks {
                 || base == U;
     }
 
-    /**
-     * Whether a kana may carry a handakuten.
-     *
-     * <p>The は row alone: ﾊﾟ, ﾋﾟ, ﾌﾟ, ﾍﾟ, ﾎﾟ and nothing else.
-     *
-     * @param base the base kana's byte value, 0–255
-     * @return {@code true} if a handakuten may follow it
-     */
+    /// Whether a kana may carry a handakuten.
+    ///
+    /// The は row alone: ﾊﾟ, ﾋﾟ, ﾌﾟ, ﾍﾟ, ﾎﾟ and nothing else.
+    ///
+    /// @param base the base kana's byte value, 0–255
+    /// @return `true` if a handakuten may follow it
     public static boolean takesHandakuten(int base) {
         return base >= HA_FIRST && base <= HA_LAST;
     }
 
-    /**
-     * Whether a mark may follow a base.
-     *
-     * @param base the preceding byte, or a negative value if the mark is first
-     * @param mark the mark's byte value
-     * @return {@code true} if the pair is a character the standard recognises
-     */
+    /// Whether a mark may follow a base.
+    ///
+    /// @param base the preceding byte, or a negative value if the mark is first
+    /// @param mark the mark's byte value
+    /// @return `true` if the pair is a character the standard recognises
     public static boolean isLegal(int base, int mark) {
         if (base < 0) {
             return false;

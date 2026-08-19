@@ -1,5 +1,6 @@
 package io.zengin4j.validation;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
@@ -9,18 +10,14 @@ import io.zengin4j.testkit.SyntheticRecords;
 import io.zengin4j.validation.api.Finding;
 import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.api.ValidationReport;
-import java.util.List;
-import java.util.Locale;
 import org.junit.jupiter.api.Test;
 
-/**
- * The paths the happy-case tests do not reach: each rule's other branch, and
- * the report's own behaviour.
- *
- * <p>A rule tested only on the input that makes it fire is half tested. The
- * half that matters more in practice is the one that keeps it quiet, because a
- * rule that fires on clean files is how a report stops being read.
- */
+/// The paths the happy-case tests do not reach: each rule's other branch, and
+/// the report's own behaviour.
+///
+/// A rule tested only on the input that makes it fire is half tested. The
+/// half that matters more in practice is the one that keeps it quiet, because a
+/// rule that fires on clean files is how a report stops being read.
 class RuleEdgeCaseTest {
 
     private static final SougouFurikomiFixtures KIT = Fixtures.TESTKIT;
@@ -38,11 +35,9 @@ class RuleEdgeCaseTest {
 
     // ------------------------------------------------------------ V-601
 
-    /**
-     * A name ending on a kana that takes a voicing mark, filling the field
-     * exactly — what truncation through a mark leaves behind. 受取人名 is 30
-     * bytes, so a 30-byte name ending in ｶ is the shape.
-     */
+    /// A name ending on a kana that takes a voicing mark, filling the field
+    /// exactly — what truncation through a mark leaves behind. 受取人名 is 30
+    /// bytes, so a 30-byte name ending in ｶ is the shape.
     @Test
     void v601_warnsAboutANameCutThroughAVoicingMark() {
         String thirtyBytes = "ｱｲｳｴｵｱｲｳｴｵｱｲｳｴｵｱｲｳｴｵｱｲｳｴｵｱｲｳｴｶ";
@@ -54,7 +49,7 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-601")).isNotEmpty();
     }
 
-    /** A name that stops short of the field end was not truncated. */
+    /// A name that stops short of the field end was not truncated.
     @Test
     void v601_staysQuietWhenTheFieldIsNotFull() {
         ValidationReport report = validate(fileWith(
@@ -63,7 +58,7 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-601")).isEmpty();
     }
 
-    /** A full field ending on a kana that takes no mark was not truncated either. */
+    /// A full field ending on a kana that takes no mark was not truncated either.
     @Test
     void v601_staysQuietWhenTheLastKanaTakesNoMark() {
         String endsInN = "ｱｲｳｴｵｱｲｳｴｵｱｲｳｴｵｱｲｳｴｵｱｲｳｴｵｱｲｳｴﾝ";
@@ -77,7 +72,7 @@ class RuleEdgeCaseTest {
 
     // ------------------------------------------------------------ V-206
 
-    /** A handakuten may follow only ﾊ-ﾎ; after ｶ it is illegal. */
+    /// A handakuten may follow only ﾊ-ﾎ; after ｶ it is illegal.
     @Test
     void v206_reportsAHandakutenAfterAKanaThatCannotTakeOne() {
         ValidationReport report = validate(fileWith(
@@ -87,7 +82,7 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-206").get(0).messageEn()).contains("handakuten");
     }
 
-    /** ﾊﾟ is legal — ﾊ takes a handakuten. */
+    /// ﾊﾟ is legal — ﾊ takes a handakuten.
     @Test
     void v206_staysQuietOnALegalHandakuten() {
         ValidationReport report = validate(fileWith(
@@ -96,7 +91,7 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-206")).isEmpty();
     }
 
-    /** ｳﾞ is legal: ｳ is the one vowel that takes a dakuten. */
+    /// ｳﾞ is legal: ｳ is the one vowel that takes a dakuten.
     @Test
     void v206_acceptsTheVowelThatTakesADakuten() {
         ValidationReport report = validate(fileWith(
@@ -105,7 +100,7 @@ class RuleEdgeCaseTest {
         assertThat(report.findingsOf("V-206")).isEmpty();
     }
 
-    /** A mark at the very start of a field follows nothing at all. */
+    /// A mark at the very start of a field follows nothing at all.
     @Test
     void v206_reportsAMarkWithNoBaseAtAll() {
         ValidationReport report = validate(fileWith(
@@ -117,7 +112,7 @@ class RuleEdgeCaseTest {
 
     // ------------------------------------------------------------ V-203
 
-    /** A text field pushed right rather than left is padded on the wrong side. */
+    /// A text field pushed right rather than left is padded on the wrong side.
     @Test
     void v203_warnsAboutAMisalignedTextField() {
         ValidationReport report = validate(fileWith(
@@ -135,7 +130,7 @@ class RuleEdgeCaseTest {
 
     // ------------------------------------------------------------ V-102
 
-    /** A record whose first byte names no record kind. */
+    /// A record whose first byte names no record kind.
     @Test
     void v102_reportsAnUnknownDataKubun() {
         byte[] data = KIT.data();
@@ -149,7 +144,7 @@ class RuleEdgeCaseTest {
 
     // ------------------------------------------------------------ V-205
 
-    /** A code the list does not carry — a warning, because the lists are open. */
+    /// A code the list does not carry — a warning, because the lists are open.
     @Test
     void v205_warnsAboutAValueOutsideItsCodeList() {
         byte[] data = KIT.data();
@@ -218,7 +213,7 @@ class RuleEdgeCaseTest {
 
     // ------------------------------------------------- engine and report
 
-    /** Fail-fast stops after tier 1, so later tiers do not describe misalignment. */
+    /// Fail-fast stops after tier 1, so later tiers do not describe misalignment.
     @Test
     void failFastStopsAfterStructuralErrors() {
         byte[] good = KIT.file(1, SeparatorStyle.NONE, false);
@@ -267,7 +262,7 @@ class RuleEdgeCaseTest {
                 .withMessageContaining("both languages");
     }
 
-    /** An override that matches the rule's own severity changes nothing. */
+    /// An override that matches the rule's own severity changes nothing.
     @Test
     void anOverrideEqualToTheDefaultIsANoOp() {
         ValidationReport report = ZenginValidator.builder()
@@ -279,7 +274,7 @@ class RuleEdgeCaseTest {
                 .extracting(Finding::severity).isEqualTo(Severity.ERROR);
     }
 
-    /** Duplicates are per batch: the same payment in two batches is not one. */
+    /// Duplicates are per batch: the same payment in two batches is not one.
     @Test
     void v306_doesNotReportAcrossBatchBoundaries() {
         byte[] file = SyntheticRecords.file(
@@ -296,7 +291,7 @@ class RuleEdgeCaseTest {
                 .isEmpty();
     }
 
-    /** A filler field is never checked for characters or padding (R-D5). */
+    /// A filler field is never checked for characters or padding (R-D5).
     @Test
     void fillerIsNeverPoliced() {
         byte[] data = KIT.data();
@@ -309,7 +304,7 @@ class RuleEdgeCaseTest {
                         .isNotEqualTo("dummy"));
     }
 
-    /** Findings at the same position order by rule id, so the report is stable. */
+    /// Findings at the same position order by rule id, so the report is stable.
     @Test
     void findingsAtOneLocationOrderByRuleId() {
         Finding first = Finding.of(Severity.ERROR, "V-201").at(2, 122).field("a", 10)
@@ -322,7 +317,7 @@ class RuleEdgeCaseTest {
         assertThat(first.compareTo(first)).isZero();
     }
 
-    /** A finding with no position sorts after one that has a position. */
+    /// A finding with no position sorts after one that has a position.
     @Test
     void findingsWithoutAPositionSortLast() {
         Finding located = Finding.of(Severity.ERROR, "V-101").at(1, 0).message("en", "ja").build();

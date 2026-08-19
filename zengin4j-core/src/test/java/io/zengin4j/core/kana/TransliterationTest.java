@@ -15,12 +15,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * What the transliterator does, and what it refuses to do.
- *
- * @see KanaTableTest for the tables themselves (R-T10)
- * @see TruncationTest for the dakuten hazard (R-T11, INV-4)
- */
+/// What the transliterator does, and what it refuses to do.
+///
+/// @see KanaTableTest for the tables themselves (R-T10)
+/// @see TruncationTest for the dakuten hazard (R-T11, INV-4)
 class TransliterationTest {
 
     private static final TransliterationOptions PARTY = TransliterationOptions.builder()
@@ -76,13 +74,11 @@ class TransliterationTest {
 
     // ------------------------------------------------- the corrections to R-K2
 
-    /**
-     * R-K2 says to map ー to ｰ. This library's own validator disagrees.
-     *
-     * <p>{@code CharacterClass} excludes the prolonged sound mark from every
-     * field class, so following R-K2 would emit text that {@code V-202} rejects.
-     * The standard writes a long vowel as a hyphen; see ADR-0028.
-     */
+    /// R-K2 says to map ー to ｰ. This library's own validator disagrees.
+    ///
+    /// `CharacterClass` excludes the prolonged sound mark from every
+    /// field class, so following R-K2 would emit text that `V-202` rejects.
+    /// The standard writes a long vowel as a hyphen; see ADR-0028.
     @Test
     void aLongVowelBecomesAHyphenNotAProlongedSoundMark() {
         Transliteration result = KanaTransliterator.toHalfWidth("ヨーコ", PARTY);
@@ -92,7 +88,7 @@ class TransliterationTest {
         assertThat(result.isMateriallyChanged()).isTrue();
     }
 
-    /** And R-K2's other named mapping, ャ to ｬ, is wrong for the same reason. */
+    /// And R-K2's other named mapping, ャ to ｬ, is wrong for the same reason.
     @Test
     void aSmallKanaBecomesItsFullSizeFormNotASmallHalfWidthOne() {
         Transliteration result = KanaTransliterator.toHalfWidth("キャノン", PARTY);
@@ -115,7 +111,7 @@ class TransliterationTest {
                 .isTrue();
     }
 
-    /** Half-width small kana arriving as input get the same treatment. */
+    /// Half-width small kana arriving as input get the same treatment.
     @ParameterizedTest
     @ValueSource(strings = {"ｧ", "ｨ", "ｩ", "ｪ", "ｫ", "ｯ", "ｬ", "ｭ", "ｮ", "ｰ"})
     void halfWidthInputIsNormalisedTheSameWay(String small) {
@@ -129,14 +125,12 @@ class TransliterationTest {
 
     // --------------------------------------------------------- the field class
 
-    /**
-     * The same name transliterates differently depending on the field.
-     *
-     * <p>The finding that shaped this API. A long vowel becomes a hyphen, and
-     * payroll names admit no symbols, so ヨーコ has a spelling in a 総合振込 file
-     * and none in a 給与振込 one. A transliterator taking only a string would be
-     * wrong for one of them.
-     */
+    /// The same name transliterates differently depending on the field.
+    ///
+    /// The finding that shaped this API. A long vowel becomes a hyphen, and
+    /// payroll names admit no symbols, so ヨーコ has a spelling in a 総合振込 file
+    /// and none in a 給与振込 one. A transliterator taking only a string would be
+    /// wrong for one of them.
     @Test
     void aNameWritableInOneFieldCanBeUnwritableInAnother() {
         assertThat(KanaTransliterator.toHalfWidth("ヨーコ", PARTY).text()).isEqualTo("ﾖ-ｺ");
@@ -187,7 +181,7 @@ class TransliterationTest {
 
     // ------------------------------------------------------------- refusals
 
-    /** R-K6: a kanji's reading is ambiguous, so it is refused rather than guessed. */
+    /// R-K6: a kanji's reading is ambiguous, so it is refused rather than guessed.
     @Test
     void kanjiIsRefusedAndTheCharactersAreNamed() {
         assertThatExceptionOfType(UntransliterableCharacterException.class)
@@ -197,7 +191,7 @@ class TransliterationTest {
                 .withMessageContaining("katakana");
     }
 
-    /** P4: no reading dictionary, so no guess — however common the name. */
+    /// P4: no reading dictionary, so no guess — however common the name.
     @Test
     void aCommonSurnameIsStillRefused() {
         assertThatExceptionOfType(UntransliterableCharacterException.class)

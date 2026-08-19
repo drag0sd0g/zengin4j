@@ -1,5 +1,6 @@
 package io.zengin4j.validation.rules;
 
+import module java.base;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FieldFormat;
 import io.zengin4j.core.format.RecordDescriptor;
@@ -14,35 +15,27 @@ import io.zengin4j.validation.api.Rule;
 import io.zengin4j.validation.api.RuleScope;
 import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.engine.ValidationContext;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
-/**
- * Tier 3 — does the file agree with itself? (§14.3, §19.3, {@code V-3xx})
- *
- * <p>The tier that catches the expensive mistakes. A trailer that disagrees
- * with its batch is the single most common reason a file is rejected, and the
- * arithmetic that produces it — summing amounts into a fixed-width field — is
- * the one place in this library where a silent wrap would turn a large payment
- * into a small one.
- *
- * @since 0.2.0
- */
+/// Tier 3 — does the file agree with itself? (§14.3, §19.3, `V-3xx`)
+///
+/// The tier that catches the expensive mistakes. A trailer that disagrees
+/// with its batch is the single most common reason a file is rejected, and the
+/// arithmetic that produces it — summing amounts into a fixed-width field — is
+/// the one place in this library where a silent wrap would turn a large payment
+/// into a small one.
+///
+/// @since 0.2.0
 public final class ConsistencyRules {
 
-    /** What an {@code N(12)} trailer total can hold. */
+    /// What an `N(12)` trailer total can hold.
     static final long TRAILER_CAPACITY = 999_999_999_999L;
 
     private ConsistencyRules() {
     }
 
-    /**
-     * Every rule in this tier.
-     *
-     * @return the rules, never {@code null}
-     */
+    /// Every rule in this tier.
+    ///
+    /// @return the rules, never `null`
     public static List<Rule> all() {
         return List.of(
                 new TrailerTotal(),
@@ -51,11 +44,9 @@ public final class ConsistencyRules {
                 new DuplicatePayments());
     }
 
-    /**
-     * V-301, V-303 and V-304 — one walk of the batch, because they are three
-     * answers to one question and computing the sum three times could produce
-     * three different ones (§19.3).
-     */
+    /// V-301, V-303 and V-304 — one walk of the batch, because they are three
+    /// answers to one question and computing the sum three times could produce
+    /// three different ones (§19.3).
     static final class TrailerTotal extends AbstractRule {
 
         TrailerTotal() {
@@ -115,7 +106,7 @@ public final class ConsistencyRules {
         }
     }
 
-    /** V-302. */
+    /// V-302.
     static final class TrailerCount extends AbstractRule {
 
         TrailerCount() {
@@ -142,7 +133,7 @@ public final class ConsistencyRules {
         }
     }
 
-    /** V-305. */
+    /// V-305.
     static final class TypeCodeConsistent extends AbstractRule {
 
         TypeCodeConsistent() {
@@ -182,12 +173,10 @@ public final class ConsistencyRules {
         }
     }
 
-    /**
-     * V-306 — a warning, deliberately. Two identical payments in one batch is
-     * legal, occasionally intended, and far more often a duplicated row in a
-     * spreadsheet. Reporting it as an error would make people suppress the
-     * rule; reporting it as a warning makes them look.
-     */
+    /// V-306 — a warning, deliberately. Two identical payments in one batch is
+    /// legal, occasionally intended, and far more often a duplicated row in a
+    /// spreadsheet. Reporting it as an error would make people suppress the
+    /// rule; reporting it as a warning makes them look.
     static final class DuplicatePayments extends AbstractRule {
 
         DuplicatePayments() {
@@ -217,11 +206,9 @@ public final class ConsistencyRules {
             }
         }
 
-        /**
-         * Bank, branch, account and amount — what §14.3 names. Built from the
-         * descriptor rather than from accessors, so it works for any format
-         * whose data record carries those field ids.
-         */
+        /// Bank, branch, account and amount — what §14.3 names. Built from the
+        /// descriptor rather than from accessors, so it works for any format
+        /// whose data record carries those field ids.
         private static String identityOf(RecordDescriptor layout, DataRecord data) {
             byte[] bytes = data.rawBytes();
             if (bytes.length < layout.recordLength()) {
@@ -251,7 +238,7 @@ public final class ConsistencyRules {
                 .orElse(0);
     }
 
-    /** Whether the format's trailer declares an amount field at all. */
+    /// Whether the format's trailer declares an amount field at all.
     static boolean hasTrailerTotal(ValidationContext context) {
         return context.descriptor().find(RecordKind.TRAILER)
                 .flatMap(record -> record.findByFormat(FieldFormat.AMOUNT))

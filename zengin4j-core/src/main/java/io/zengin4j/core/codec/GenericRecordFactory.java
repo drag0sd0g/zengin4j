@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import io.zengin4j.core.charset.CodeKubun;
 import io.zengin4j.core.error.FormatDescriptorException;
 import io.zengin4j.core.format.FieldDescriptor;
@@ -10,21 +11,15 @@ import io.zengin4j.core.model.GenericEndRecord;
 import io.zengin4j.core.model.GenericHeaderRecord;
 import io.zengin4j.core.model.GenericTrailerRecord;
 import io.zengin4j.core.model.ZenginRecord;
-import java.time.MonthDay;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
 
-/**
- * Materialises records for formats that have no generated types — descriptors
- * a consumer registered at runtime.
- *
- * <p>Fields that the role interfaces promise but a descriptor may reasonably
- * omit degrade to an explicit absence: no 委託者名 field yields an empty name,
- * not a fabricated one. Fields that cannot degrade honestly are required: a
- * data record has to say which of its fields is the amount, because
- * {@code long amount()} has no value that means "there wasn't one".
- */
+/// Materialises records for formats that have no generated types — descriptors
+/// a consumer registered at runtime.
+///
+/// Fields that the role interfaces promise but a descriptor may reasonably
+/// omit degrade to an explicit absence: no 委託者名 field yields an empty name,
+/// not a fabricated one. Fields that cannot degrade honestly are required: a
+/// data record has to say which of its fields is the amount, because
+/// `long amount()` has no value that means "there wasn't one".
 final class GenericRecordFactory implements RecordFactory {
 
     static final GenericRecordFactory INSTANCE = new GenericRecordFactory();

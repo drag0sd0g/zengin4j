@@ -1,5 +1,6 @@
 package io.zengin4j.validation;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,18 +13,14 @@ import io.zengin4j.validation.api.ValidationReport;
 import io.zengin4j.validation.engine.Rules;
 import io.zengin4j.validation.refdata.MapReferenceData;
 import io.zengin4j.validation.refdata.ReferenceDataProvider;
-import java.util.List;
-import java.util.Locale;
 import org.junit.jupiter.api.Test;
 
-/**
- * R-V4 (JSON and SARIF) and R-V5 (optional reference data).
- */
+/// R-V4 (JSON and SARIF) and R-V5 (optional reference data).
 class ReportOutputTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    /** Parses with a real parser, so the writer is checked rather than trusted. */
+    /// Parses with a real parser, so the writer is checked rather than trusted.
     private static JsonNode parse(String json) {
         try {
             return MAPPER.readTree(json);
@@ -38,11 +35,9 @@ class ReportOutputTest {
 
     // -------------------------------------------------------------- R-V4
 
-    /**
-     * The JSON is parsed back rather than pattern-matched. A hand-written
-     * writer that produced <em>almost</em> valid JSON would pass every
-     * {@code contains} assertion and fail in the consumer.
-     */
+    /// The JSON is parsed back rather than pattern-matched. A hand-written
+    /// writer that produced *almost* valid JSON would pass every
+    /// `contains` assertion and fail in the consumer.
     @Test
     void jsonIsWellFormedAndCarriesEveryFinding() {
         String json = ReportWriters.toJson(problems());
@@ -58,7 +53,7 @@ class ReportOutputTest {
         assertThat(findings.get(0).get("messageJa").asText()).isNotBlank();
     }
 
-    /** Japanese survives the round trip as itself, not as escapes. */
+    /// Japanese survives the round trip as itself, not as escapes.
     @Test
     void japaneseTextIsNotMangled() {
         String json = ReportWriters.toJson(problems());
@@ -68,7 +63,7 @@ class ReportOutputTest {
         assertThat(parse(json).get("findings").get(0).get("messageJa").asText()).isNotBlank();
     }
 
-    /** A message containing the characters JSON reserves must not break it. */
+    /// A message containing the characters JSON reserves must not break it.
     @Test
     void quotesAndBackslashesAreEscaped() {
         ValidationReport report = new ValidationReport(List.of(
@@ -118,7 +113,7 @@ class ReportOutputTest {
                 .isEqualTo("payments.txt");
     }
 
-    /** Severity maps onto SARIF's three levels, which is why SARIF fits. */
+    /// Severity maps onto SARIF's three levels, which is why SARIF fits.
     @Test
     void severityMapsOntoSarifLevels() {
         assertThat(io.zengin4j.validation.api.Severity.ERROR.sarifLevel()).isEqualTo("error");
@@ -126,7 +121,7 @@ class ReportOutputTest {
         assertThat(io.zengin4j.validation.api.Severity.INFO.sarifLevel()).isEqualTo("note");
     }
 
-    /** A clean report still produces valid documents, not empty strings. */
+    /// A clean report still produces valid documents, not empty strings.
     @Test
     void aCleanReportStillSerialises() {
         ValidationReport clean = ZenginValidator.defaults().validate(Fixtures.wellFormedFile());
@@ -146,7 +141,7 @@ class ReportOutputTest {
 
     // -------------------------------------------------------------- R-V5
 
-    /** The library is complete without reference data: those rules just do not run. */
+    /// The library is complete without reference data: those rules just do not run.
     @Test
     void withoutReferenceDataNoReferenceRulesRun() {
         ValidationReport report = ZenginValidator.defaults().validate(Fixtures.wellFormedFile());
@@ -210,7 +205,7 @@ class ReportOutputTest {
         assertThat(data.describe()).isEqualTo("complete test data");
     }
 
-    /** V-403: the name in the file disagrees with what the reference data says. */
+    /// V-403: the name in the file disagrees with what the reference data says.
     @Test
     void v403_warnsWhenANameDisagreesWithTheReferenceData() {
         ReferenceDataProvider data = MapReferenceData.describedAs("test data")
@@ -230,7 +225,7 @@ class ReportOutputTest {
                 .isEqualTo(io.zengin4j.validation.api.Severity.WARNING);
     }
 
-    /** And it stays quiet when the names agree. */
+    /// And it stays quiet when the names agree.
     @Test
     void v403_staysQuietWhenNamesMatch() {
         ReferenceDataProvider data = MapReferenceData.describedAs("test data")
@@ -247,7 +242,7 @@ class ReportOutputTest {
         assertThat(report.findingsOf("V-403")).isEmpty();
     }
 
-    /** The report renders its own JSON and SARIF, as §14.1 specifies. */
+    /// The report renders its own JSON and SARIF, as §14.1 specifies.
     @Test
     void theReportSerialisesItself() {
         ValidationReport report = problems();
@@ -261,7 +256,7 @@ class ReportOutputTest {
         assertThat(report.rules()).as("a report knows the rules that produced it").isNotEmpty();
     }
 
-    /** An unused fixture guard: the file the reference tests rely on is clean otherwise. */
+    /// An unused fixture guard: the file the reference tests rely on is clean otherwise.
     @Test
     void theReferenceFixtureUsesTheSyntheticRanges() {
         byte[] file = SyntheticRecords.file(

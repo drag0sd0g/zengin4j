@@ -1,5 +1,6 @@
 package io.zengin4j.validation;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.model.SeparatorStyle;
@@ -9,16 +10,13 @@ import io.zengin4j.testkit.SyntheticRecords;
 import io.zengin4j.validation.api.Finding;
 import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.api.ValidationReport;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * Each rule fires on what it claims to detect, and stays quiet otherwise.
- *
- * <p>The second half matters as much as the first. A rule that fires on a clean
- * file is worse than a rule that never fires: it teaches people to ignore the
- * report, and they then ignore the finding that mattered.
- */
+/// Each rule fires on what it claims to detect, and stays quiet otherwise.
+///
+/// The second half matters as much as the first. A rule that fires on a clean
+/// file is worse than a rule that never fires: it teaches people to ignore the
+/// report, and they then ignore the finding that mattered.
 class RuleCatalogueTest {
 
     private static final SougouFurikomiFixtures KIT = Fixtures.TESTKIT;
@@ -27,7 +25,7 @@ class RuleCatalogueTest {
         return ZenginValidator.defaults().validate(file);
     }
 
-    /** The control: a well-formed file produces no errors at all. */
+    /// The control: a well-formed file produces no errors at all.
     @Test
     void aWellFormedFileProducesNoErrors() {
         ValidationReport report = validate(Fixtures.wellFormedFile());
@@ -109,7 +107,7 @@ class RuleCatalogueTest {
         assertThat(report.findingsOf("V-202").get(0).messageEn()).contains("long vowel mark");
     }
 
-    /** R-K7: a voicing mark after a kana that cannot take one. */
+    /// R-K7: a voicing mark after a kana that cannot take one.
     @Test
     void v206_reportsAnIllegalVoicingMark() {
         // ｱ followed by a dakuten — a byte pair no reader can pronounce.
@@ -125,7 +123,7 @@ class RuleCatalogueTest {
         assertThat(report.findingsOf("V-206").get(0).messageEn()).contains("dakuten");
     }
 
-    /** And a legal one does not fire — ﾀﾞ is ﾀ plus a mark, and is fine. */
+    /// And a legal one does not fire — ﾀﾞ is ﾀ plus a mark, and is fine.
     @Test
     void v206_staysQuietOnALegalVoicingMark() {
         ValidationReport report = validate(Fixtures.wellFormedFile());
@@ -160,7 +158,7 @@ class RuleCatalogueTest {
                 assertThat(finding.actualValue()).contains("7"));
     }
 
-    /** V-304: a total that does not fit the trailer's N(12) field. */
+    /// V-304: a total that does not fit the trailer's N(12) field.
     @Test
     void v304_reportsABatchTotalThatOutgrowsTheTrailerField() {
         // 9,999,999,999 is the N(10) maximum; 200 of them exceed N(12).
@@ -182,7 +180,7 @@ class RuleCatalogueTest {
                 .isEmpty();
     }
 
-    /** V-306 is a warning, deliberately: duplicates are legal and usually wrong. */
+    /// V-306 is a warning, deliberately: duplicates are legal and usually wrong.
     @Test
     void v306_warnsAboutTwoIdenticalPaymentsInOneBatch() {
         byte[] file = SyntheticRecords.file(
@@ -254,7 +252,7 @@ class RuleCatalogueTest {
 
     // --------------------------------------------------------------- R-E6
 
-    /** Account numbers are masked in findings unless the caller opts out. */
+    /// Account numbers are masked in findings unless the caller opts out.
     @Test
     void accountNumbersAreMaskedInFindingsByDefault() {
         byte[] data = KIT.data("ﾔﾏﾀﾞ ﾀﾛｳ", SougouFurikomiFixtures.AMOUNT, "9876543");

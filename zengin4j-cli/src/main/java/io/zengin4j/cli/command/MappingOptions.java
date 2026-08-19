@@ -1,5 +1,6 @@
 package io.zengin4j.cli.command;
 
+import module java.base;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.charset.ZenginCharset;
@@ -9,22 +10,17 @@ import io.zengin4j.core.kana.UnmappableCharacterPolicy;
 import io.zengin4j.core.loss.LossSeverity;
 import io.zengin4j.iso20022.api.EndToEndIdPolicy;
 import io.zengin4j.iso20022.api.MappingContext;
-import java.io.PrintWriter;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import picocli.CommandLine;
 
-/**
- * The conversion settings {@code convert} and {@code dryrun} share.
- *
- * <p>§27 sketches these as a {@code --context=ctx.yaml} file. They are flags
- * instead — see {@code docs/adr/0034-the-mapping-context-is-flags-not-a-file.md}.
- * The short version: there are eight values here, and a YAML file would be a
- * second configuration language for eight values, in a tool whose library
- * deliberately parses no YAML at runtime.
- *
- * @since 0.5.0
- */
+/// The conversion settings `convert` and `dryrun` share.
+///
+/// §27 sketches these as a `--context=ctx.yaml` file. They are flags
+/// instead — see `docs/adr/0034-the-mapping-context-is-flags-not-a-file.md`.
+/// The short version: there are eight values here, and a YAML file would be a
+/// second configuration language for eight values, in a tool whose library
+/// deliberately parses no YAML at runtime.
+///
+/// @since 0.5.0
 public final class MappingOptions {
 
     @CommandLine.Option(
@@ -90,29 +86,25 @@ public final class MappingOptions {
                     + "conversion refuses at CRITICAL rather than returning quietly.")
     boolean acceptLoss;
 
-    /**
-     * Builds the context, or explains what is missing.
-     *
-     * @param err            where to write the explanation
-     * @param needTheFormat  whether a target format is required, which it is
-     *                       when producing a Zengin file
-     * @return the context, or {@code null} when something required is absent
-     */
+    /// Builds the context, or explains what is missing.
+    ///
+    /// @param err            where to write the explanation
+    /// @param needTheFormat  whether a target format is required, which it is
+    ///   when producing a Zengin file
+    /// @return the context, or `null` when something required is absent
     MappingContext toContext(PrintWriter err, boolean needTheFormat) {
         return toContext(err, needTheFormat, ZenginCharset.defaultCharset());
     }
 
-    /**
-     * Builds the context, or explains what is missing.
-     *
-     * @param err            where to write the explanation
-     * @param needTheFormat  whether a target format is required, which it is
-     *                       when producing a Zengin file
-     * @param charset        the charset of the fixed-length side, taken from
-     *                       {@code --charset} so that reading and converting
-     *                       cannot disagree about it
-     * @return the context, or {@code null} when something required is absent
-     */
+    /// Builds the context, or explains what is missing.
+    ///
+    /// @param err            where to write the explanation
+    /// @param needTheFormat  whether a target format is required, which it is
+    ///   when producing a Zengin file
+    /// @param charset        the charset of the fixed-length side, taken from
+    ///   `--charset` so that reading and converting
+    ///   cannot disagree about it
+    /// @return the context, or `null` when something required is absent
     MappingContext toContext(PrintWriter err, boolean needTheFormat, ZenginCharset charset) {
         if (needTheFormat && (originatorCode == null || originatorCode.isBlank())) {
             err.println("--originator-code is required when converting to Zengin. The XML does "
@@ -174,12 +166,10 @@ public final class MappingOptions {
                 });
     }
 
-    /**
-     * The severity at which the command reports failure, whatever the context
-     * does.
-     *
-     * @return the threshold
-     */
+    /// The severity at which the command reports failure, whatever the context
+    /// does.
+    ///
+    /// @return the threshold
     static LossSeverity criticalThreshold() {
         return LossSeverity.CRITICAL;
     }

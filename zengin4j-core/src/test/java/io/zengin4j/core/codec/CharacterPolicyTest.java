@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -9,28 +10,22 @@ import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.testing.Fixtures;
-import java.io.ByteArrayInputStream;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * Issue 3.1: strict mode over the permitted character set (R-C13).
- */
+/// Issue 3.1: strict mode over the permitted character set (R-C13).
 class CharacterPolicyTest {
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
-    /**
-     * A beneficiary name written with the long vowel mark instead of a hyphen —
-     * the mistake that looks correct.
-     */
+    /// A beneficiary name written with the long vowel mark instead of a hyphen —
+    /// the mistake that looks correct.
     private byte[] fileWithProlongedSoundMark() {
         byte[] data = Fixtures.data(descriptor, "ﾔﾏﾀﾞｰﾀﾛｳ", Fixtures.AMOUNT);
         return Fixtures.join(Fixtures.CRLF, Fixtures.header(descriptor), data,
                 Fixtures.trailer(descriptor, 1, Fixtures.AMOUNT), Fixtures.end(descriptor));
     }
 
-    /** Collects what the reader reports, since warnings are the reader's, not the file's. */
+    /// Collects what the reader reports, since warnings are the reader's, not the file's.
     private final List<ZenginWarning> collected = new java.util.ArrayList<>();
 
     private ReaderOptions options(CharacterPolicy policy) {
@@ -42,7 +37,7 @@ class CharacterPolicyTest {
                 .build();
     }
 
-    /** The default. Content is not the reader's business (R-E1). */
+    /// The default. Content is not the reader's business (R-E1).
     @Test
     void ignoresCharacterViolationsByDefault() {
         assertThat(Fixtures.options().characterPolicy()).isEqualTo(CharacterPolicy.IGNORE);
@@ -74,7 +69,7 @@ class CharacterPolicyTest {
         assertThat(warnings.get(0).byteOffset()).isEqualTo(122 + 50 + 4);
     }
 
-    /** R-C13: refuse the file, naming every violation in the offending record. */
+    /// R-C13: refuse the file, naming every violation in the offending record.
     @Test
     void rejectsTheFileWhenToldTo() {
         assertThatExceptionOfType(CharacterSetViolationException.class)
@@ -90,7 +85,7 @@ class CharacterPolicyTest {
                 });
     }
 
-    /** A clean file passes under every policy, which is what makes the strict mode usable. */
+    /// A clean file passes under every policy, which is what makes the strict mode usable.
     @Test
     void aCleanFilePassesUnderEveryPolicy() {
         for (CharacterPolicy policy : CharacterPolicy.values()) {
@@ -103,7 +98,7 @@ class CharacterPolicyTest {
         }
     }
 
-    /** Filler is never policed: R-D5 requires those bytes back verbatim, whatever they are. */
+    /// Filler is never policed: R-D5 requires those bytes back verbatim, whatever they are.
     @Test
     void fillerIsNotChecked() {
         byte[] header = Fixtures.patch(Fixtures.header(descriptor), 110, "abc");

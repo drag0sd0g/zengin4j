@@ -1,5 +1,6 @@
 package io.zengin4j.cli.command;
 
+import module java.base;
 import io.zengin4j.cli.ExitCode;
 import io.zengin4j.cli.internal.FieldRendering;
 import io.zengin4j.cli.internal.Json;
@@ -11,27 +12,20 @@ import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.format.FormatRegistry;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-/**
- * {@code zengin explain} — describes a format, or one field of it.
- *
- * <p>Answers "what is at byte 50, and what is it allowed to contain?" without
- * needing a file to hand. The same descriptors the reader uses are the source,
- * so what this prints is what the library will actually do — not a document
- * that agreed with the code when it was written.
- *
- * <p>It states the verification status plainly, because a layout nobody has
- * confirmed against two published sources is exactly the thing a reader of this
- * output needs to know.
- *
- * @since 0.3.0
- */
+/// `zengin explain` — describes a format, or one field of it.
+///
+/// Answers "what is at byte 50, and what is it allowed to contain?" without
+/// needing a file to hand. The same descriptors the reader uses are the source,
+/// so what this prints is what the library will actually do — not a document
+/// that agreed with the code when it was written.
+///
+/// It states the verification status plainly, because a layout nobody has
+/// confirmed against two published sources is exactly the thing a reader of this
+/// output needs to know.
+///
+/// @since 0.3.0
 @CommandLine.Command(
         name = "explain",
         mixinStandardHelpOptions = true,
@@ -254,7 +248,7 @@ public final class ExplainCommand implements Callable<Integer> {
         }
     }
 
-    /** The layout table: no hex or value column, because there is no file here. */
+    /// The layout table: no hex or value column, because there is no file here.
     private static void layoutTable(PrintWriter out, List<FieldRendering.Row> rows) {
         int idWidth = 10;
         int jaWidth = 8;
@@ -353,13 +347,11 @@ public final class ExplainCommand implements Callable<Integer> {
         field.note().ifPresent(note -> json.field("note", note));
     }
 
-    /**
-     * The codes this field may hold.
-     *
-     * <p>A descriptor may narrow a shared list — 給与振込 admits two of the
-     * account types 総合振込 admits — and the narrowed set is what the reader
-     * of this output needs, not the superset.
-     */
+    /// The codes this field may hold.
+    ///
+    /// A descriptor may narrow a shared list — 給与振込 admits two of the
+    /// account types 総合振込 admits — and the narrowed set is what the reader
+    /// of this output needs, not the superset.
     private static List<CodeValue> permittedCodes(FieldDescriptor field, CodeList list) {
         if (field.codes().isEmpty()) {
             return list.values();

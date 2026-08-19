@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -20,24 +21,14 @@ import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.ZenginRecord;
 import io.zengin4j.core.testing.Fixtures;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.MonthDay;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
-/**
- * Milestone M1 and the framing requirements of issues 1.6 and 1.8.
- */
+/// Milestone M1 and the framing requirements of issues 1.6 and 1.8.
 class StreamingZenginReaderTest {
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
 
-    /** M1: parse a synthetic 総合振込 file end to end. */
+    /// M1: parse a synthetic 総合振込 file end to end.
     @Test
     void parsesASyntheticFileEndToEnd() {
         List<RecordKind> kinds = new ArrayList<>();
@@ -76,18 +67,16 @@ class StreamingZenginReaderTest {
         assertThat(kinds).containsExactly(RecordKind.HEADER, RecordKind.DATA, RecordKind.TRAILER, RecordKind.END);
     }
 
-    /**
-     * A voicing mark is a character of its own, and a byte of its own.
-     *
-     * <p>ﾃｽﾄｷﾞﾝｺｳ renders as seven characters — テストギンコウ — but the ｷﾞ is
-     * ｷ followed by a standalone ﾞ, so it is eight code points and eight bytes.
-     * Truncating between them turns ギ into キ and the name into a different
-     * one, which is the hazard §17 is about.
-     *
-     * <p>The same string is 24 bytes in UTF-8. A 15-byte 被仕向銀行名 field
-     * holds it under MS932 and cannot hold it under UTF-8, which is why every
-     * length in the codec is a byte count (R-C15).
-     */
+    /// A voicing mark is a character of its own, and a byte of its own.
+    ///
+    /// ﾃｽﾄｷﾞﾝｺｳ renders as seven characters — テストギンコウ — but the ｷﾞ is
+    /// ｷ followed by a standalone ﾞ, so it is eight code points and eight bytes.
+    /// Truncating between them turns ギ into キ and the name into a different
+    /// one, which is the hazard §17 is about.
+    ///
+    /// The same string is 24 bytes in UTF-8. A 15-byte 被仕向銀行名 field
+    /// holds it under MS932 and cannot hold it under UTF-8, which is why every
+    /// length in the codec is a byte count (R-C15).
     @Test
     void voicingMarksAreSeparateCharactersAndSeparateBytes() {
         assertThat(Fixtures.BANK_NAME).hasSize(8);
@@ -125,7 +114,7 @@ class StreamingZenginReaderTest {
         }
     }
 
-    /** R-C6: conventions may vary within one file, and that is recorded rather than normalised. */
+    /// R-C6: conventions may vary within one file, and that is recorded rather than normalised.
     @Test
     void reportsMixedSeparators() {
         byte[] file = Fixtures.concat(List.of(
@@ -142,7 +131,7 @@ class StreamingZenginReaderTest {
         }
     }
 
-    /** R-C8: a trailing EOF byte is accepted and recorded. */
+    /// R-C8: a trailing EOF byte is accepted and recorded.
     @Test
     void acceptsATrailingEofByte() {
         byte[] file = Fixtures.concat(List.of(Fixtures.file(descriptor), new byte[] {0x1A}));
@@ -176,7 +165,7 @@ class StreamingZenginReaderTest {
         }
     }
 
-    /** R-C10: a byte order mark is rejected by default. */
+    /// R-C10: a byte order mark is rejected by default.
     @Test
     void rejectsAByteOrderMarkByDefault() {
         byte[] file = withByteOrderMark(Fixtures.file(descriptor));
@@ -197,7 +186,7 @@ class StreamingZenginReaderTest {
         }
     }
 
-    /** R-0.1, issue 1.9: a provisional layout is refused unless the caller opts in. */
+    /// R-0.1, issue 1.9: a provisional layout is refused unless the caller opts in.
     @Test
     void refusesAnUnverifiedFormatUnlessAllowed() {
         ReaderOptions options = ReaderOptions.builder()
@@ -247,7 +236,7 @@ class StreamingZenginReaderTest {
                         .containsExactly("sougou-furikomi", "sougou-furikomi-variant"));
     }
 
-    /** R-C14: EBCDIC is named and refused, never decoded as JIS. */
+    /// R-C14: EBCDIC is named and refused, never decoded as JIS.
     @Test
     void refusesAnEbcdicFile() {
         byte[] header = Fixtures.patch(Fixtures.header(descriptor), 3, "1");
@@ -272,7 +261,7 @@ class StreamingZenginReaderTest {
                 .withMessageContaining("too short");
     }
 
-    /** §12.4: the state machine rejects a record that cannot appear where it is. */
+    /// §12.4: the state machine rejects a record that cannot appear where it is.
     @Test
     void rejectsAnOutOfSequenceRecordInStrictMode() {
         byte[] file = Fixtures.join(Fixtures.CRLF, Fixtures.header(descriptor), Fixtures.header(descriptor));
@@ -285,7 +274,7 @@ class StreamingZenginReaderTest {
                 .withMessageContaining("cannot appear here");
     }
 
-    /** R-C3: lenient mode resynchronises by one record length, never by scanning. */
+    /// R-C3: lenient mode resynchronises by one record length, never by scanning.
     @Test
     void emitsMalformedRecordsAndKeepsGoingInLenientMode() {
         byte[] broken = Fixtures.patch(Fixtures.data(descriptor), 0, "5");
@@ -334,7 +323,7 @@ class StreamingZenginReaderTest {
         }
     }
 
-    /** R-C2: a missing end record is a finding for the validator, not a parse failure. */
+    /// R-C2: a missing end record is a finding for the validator, not a parse failure.
     @Test
     void acceptsAFileWithNoEndRecord() {
         byte[] file = Fixtures.join(Fixtures.CRLF, Fixtures.header(descriptor), Fixtures.data(descriptor),
@@ -344,7 +333,7 @@ class StreamingZenginReaderTest {
         }
     }
 
-    /** R-C1: several batches in one file parse; whether that is allowed is a validation question. */
+    /// R-C1: several batches in one file parse; whether that is allowed is a validation question.
     @Test
     void acceptsMultipleBatches() {
         byte[] file = Fixtures.join(Fixtures.CRLF,
@@ -375,7 +364,7 @@ class StreamingZenginReaderTest {
                 .withMessageContaining("not registered");
     }
 
-    /** R-MEM1: the buffer holds whole records, and small buffers still work. */
+    /// R-MEM1: the buffer holds whole records, and small buffers still work.
     @Test
     void readsCorrectlyWithABufferOfOneRecord() {
         byte[] file = Fixtures.join(Fixtures.CRLF, Fixtures.header(descriptor),
@@ -387,7 +376,7 @@ class StreamingZenginReaderTest {
         }
     }
 
-    /** Reading in small chunks exercises buffer refills across record boundaries. */
+    /// Reading in small chunks exercises buffer refills across record boundaries.
     @Test
     void readsCorrectlyFromADribblingStream() {
         byte[] file = Fixtures.file(descriptor);
@@ -403,16 +392,14 @@ class StreamingZenginReaderTest {
         assertThat(total).isEqualTo(Fixtures.AMOUNT);
     }
 
-    /**
-     * The framing paths — skipping a leading byte order mark, consuming a
-     * separator run, consuming the EOF byte — each have to survive the buffer
-     * running out mid-way. A one-record buffer fed a byte at a time puts a
-     * refill at every one of those points, in every framing combination.
-     *
-     * <p>Round-tripping is the assertion rather than a field value, because a
-     * refill that loses or duplicates a byte shows up in the output even when
-     * every decoded field still looks plausible (INV-1).
-     */
+    /// The framing paths — skipping a leading byte order mark, consuming a
+    /// separator run, consuming the EOF byte — each have to survive the buffer
+    /// running out mid-way. A one-record buffer fed a byte at a time puts a
+    /// refill at every one of those points, in every framing combination.
+    ///
+    /// Round-tripping is the assertion rather than a field value, because a
+    /// refill that loses or duplicates a byte shows up in the output even when
+    /// every decoded field still looks plausible (INV-1).
     @Test
     void survivesABufferRefillAtEveryFramingBoundary() {
         for (SeparatorStyle style : List.of(SeparatorStyle.NONE, SeparatorStyle.CR,
@@ -439,20 +426,18 @@ class StreamingZenginReaderTest {
         }
     }
 
-    /**
-     * A run of separators longer than whatever is left in the buffer.
-     *
-     * <p>{@code fill} drains the stream greedily, so feeding it slowly does not
-     * produce a partial buffer — the only way to run out mid-framing is for the
-     * framing itself to be longer than the buffer's tail. Blank lines between
-     * records do that, and a file that has been through a text editor has them.
-     *
-     * <p>Such a run is reported as {@link SeparatorStyle#MIXED}, and that is the
-     * right answer rather than a limitation: nothing distinguishes "one CRLF
-     * plus blank lines" from "two conventions in one file", and both are
-     * equally unreproducible. The reader says so and the writer refuses,
-     * instead of silently normalising the blank lines away.
-     */
+    /// A run of separators longer than whatever is left in the buffer.
+    ///
+    /// `fill` drains the stream greedily, so feeding it slowly does not
+    /// produce a partial buffer — the only way to run out mid-framing is for the
+    /// framing itself to be longer than the buffer's tail. Blank lines between
+    /// records do that, and a file that has been through a text editor has them.
+    ///
+    /// Such a run is reported as [SeparatorStyle#MIXED], and that is the
+    /// right answer rather than a limitation: nothing distinguishes "one CRLF
+    /// plus blank lines" from "two conventions in one file", and both are
+    /// equally unreproducible. The reader says so and the writer refuses,
+    /// instead of silently normalising the blank lines away.
     @Test
     void readsThroughASeparatorRunLongerThanTheBuffer() {
         byte[] blankLines = new byte[400];
@@ -476,7 +461,7 @@ class StreamingZenginReaderTest {
         }
     }
 
-    /** A reader owns the stream it opened and must release it (R-C21). */
+    /// A reader owns the stream it opened and must release it (R-C21).
     @Test
     void closingTheReaderClosesTheStreamItOpened() {
         AtomicBoolean closed = new AtomicBoolean();
@@ -544,7 +529,7 @@ class StreamingZenginReaderTest {
         return Fixtures.concat(List.of(RecordFramer.BYTE_ORDER_MARK, file));
     }
 
-    /** Hands out a few bytes at a time, so buffer refills happen mid-record. */
+    /// Hands out a few bytes at a time, so buffer refills happen mid-record.
     private static final class DribblingStream extends InputStream {
 
         private final byte[] source;

@@ -1,29 +1,23 @@
 package io.zengin4j.core.model;
 
+import module java.base;
 import io.zengin4j.core.error.Diagnostics;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.format.RecordDescriptor;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
 
-/**
- * Base of the descriptor-driven fallback records.
- *
- * <p>Every format bundled with this library has generated, format-shaped
- * record types (R-D1). These fallbacks exist for descriptors registered at
- * runtime, where no generated type can exist: they expose the same
- * information keyed by field id instead of by accessor name.
- *
- * <p>Prefer the generated types. A fallback record cannot give you
- * {@code beneficiaryName()}; it can only give you {@code value("...")}, and a
- * misspelling there is a runtime surprise rather than a compile error.
- *
- * @since 0.1.0
- */
+/// Base of the descriptor-driven fallback records.
+///
+/// Every format bundled with this library has generated, format-shaped
+/// record types (R-D1). These fallbacks exist for descriptors registered at
+/// runtime, where no generated type can exist: they expose the same
+/// information keyed by field id instead of by accessor name.
+///
+/// Prefer the generated types. A fallback record cannot give you
+/// `beneficiaryName()`; it can only give you `value("...")`, and a
+/// misspelling there is a runtime surprise rather than a compile error.
+///
+/// @since 0.1.0
 public abstract sealed class GenericRecord
         permits GenericHeaderRecord, GenericDataRecord, GenericTrailerRecord, GenericEndRecord {
 
@@ -33,16 +27,14 @@ public abstract sealed class GenericRecord
     private final byte[] rawBytes;
     private final Map<String, String> values;
 
-    /**
-     * Creates a fallback record.
-     *
-     * @param descriptor   the layout the record was decoded with
-     * @param recordNumber the 1-based position of the record in the file
-     * @param byteOffset   the record's byte offset within the file
-     * @param rawBytes     the record's bytes, copied defensively
-     * @param values       decoded field values keyed by field id, copied
-     *                     defensively
-     */
+    /// Creates a fallback record.
+    ///
+    /// @param descriptor   the layout the record was decoded with
+    /// @param recordNumber the 1-based position of the record in the file
+    /// @param byteOffset   the record's byte offset within the file
+    /// @param rawBytes     the record's bytes, copied defensively
+    /// @param values       decoded field values keyed by field id, copied
+    ///   defensively
     protected GenericRecord(
             RecordDescriptor descriptor,
             int recordNumber,
@@ -57,77 +49,61 @@ public abstract sealed class GenericRecord
                 new LinkedHashMap<>(Objects.requireNonNull(values, "values")));
     }
 
-    /**
-     * Returns the layout this record was decoded with.
-     *
-     * @return the record descriptor
-     */
+    /// Returns the layout this record was decoded with.
+    ///
+    /// @return the record descriptor
     public final RecordDescriptor descriptor() {
         return descriptor;
     }
 
-    /**
-     * Returns the format this record belongs to.
-     *
-     * @return the format id
-     */
+    /// Returns the format this record belongs to.
+    ///
+    /// @return the format id
     public final FormatId formatId() {
         return descriptor.formatId();
     }
 
-    /**
-     * Returns the 1-based position of this record within the file.
-     *
-     * @return the record number
-     */
+    /// Returns the 1-based position of this record within the file.
+    ///
+    /// @return the record number
     public final int recordNumber() {
         return recordNumber;
     }
 
-    /**
-     * Returns the byte offset of this record within the file.
-     *
-     * @return the byte offset
-     */
+    /// Returns the byte offset of this record within the file.
+    ///
+    /// @return the byte offset
     public final long byteOffset() {
         return byteOffset;
     }
 
-    /**
-     * Returns a copy of the record's bytes.
-     *
-     * @return the raw bytes
-     */
+    /// Returns a copy of the record's bytes.
+    ///
+    /// @return the raw bytes
     public final byte[] rawBytes() {
         return rawBytes.clone();
     }
 
-    /**
-     * Returns every decoded field value, keyed by field id, in layout order.
-     *
-     * @return an unmodifiable map of field values
-     */
+    /// Returns every decoded field value, keyed by field id, in layout order.
+    ///
+    /// @return an unmodifiable map of field values
     public final Map<String, String> values() {
         return values;
     }
 
-    /**
-     * Returns one decoded field value.
-     *
-     * @param fieldId the field id
-     * @return the value, or an empty string if this record has no such field
-     */
+    /// Returns one decoded field value.
+    ///
+    /// @param fieldId the field id
+    /// @return the value, or an empty string if this record has no such field
     public final String value(String fieldId) {
         return values.getOrDefault(fieldId, "");
     }
 
-    /**
-     * Two fallback records are equal when they share a format, a role and
-     * their bytes; position within the file is metadata, not identity.
-     *
-     * @param other the object to compare with
-     * @return whether the records are equal
-     */
+    /// Two fallback records are equal when they share a format, a role and
+    /// their bytes; position within the file is metadata, not identity.
+    ///
+    /// @param other the object to compare with
+    /// @return whether the records are equal
     @Override
     public final boolean equals(Object other) {
         return other instanceof GenericRecord record
@@ -142,12 +118,10 @@ public abstract sealed class GenericRecord
         return Objects.hash(descriptor.formatId(), descriptor.kind(), Arrays.hashCode(rawBytes));
     }
 
-    /**
-     * Renders the record with values marked {@code sensitive} in the
-     * descriptor masked to their last four characters (R-E6).
-     *
-     * @return a diagnostic description
-     */
+    /// Renders the record with values marked `sensitive` in the
+    /// descriptor masked to their last four characters (R-E6).
+    ///
+    /// @return a diagnostic description
     @Override
     public final String toString() {
         StringBuilder result = new StringBuilder(getClass().getSimpleName())

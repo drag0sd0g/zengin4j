@@ -745,6 +745,45 @@ depends on.
   reads as a possible account number — correctly, because a digit run that means a date is
   indistinguishable from one that means an account. The date keeps its hyphens.
 
+### Changed — Java 25 baseline
+
+- **`options.release` moves from 21 to 25**, and the CI matrix drops its 21 leg. This diverges from
+  R-M7 deliberately: a language baseline is a decision with an expiry date rather than a fact about
+  the format. **The cost lands on somebody who is not in the room** — anyone still on Java 21, which
+  is what most enterprises run, can no longer use the library, and the change buys no capability.
+  Recorded in [ADR-0036](docs/adr/0036-java-25-baseline.md), which supersedes ADR-0002 on the
+  version and keeps its mechanism, and states how to reverse it.
+- **`examples/` are compact source files with an instance `main`.** All seven were already run as
+  single-file programs by `runExamples`; the class wrapper was noise. Output is byte-identical.
+- **`HexFormat` replaces a hand-rolled hex dump** in `inspect --annotate` and the `%02X` formats
+  around it. Same bytes on screen, thirteen fewer lines.
+- **The CLI's exception dispatch is a pattern switch** rather than six chained `instanceof` tests,
+  with an explicit `case null` — `describe(unchecked.getCause())` could in principle pass one.
+- **`MappingFailedException` validates before `super(...)`.** Its message builder reads the loss
+  report, so the null check used to fire after the `NullPointerException` it exists to prevent.
+- **`getFirst()` for nine `get(0)` calls**, and `List.copyOf` for two defensive copies.
+
+`Map.copyOf` was tried for `FormatRegistry` and reverted: it returns an *unordered* map, and
+declaration order is what diagnostics and the generated documentation list things in. A test caught
+it, which is the only reason this is a footnote rather than a defect.
+
+### Changed — Markdown doc comments and module imports
+
+- **Every doc comment is now a Markdown `///` comment.** No `/** */` remains anywhere, including in
+  the sources the code generators emit. Rendered javadoc is unchanged: `-Xdoclint:all,-missing`
+  reports nothing, every `{@link}` that became a `[reference]` still resolves, and R-MEM2's bold
+  buffer-recycling warning on `RecordView` still renders bold. Two `{@link}` tags whose signatures
+  contain `[]` stay as taglets, because CommonMark would have to parse the brackets.
+- **`import module java.base;` replaces 879 single-type JDK imports**, as the first line of the
+  import block. `java.lang.management.ManagementFactory` keeps its own import, being outside
+  java.base; `XmlParser` and `SchemaValidationTest` add `import module java.xml;`. The `examples/`
+  programs are compact source files, which import java.base implicitly, so their imports are gone
+  entirely.
+- Both are recorded in
+  [ADR-0037](docs/adr/0037-markdown-doc-comments-and-module-imports.md), which is candid that the
+  module-import half is the weaker one: 43% of the affected files imported one JDK type or two, and
+  for those the change saves no lines and says less.
+
 ### Known limitations
 
 - **Every bundled format descriptor is `verified: false`**, though not for want of evidence: the
@@ -809,7 +848,7 @@ depends on.
 
 ### Quality gates
 
-`./gradlew build` enforces, on every run: the Java 21 baseline, the tests, the coverage floors
+`./gradlew build` enforces, on every run: the Java 25 baseline, the tests, the coverage floors
 (≥ 90% line and ≥ 85% branch on `core` and `iso20022`; 90/80 on `validation`; 95/90 on `testkit`;
 85/75 on `cli`), the ArchUnit module rules for `core` and `iso20022`, descriptor consistency, that
 the committed generated sources and `docs/mapping.md` match the declarations, that `docs/cli.md`

@@ -1,22 +1,19 @@
 package io.zengin4j.cli.internal;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import io.zengin4j.cli.internal.RecordAlignment.Change;
 import io.zengin4j.cli.internal.RecordAlignment.Pair;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * The alignment, which is the whole reason {@code diff} is useful.
- *
- * <p>The behaviour worth pinning is the one positional pairing gets wrong:
- * inserting a record near the top must not report every later record as
- * changed. That is the edit somebody most wants to see clearly, and the naive
- * implementation is at its worst exactly there.
- */
+/// The alignment, which is the whole reason `diff` is useful.
+///
+/// The behaviour worth pinning is the one positional pairing gets wrong:
+/// inserting a record near the top must not report every later record as
+/// changed. That is the edit somebody most wants to see clearly, and the naive
+/// implementation is at its worst exactly there.
 class RecordAlignmentTest {
 
     private static List<byte[]> records(String... lines) {
@@ -70,11 +67,9 @@ class RecordAlignmentTest {
         assertThat(changed.rightNumber()).isEqualTo(2);
     }
 
-    /**
-     * The case that motivated pairing whole runs rather than adjacent entries:
-     * the backtrack emits four removals then four additions, and matching only
-     * neighbours reported eight events where a reader sees four edits.
-     */
+    /// The case that motivated pairing whole runs rather than adjacent entries:
+    /// the backtrack emits four removals then four additions, and matching only
+    /// neighbours reported eight events where a reader sees four edits.
     @Test
     void aRunOfEditsIsReportedAsEditsNotAsAdditionsAndRemovals() {
         List<Pair> pairs = RecordAlignment.align(
@@ -120,15 +115,13 @@ class RecordAlignmentTest {
 
     // ------------------------------------------------------------------ size
 
-    /**
-     * A big file with one edit costs almost nothing.
-     *
-     * <p>The table is {@code O(n·m)}, so aligning two 8,000-record files
-     * naively needs 64 million cells and dies under any ordinary heap.
-     * Stripping the records that match at both ends first is what makes the
-     * realistic case — a handful of payments changed in a file of thousands —
-     * affordable, and this is the test that says so.
-     */
+    /// A big file with one edit costs almost nothing.
+    ///
+    /// The table is `O(n·m)`, so aligning two 8,000-record files
+    /// naively needs 64 million cells and dies under any ordinary heap.
+    /// Stripping the records that match at both ends first is what makes the
+    /// realistic case — a handful of payments changed in a file of thousands —
+    /// affordable, and this is the test that says so.
     @Test
     void aLargeFileWithOneInsertionAlignsWithoutBuildingAHugeTable() {
         List<byte[]> before = many(8000);
@@ -153,14 +146,12 @@ class RecordAlignmentTest {
         assertThat(pairs).allMatch(pair -> pair.change() == Change.SAME);
     }
 
-    /**
-     * Files that differ almost everywhere are refused, not attempted.
-     *
-     * <p>An {@code OutOfMemoryError} here would escape as an uncaught
-     * {@code Error} and exit the JVM with status 1 — which in this tool means
-     * "the files differ", so a crash would be indistinguishable from a
-     * successful comparison that found changes.
-     */
+    /// Files that differ almost everywhere are refused, not attempted.
+    ///
+    /// An `OutOfMemoryError` here would escape as an uncaught
+    /// `Error` and exit the JVM with status 1 — which in this tool means
+    /// "the files differ", so a crash would be indistinguishable from a
+    /// successful comparison that found changes.
     @Test
     void filesThatDifferEverywhereAreRefusedRatherThanAttempted() {
         List<byte[]> before = many(5000);
@@ -175,7 +166,7 @@ class RecordAlignmentTest {
                 .withMessageContaining("zengin inspect");
     }
 
-    /** The stated limit is the one the code enforces. */
+    /// The stated limit is the one the code enforces.
     @Test
     void theLimitIsWhatTheMessageClaims() {
         assertThat(RecordAlignment.MAX_TABLE_CELLS).isEqualTo(16L * 1024 * 1024);

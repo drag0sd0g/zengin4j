@@ -1,44 +1,31 @@
 package io.zengin4j.codegen;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import module java.base;
 import org.yaml.snakeyaml.Yaml;
 
-/**
- * Reads the declared transliteration substitutions.
- *
- * <p>Build-time only, like every other reader here: the result is compiled into
- * {@code core} as Java, so nothing at runtime parses YAML (ADR-0016).
- *
- * <p>The file holds only the judgement calls — which characters the field rules
- * refuse and what is written instead. The mechanical width correspondence is
- * derived from Unicode by {@link KanaTablesGenerator} and is deliberately not
- * transcribed here.
- */
+/// Reads the declared transliteration substitutions.
+///
+/// Build-time only, like every other reader here: the result is compiled into
+/// `core` as Java, so nothing at runtime parses YAML (ADR-0016).
+///
+/// The file holds only the judgement calls — which characters the field rules
+/// refuse and what is written instead. The mechanical width correspondence is
+/// derived from Unicode by [KanaTablesGenerator] and is deliberately not
+/// transcribed here.
 final class KanaSubstitutionReader {
 
-    /** One declared substitution. */
+    /// One declared substitution.
     record Substitution(String from, String to, String severity, String whyEn, String whyJa) {
     }
 
     private KanaSubstitutionReader() {
     }
 
-    /**
-     * Reads the substitutions.
-     *
-     * @param file the YAML file
-     * @return the substitutions, in declaration order
-     * @throws CodegenException if the file is malformed or self-contradictory
-     */
+    /// Reads the substitutions.
+    ///
+    /// @param file the YAML file
+    /// @return the substitutions, in declaration order
+    /// @throws CodegenException if the file is malformed or self-contradictory
     @SuppressWarnings("unchecked")
     static List<Substitution> read(Path file) {
         String text;

@@ -1,23 +1,19 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.testkit.FormatFixtures;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * What each command does, beyond its exit status.
- *
- * @see ExitCodeContractTest for the status codes themselves
- * @see MaskingTest for R-CLI4
- * @see JsonOutputTest for R-CLI2
- */
+/// What each command does, beyond its exit status.
+///
+/// @see ExitCodeContractTest for the status codes themselves
+/// @see MaskingTest for R-CLI4
+/// @see JsonOutputTest for R-CLI2
 class CommandBehaviourTest {
 
     @TempDir
@@ -31,7 +27,7 @@ class CommandBehaviourTest {
 
     // ------------------------------------------------------------- generate
 
-    /** R-CLI3, for every format the testkit covers. */
+    /// R-CLI3, for every format the testkit covers.
     @ParameterizedTest
     @MethodSource("formats")
     void theSameSeedProducesTheSameFile(String format) throws Exception {
@@ -45,15 +41,13 @@ class CommandBehaviourTest {
                 .isEqualTo(Files.readAllBytes(second));
     }
 
-    /**
-     * A generated file passes the library's own validator.
-     *
-     * <p>The count is deliberately large. At {@code --count=5} this passed while
-     * the generator's name list held a 長音 ｰ that no format permits, because
-     * five draws from eight names usually miss it; 200 draws do not. A fixture
-     * generator whose output its own validator rejects is worse than no
-     * generator, and the bug was invisible at small sizes.
-     */
+    /// A generated file passes the library's own validator.
+    ///
+    /// The count is deliberately large. At `--count=5` this passed while
+    /// the generator's name list held a 長音 ｰ that no format permits, because
+    /// five draws from eight names usually miss it; 200 draws do not. A fixture
+    /// generator whose output its own validator rejects is worse than no
+    /// generator, and the bug was invisible at small sizes.
     @ParameterizedTest
     @MethodSource("formats")
     void everyGeneratedFormatValidatesCleanly(String format) throws Exception {
@@ -94,7 +88,7 @@ class CommandBehaviourTest {
         assertThat(result.err()).contains("must not be negative");
     }
 
-    /** MIXED describes a file that already exists; no writer can follow it. */
+    /// MIXED describes a file that already exists; no writer can follow it.
     @Test
     void generateRefusesAMixedSeparator() {
         Cli result = Cli.run("generate", "--separator=MIXED");
@@ -158,7 +152,7 @@ class CommandBehaviourTest {
         assertThat(result.out()).contains("unverified");
     }
 
-    /** R-CLI6: reading an unverified format without the flag must not silently work. */
+    /// R-CLI6: reading an unverified format without the flag must not silently work.
     @Test
     void readingAnUnverifiedFormatWithoutTheFlagFails() throws Exception {
         Path file = Cli.generate(directory, "flagless.txt", "--count=1");
@@ -172,7 +166,7 @@ class CommandBehaviourTest {
         assertThat(result.err()).doesNotContain("ReaderOptions.builder()");
     }
 
-    /** R-CLI6: and with the flag, the warning is still printed. */
+    /// R-CLI6: and with the flag, the warning is still printed.
     @Test
     void theUnverifiedWarningGoesToStderrSoItSurvivesRedirection() throws Exception {
         Path file = Cli.generate(directory, "warned.txt", "--count=1");
@@ -217,14 +211,12 @@ class CommandBehaviourTest {
         assertThat(result.err()).contains("different formats", "sougou-furikomi", "kyuyo-furikomi");
     }
 
-    /**
-     * A large diff that cannot be aligned says so, and does not exit 1.
-     *
-     * <p>Exit 1 means "the files differ". Before this was guarded, two large
-     * files that differ throughout produced an {@code OutOfMemoryError}, which
-     * escapes uncaught and exits the JVM with status 1 — so a crash and a
-     * successful comparison were indistinguishable to a script.
-     */
+    /// A large diff that cannot be aligned says so, and does not exit 1.
+    ///
+    /// Exit 1 means "the files differ". Before this was guarded, two large
+    /// files that differ throughout produced an `OutOfMemoryError`, which
+    /// escapes uncaught and exits the JVM with status 1 — so a crash and a
+    /// successful comparison were indistinguishable to a script.
     @Test
     void aDiffTooLargeToAlignIsReportedRatherThanCrashing() throws Exception {
         Path before = Cli.generate(directory, "big-a.txt", "--count=5000", "--seed=1");
@@ -239,7 +231,7 @@ class CommandBehaviourTest {
         assertThat(result.all()).doesNotContain("OutOfMemoryError", "internal error");
     }
 
-    /** The same size of file, edited once, is compared without trouble. */
+    /// The same size of file, edited once, is compared without trouble.
     @Test
     void aLargeFileWithOneEditStillDiffsFieldByField() throws Exception {
         Path before = Cli.generate(directory, "big-1.txt", "--count=5000", "--seed=3");
@@ -311,10 +303,8 @@ class CommandBehaviourTest {
         assertThat(result.err()).contains("no field 'nonesuch'");
     }
 
-    /**
-     * 預金口座振替 collects rather than pays, and the descriptor's names say so.
-     * A reader of this output must not come away thinking it credits anyone.
-     */
+    /// 預金口座振替 collects rather than pays, and the descriptor's names say so.
+    /// A reader of this output must not come away thinking it credits anyone.
     @Test
     void explainShowsDirectDebitInItsOwnDirection() {
         Cli result = Cli.run("explain", "--format=kouza-furikae", "--record=DATA");

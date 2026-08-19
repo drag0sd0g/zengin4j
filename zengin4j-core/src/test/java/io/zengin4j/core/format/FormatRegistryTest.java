@@ -1,20 +1,17 @@
 package io.zengin4j.core.format;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import io.zengin4j.core.error.FormatDescriptorException;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/**
- * Covers loading the bundled descriptors (issues 1.2, 1.3) and the immutability
- * contract of R-T1.
- */
+/// Covers loading the bundled descriptors (issues 1.2, 1.3) and the immutability
+/// contract of R-T1.
 class FormatRegistryTest {
 
-    /** 総合振込, 給与振込, 賞与振込 and 預金口座振替. Grows as Epic 8 adds the 200-byte formats. */
+    /// 総合振込, 給与振込, 賞与振込 and 預金口座振替. Grows as Epic 8 adds the 200-byte formats.
     private static final int BUNDLED_FORMATS = 4;
 
     @Test
@@ -31,13 +28,11 @@ class FormatRegistryTest {
                 .containsExactlyInAnyOrder(RecordKind.HEADER, RecordKind.DATA, RecordKind.TRAILER, RecordKind.END);
     }
 
-    /**
-     * R-0.3, R-0.2: everything shipped in 0.1.0 is still provisional and says
-     * so — but no longer for want of evidence. Each descriptor now cites the
-     * sources its offsets were checked against; what holds the flag at false
-     * is an unresolved field-attribute disagreement (D-002), which R-0.2 says
-     * keeps a format unverified until it is settled.
-     */
+    /// R-0.3, R-0.2: everything shipped in 0.1.0 is still provisional and says
+    /// so — but no longer for want of evidence. Each descriptor now cites the
+    /// sources its offsets were checked against; what holds the flag at false
+    /// is an unresolved field-attribute disagreement (D-002), which R-0.2 says
+    /// keeps a format unverified until it is settled.
     @Test
     void everyBundledDescriptorIsUnverifiedButCitesItsEvidence() {
         for (FormatDescriptor descriptor : FormatRegistry.defaults().all()) {
@@ -53,7 +48,7 @@ class FormatRegistryTest {
         }
     }
 
-    /** R-F2: offsets are computed, and they must match the published layout. */
+    /// R-F2: offsets are computed, and they must match the published layout.
     @Test
     void computesTheDataRecordOffsetsFromCumulativeLengths() {
         RecordDescriptor data = FormatRegistry.defaults()
@@ -142,7 +137,7 @@ class FormatRegistryTest {
         assertThat(registry.describeTypeCodes()).contains("21 (sougou-furikomi)");
     }
 
-    /** R-T1: adding a format yields a new registry rather than mutating one. */
+    /// R-T1: adding a format yields a new registry rather than mutating one.
     @Test
     void withFormatDoesNotMutateTheReceiver() {
         FormatRegistry original = FormatRegistry.defaults();
@@ -180,7 +175,7 @@ class FormatRegistryTest {
                         .isTrue());
     }
 
-    /** R-0.1 applies to code lists too, and the loader enforces it. */
+    /// R-0.1 applies to code lists too, and the loader enforces it.
     @Test
     void everyVerifiedCodeListCitesAtLeastTwoSources() {
         for (CodeList list : FormatRegistry.defaults().codeLists().values()) {
@@ -192,10 +187,8 @@ class FormatRegistryTest {
         }
     }
 
-    /**
-     * 種別コード 91 is used by both the 預金口座振替 instruction file and its
-     * result file. The registry surfaces that rather than resolving it.
-     */
+    /// 種別コード 91 is used by both the 預金口座振替 instruction file and its
+    /// result file. The registry surfaces that rather than resolving it.
     @Test
     void recordsThatOneBusinessTypeCodeCoversTwoFormats() {
         CodeList typeCode = FormatRegistry.defaults().codeLists().get("typeCode");

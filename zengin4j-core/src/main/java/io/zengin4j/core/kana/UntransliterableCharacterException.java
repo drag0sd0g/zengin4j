@@ -1,36 +1,31 @@
 package io.zengin4j.core.kana;
 
+import module java.base;
 import io.zengin4j.core.charset.CharacterClass;
 import io.zengin4j.core.error.ZenginException;
-import java.util.List;
-import java.util.Objects;
 
-/**
- * Text contains characters that cannot be written into the target field.
- *
- * <p>Three different situations reach here, and the message says which:
- *
- * <ul>
- *   <li><strong>Kanji.</strong> Readings are ambiguous — 東 is ヒガシ, トウ or
- *       アズマ depending on the name — and guessing wrong on a beneficiary
- *       misroutes a payment. This library does not ship a reading dictionary
- *       and will not guess (R-K6, P4).
- *   <li><strong>Hiragana</strong>, when the hiragana policy is
- *       {@link HiraganaPolicy#REJECT}. Convertible, but refused by default
- *       because it usually means the wrong field arrived.
- *   <li><strong>A character with no permitted form</strong>, when the policy is
- *       {@link UnmappableCharacterPolicy#REJECT}. A long vowel in a payroll
- *       name is the case that matters: it becomes a hyphen, and payroll names
- *       admit no symbols.
- * </ul>
- *
- * @since 0.4.0
- */
+/// Text contains characters that cannot be written into the target field.
+///
+/// Three different situations reach here, and the message says which:
+///
+/// - **Kanji.** Readings are ambiguous — 東 is ヒガシ, トウ or
+///   アズマ depending on the name — and guessing wrong on a beneficiary
+///   misroutes a payment. This library does not ship a reading dictionary
+///   and will not guess (R-K6, P4).
+/// - **Hiragana**, when the hiragana policy is
+///   [HiraganaPolicy#REJECT]. Convertible, but refused by default
+///   because it usually means the wrong field arrived.
+/// - **A character with no permitted form**, when the policy is
+///   [UnmappableCharacterPolicy#REJECT]. A long vowel in a payroll
+///   name is the case that matters: it becomes a hyphen, and payroll names
+///   admit no symbols.
+///
+/// @since 0.4.0
 public final class UntransliterableCharacterException extends ZenginException {
 
     private static final long serialVersionUID = 1L;
 
-    /** How many offending characters to name before summarising the rest. */
+    /// How many offending characters to name before summarising the rest.
     private static final int NAMED = 8;
 
     private final String offendingCharacters;
@@ -43,13 +38,11 @@ public final class UntransliterableCharacterException extends ZenginException {
         this.characterClass = characterClass;
     }
 
-    /**
-     * Raised for kanji, which cannot be transliterated correctly (R-K6, P4).
-     *
-     * @param offending the kanji found, in order of appearance
-     * @param source    the text they came from
-     * @return the exception
-     */
+    /// Raised for kanji, which cannot be transliterated correctly (R-K6, P4).
+    ///
+    /// @param offending the kanji found, in order of appearance
+    /// @param source    the text they came from
+    /// @return the exception
     public static UntransliterableCharacterException kanji(List<String> offending, String source) {
         String named = name(offending);
         return new UntransliterableCharacterException(
@@ -63,13 +56,11 @@ public final class UntransliterableCharacterException extends ZenginException {
                 named, null);
     }
 
-    /**
-     * Raised for hiragana under {@link HiraganaPolicy#REJECT} (R-K5).
-     *
-     * @param offending the hiragana found
-     * @param source    the text they came from
-     * @return the exception
-     */
+    /// Raised for hiragana under [HiraganaPolicy#REJECT] (R-K5).
+    ///
+    /// @param offending the hiragana found
+    /// @param source    the text they came from
+    /// @return the exception
     public static UntransliterableCharacterException hiragana(List<String> offending, String source) {
         String named = name(offending);
         return new UntransliterableCharacterException(
@@ -84,14 +75,12 @@ public final class UntransliterableCharacterException extends ZenginException {
                 named, null);
     }
 
-    /**
-     * Raised for a character with no form the target field permits.
-     *
-     * @param offending      the characters with no permitted form
-     * @param source         the text they came from
-     * @param characterClass the field class that refuses them
-     * @return the exception
-     */
+    /// Raised for a character with no form the target field permits.
+    ///
+    /// @param offending      the characters with no permitted form
+    /// @param source         the text they came from
+    /// @param characterClass the field class that refuses them
+    /// @return the exception
     public static UntransliterableCharacterException unmappable(List<String> offending,
             String source, CharacterClass characterClass) {
         Objects.requireNonNull(characterClass, "characterClass");
@@ -109,13 +98,11 @@ public final class UntransliterableCharacterException extends ZenginException {
                 named, characterClass);
     }
 
-    /**
-     * Raised for a voicing mark that no neighbouring kana can carry (R-K7).
-     *
-     * @param stranded the base-and-mark pairs that are not characters
-     * @param source   the text they came from
-     * @return the exception
-     */
+    /// Raised for a voicing mark that no neighbouring kana can carry (R-K7).
+    ///
+    /// @param stranded the base-and-mark pairs that are not characters
+    /// @param source   the text they came from
+    /// @return the exception
     public static UntransliterableCharacterException strandedVoicingMark(List<String> stranded,
             String source) {
         String named = name(stranded);
@@ -134,31 +121,25 @@ public final class UntransliterableCharacterException extends ZenginException {
                 named, null);
     }
 
-    /**
-     * The characters that could not be transliterated.
-     *
-     * @return the offending characters, comma-separated
-     */
+    /// The characters that could not be transliterated.
+    ///
+    /// @return the offending characters, comma-separated
     public String offendingCharacters() {
         return offendingCharacters;
     }
 
-    /**
-     * The field class that refused them, where one was involved.
-     *
-     * @return the class, or {@code null} for kanji and hiragana
-     */
+    /// The field class that refused them, where one was involved.
+    ///
+    /// @return the class, or `null` for kanji and hiragana
     public CharacterClass characterClass() {
         return characterClass;
     }
 
-    /**
-     * Names the offenders without letting the message run away.
-     *
-     * <p>A field of kanji would otherwise produce a message longer than the
-     * screen, and the first few are enough to find the problem (R-E5: the count
-     * is reported rather than the list silently cut).
-     */
+    /// Names the offenders without letting the message run away.
+    ///
+    /// A field of kanji would otherwise produce a message longer than the
+    /// screen, and the first few are enough to find the problem (R-E5: the count
+    /// is reported rather than the list silently cut).
     private static String name(List<String> offending) {
         Objects.requireNonNull(offending, "offending");
         List<String> distinct = offending.stream().distinct().toList();

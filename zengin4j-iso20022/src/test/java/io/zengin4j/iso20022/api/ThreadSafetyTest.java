@@ -1,5 +1,6 @@
 package io.zengin4j.iso20022.api;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.codec.ZenginReaders;
@@ -11,32 +12,21 @@ import io.zengin4j.iso20022.envelope.ZediEnvelopeWriter;
 import io.zengin4j.iso20022.envelope.ZediFile;
 import io.zengin4j.iso20022.mapping.MappingRegistry;
 import io.zengin4j.testkit.FormatFixtures;
-import java.io.ByteArrayInputStream;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 
-/**
- * R-T1 and R-T3, which name these two types.
- *
- * <p>{@code MappingRegistry} must be immutable and thread-safe; the mapper must
- * be stateless, with all mutable state in per-call result objects. Both were
- * claimed in Javadoc and neither was tested — and the mapper does hold mutable
- * state during a conversion: a {@code LossCollector} and a counter, on the
- * per-call leg objects. Whether those are genuinely per-call is the thing worth
- * checking, because "a field on a short-lived helper" and "a field on the
- * shared mapper" look identical at a glance.
- *
- * <p>Every thread converts the same file and must get byte-identical output and
- * an identical report. A shared collector would show up as reports of differing
- * length; shared output would show up as bytes that differ.
- */
+/// R-T1 and R-T3, which name these two types.
+///
+/// `MappingRegistry` must be immutable and thread-safe; the mapper must
+/// be stateless, with all mutable state in per-call result objects. Both were
+/// claimed in Javadoc and neither was tested — and the mapper does hold mutable
+/// state during a conversion: a `LossCollector` and a counter, on the
+/// per-call leg objects. Whether those are genuinely per-call is the thing worth
+/// checking, because "a field on a short-lived helper" and "a field on the
+/// shared mapper" look identical at a glance.
+///
+/// Every thread converts the same file and must get byte-identical output and
+/// an identical report. A shared collector would show up as reports of differing
+/// length; shared output would show up as bytes that differ.
 class ThreadSafetyTest {
 
     private static final int THREADS = 16;
@@ -58,12 +48,10 @@ class ThreadSafetyTest {
                 .build();
     }
 
-    /**
-     * One mapper, many threads, identical results.
-     *
-     * <p>A {@link CyclicBarrier} releases them together, so the conversions
-     * overlap rather than queueing behind each other.
-     */
+    /// One mapper, many threads, identical results.
+    ///
+    /// A [CyclicBarrier] releases them together, so the conversions
+    /// overlap rather than queueing behind each other.
     @Test
     void oneMapperSharedAcrossThreadsProducesIdenticalResults() throws Exception {
         Iso20022Mapper shared = Iso20022Mapper.create();
@@ -98,7 +86,7 @@ class ThreadSafetyTest {
                 .containsOnly(true);
     }
 
-    /** The same for the leg that writes a file rather than a message. */
+    /// The same for the leg that writes a file rather than a message.
     @Test
     void theInverseLegIsAlsoSafeToShare() throws Exception {
         Iso20022Mapper shared = Iso20022Mapper.create();
@@ -130,7 +118,7 @@ class ThreadSafetyTest {
                 .containsOnly(true);
     }
 
-    /** R-T1: the registry is immutable, so sharing it cannot go wrong. */
+    /// R-T1: the registry is immutable, so sharing it cannot go wrong.
     @Test
     void theRegistryCannotBeChangedByAnyoneHoldingIt() {
         MappingRegistry shared = MappingRegistry.defaults();

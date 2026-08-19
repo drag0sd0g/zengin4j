@@ -1,5 +1,6 @@
 package io.zengin4j.cli.command;
 
+import module java.base;
 import io.zengin4j.cli.ExitCode;
 import io.zengin4j.core.codec.ZenginReaders;
 import io.zengin4j.core.error.ZenginException;
@@ -8,27 +9,20 @@ import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.iso20022.api.Iso20022Mapper;
 import io.zengin4j.iso20022.api.MappingContext;
 import io.zengin4j.iso20022.loss.MappingLossReport;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Locale;
-import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-/**
- * {@code zengin dryrun} — what would converting this file cost?
- *
- * <p>R-I17: the loss report and nothing else. No file is produced, and this is
- * the one command that will not refuse whatever it finds — the point is to see
- * the loss, and stopping at the first critical entry would hide the rest of the
- * answer.
- *
- * <p>It serves the question somebody asks before committing to an integration:
- * run it over a month of real files and read what the conversion would do to
- * them. That is a better basis for a decision than a mapping table.
- *
- * @since 0.5.0
- */
+/// `zengin dryrun` — what would converting this file cost?
+///
+/// R-I17: the loss report and nothing else. No file is produced, and this is
+/// the one command that will not refuse whatever it finds — the point is to see
+/// the loss, and stopping at the first critical entry would hide the rest of the
+/// answer.
+///
+/// It serves the question somebody asks before committing to an integration:
+/// run it over a month of real files and read what the conversion would do to
+/// them. That is a better basis for a decision than a mapping table.
+///
+/// @since 0.5.0
 @CommandLine.Command(
         name = "dryrun",
         mixinStandardHelpOptions = true,

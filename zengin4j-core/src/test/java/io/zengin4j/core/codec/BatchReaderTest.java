@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -11,17 +12,10 @@ import io.zengin4j.core.model.DataRecord;
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.testing.Fixtures;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.NoSuchElementException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * R-MEM5: the convenient API materialises by default.
- */
+/// R-MEM5: the convenient API materialises by default.
 class BatchReaderTest {
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
@@ -122,7 +116,7 @@ class BatchReaderTest {
         assertThat(parsed.totalRecords()).isEqualTo(8);
     }
 
-    /** R-C2: a truncated file yields what it has, with the gap visible. */
+    /// R-C2: a truncated file yields what it has, with the gap visible.
     @Test
     void reportsABatchWithNoTrailer() {
         byte[] file = Fixtures.join(Fixtures.CRLF, Fixtures.header(descriptor), Fixtures.data(descriptor));
@@ -134,7 +128,7 @@ class BatchReaderTest {
         assertThat(parsed.endRecord()).isEmpty();
     }
 
-    /** R-D8: a bad record is data, and the rest of the file still arrives. */
+    /// R-D8: a bad record is data, and the rest of the file still arrives.
     @Test
     void keepsMalformedRecordsInsideTheirBatch() {
         byte[] file = Fixtures.join(Fixtures.CRLF, Fixtures.header(descriptor),
@@ -152,7 +146,7 @@ class BatchReaderTest {
         assertThat(parsed.totalRecords()).isEqualTo(5);
     }
 
-    /** A non-numeric amount cannot be materialised; lenient mode reports it as data. */
+    /// A non-numeric amount cannot be materialised; lenient mode reports it as data.
     @Test
     void turnsAnUndecodableFieldIntoAMalformedRecordInLenientMode() {
         byte[] file = Fixtures.join(Fixtures.CRLF, Fixtures.header(descriptor),

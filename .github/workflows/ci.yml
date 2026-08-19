@@ -23,7 +23,7 @@ jobs:
         # R-T18: Windows is mandatory, not optional. Line endings and default
         # charsets differ materially, and this is a byte-oriented library.
         os: [ubuntu-latest, macos-latest, windows-latest]
-        java: ['21', '25']
+        java: ['25']
 
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +37,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # `build` runs, in one command: compilation on the Java 21 baseline, the
+      # `build` runs, in one command: compilation on the Java 25 baseline, the
       # tests, the JaCoCo floor on core (R-T16), the ArchUnit module rules
       # (R-M5), the descriptor consistency check (R-F1) and the generated-source
       # drift check (R-M8).
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
 
       # R-DOC6: an example that does not run is documentation of something that
@@ -82,7 +82,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
 
       # The unit tests drive the command objects in-process, which is right for
@@ -189,7 +189,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
 
       # R-P2. The constrained heap is the assertion: a 1 GB file is roughly nine
@@ -220,7 +220,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
 
       # R-0.1, risk R2: the descriptor loader refuses `verified: true` below two

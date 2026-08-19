@@ -1,24 +1,17 @@
 package io.zengin4j.core.format;
 
+import module java.base;
 import io.zengin4j.core.error.FormatDescriptorException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 
-/**
- * The layout of one record kind within a format.
- *
- * @param formatId      the format this record belongs to, carried so that
- *                      every diagnostic can name it
- * @param kind          the record's role
- * @param discriminator the データ区分 byte that identifies this record kind
- * @param recordLength  the record length in bytes
- * @param fields        the fields, in layout order, with computed offsets
- * @since 0.1.0
- */
+/// The layout of one record kind within a format.
+///
+/// @param formatId      the format this record belongs to, carried so that
+///   every diagnostic can name it
+/// @param kind          the record's role
+/// @param discriminator the データ区分 byte that identifies this record kind
+/// @param recordLength  the record length in bytes
+/// @param fields        the fields, in layout order, with computed offsets
+/// @since 0.1.0
 public record RecordDescriptor(
         FormatId formatId,
         RecordKind kind,
@@ -26,16 +19,14 @@ public record RecordDescriptor(
         int recordLength,
         List<FieldDescriptor> fields) {
 
-    /**
-     * Validates the layout.
-     *
-     * <p>This is the runtime half of R-F1: field lengths must sum exactly to
-     * the record length, offsets must be contiguous from zero, and field ids
-     * must be unique. The build runs the same checks as a task so that a
-     * transcription error fails the build rather than a payment run.
-     *
-     * @throws FormatDescriptorException if the layout is inconsistent
-     */
+    /// Validates the layout.
+    ///
+    /// This is the runtime half of R-F1: field lengths must sum exactly to
+    /// the record length, offsets must be contiguous from zero, and field ids
+    /// must be unique. The build runs the same checks as a task so that a
+    /// transcription error fails the build rather than a payment run.
+    ///
+    /// @throws FormatDescriptorException if the layout is inconsistent
     public RecordDescriptor {
         Objects.requireNonNull(formatId, "formatId");
         Objects.requireNonNull(kind, "kind");
@@ -70,25 +61,23 @@ public record RecordDescriptor(
         }
     }
 
-    /**
-     * Builds a record layout from field specifications, computing every byte
-     * offset from the cumulative length of the fields before it (R-F2).
-     *
-     * <p>This is the only supported way to construct a layout. The canonical
-     * constructor takes offsets because the descriptor has to carry them, but
-     * nothing should ever be in the position of writing one down: the lengths
-     * already determine them, and a transcribed offset is the classic
-     * fixed-length parser defect.
-     *
-     * @param formatId      the format this record belongs to
-     * @param kind          the record's role
-     * @param discriminator the データ区分 byte identifying this record kind
-     * @param recordLength  the record length in bytes
-     * @param fields        the fields, in layout order, without offsets
-     * @return the layout, with offsets assigned
-     * @throws FormatDescriptorException if the field lengths do not sum to the
-     *                                   record length (R-F1)
-     */
+    /// Builds a record layout from field specifications, computing every byte
+    /// offset from the cumulative length of the fields before it (R-F2).
+    ///
+    /// This is the only supported way to construct a layout. The canonical
+    /// constructor takes offsets because the descriptor has to carry them, but
+    /// nothing should ever be in the position of writing one down: the lengths
+    /// already determine them, and a transcribed offset is the classic
+    /// fixed-length parser defect.
+    ///
+    /// @param formatId      the format this record belongs to
+    /// @param kind          the record's role
+    /// @param discriminator the データ区分 byte identifying this record kind
+    /// @param recordLength  the record length in bytes
+    /// @param fields        the fields, in layout order, without offsets
+    /// @return the layout, with offsets assigned
+    /// @throws FormatDescriptorException if the field lengths do not sum to the
+    ///   record length (R-F1)
     public static RecordDescriptor of(
             FormatId formatId,
             RecordKind kind,
@@ -105,31 +94,27 @@ public record RecordDescriptor(
         return new RecordDescriptor(formatId, kind, discriminator, recordLength, placed);
     }
 
-    /**
-     * Looks a field up by id.
-     *
-     * @param id the field id
-     * @return the field, or empty if this record has no such field
-     */
+    /// Looks a field up by id.
+    ///
+    /// @param id the field id
+    /// @return the field, or empty if this record has no such field
     public Optional<FieldDescriptor> find(String id) {
         return Optional.ofNullable(lookup(id));
     }
 
-    /**
-     * Looks a field up, returning {@code null} when there is none.
-     *
-     * <p><strong>Allocation-free without relying on the JIT.</strong> This is
-     * the hot path: {@code view.asLong(view.field("amount"))} runs once per
-     * field per record, so millions of times over a large file. An indexed loop
-     * rather than an enhanced-for, which allocates an iterator; no
-     * {@link Optional} and no capturing lambda, both of which allocate.
-     *
-     * <p>In practice HotSpot's escape analysis removes all three once the path
-     * is hot — {@code FieldAllocationTest} measures zero bytes per field either
-     * way. This is written not to need it: escape analysis is a best-effort
-     * optimisation that stops applying when a method grows too large to inline,
-     * and R-P3 should not depend on one.
-     */
+    /// Looks a field up, returning `null` when there is none.
+    ///
+    /// **Allocation-free without relying on the JIT.** This is
+    /// the hot path: `view.asLong(view.field("amount"))` runs once per
+    /// field per record, so millions of times over a large file. An indexed loop
+    /// rather than an enhanced-for, which allocates an iterator; no
+    /// [Optional] and no capturing lambda, both of which allocate.
+    ///
+    /// In practice HotSpot's escape analysis removes all three once the path
+    /// is hot — `FieldAllocationTest` measures zero bytes per field either
+    /// way. This is written not to need it: escape analysis is a best-effort
+    /// optimisation that stops applying when a method grows too large to inline,
+    /// and R-P3 should not depend on one.
     private FieldDescriptor lookup(String id) {
         for (int i = 0; i < fields.size(); i++) {
             FieldDescriptor field = fields.get(i);
@@ -140,13 +125,11 @@ public record RecordDescriptor(
         return null;
     }
 
-    /**
-     * Looks a field up by id, failing if it is absent.
-     *
-     * @param id the field id
-     * @return the field
-     * @throws FormatDescriptorException if this record has no such field
-     */
+    /// Looks a field up by id, failing if it is absent.
+    ///
+    /// @param id the field id
+    /// @return the field
+    /// @throws FormatDescriptorException if this record has no such field
     public FieldDescriptor field(String id) {
         FieldDescriptor found = lookup(id);
         if (found == null) {
@@ -159,14 +142,12 @@ public record RecordDescriptor(
         return found;
     }
 
-    /**
-     * Returns the single field declaring a given interpretation, if there is
-     * one.
-     *
-     * @param format the interpretation to look for
-     * @return the field, or empty if no field declares it
-     * @throws FormatDescriptorException if more than one field declares it
-     */
+    /// Returns the single field declaring a given interpretation, if there is
+    /// one.
+    ///
+    /// @param format the interpretation to look for
+    /// @return the field, or empty if no field declares it
+    /// @throws FormatDescriptorException if more than one field declares it
     public Optional<FieldDescriptor> findByFormat(FieldFormat format) {
         FieldDescriptor found = null;
         for (FieldDescriptor field : fields) {

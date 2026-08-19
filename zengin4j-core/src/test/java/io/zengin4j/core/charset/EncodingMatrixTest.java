@@ -1,5 +1,6 @@
 package io.zengin4j.core.charset;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.codec.ReaderOptions;
@@ -10,21 +11,16 @@ import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.generated.SougouFurikomiData;
 import io.zengin4j.core.testing.Fixtures;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.Charset;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * Issue 3.6: every fixture read under every encoding, with the outcome asserted
- * for each (R-T12).
- *
- * <p>The interesting result is the negative one. For conformant content the
- * three encodings are not three different answers — two of them give byte-for-byte
- * the same answer, and the third gives a predictably broken one. Asserting that
- * is worth more than asserting each in isolation, because it is the property a
- * caller relies on when they do not know which encoding their file is in.
- */
+/// Issue 3.6: every fixture read under every encoding, with the outcome asserted
+/// for each (R-T12).
+///
+/// The interesting result is the negative one. For conformant content the
+/// three encodings are not three different answers — two of them give byte-for-byte
+/// the same answer, and the third gives a predictably broken one. Asserting that
+/// is worth more than asserting each in isolation, because it is the property a
+/// caller relies on when they do not know which encoding their file is in.
 class EncodingMatrixTest {
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
@@ -41,12 +37,10 @@ class EncodingMatrixTest {
 
     // ------------------------------------------------------- the matrix itself
 
-    /**
-     * The load-bearing claim in {@code docs/encoding.md}: a conformant file
-     * decodes identically under Shift_JIS and CP932, because every permitted
-     * character is single-byte and the two encodings differ only in the
-     * double-byte range.
-     */
+    /// The load-bearing claim in `docs/encoding.md`: a conformant file
+    /// decodes identically under Shift_JIS and CP932, because every permitted
+    /// character is single-byte and the two encodings differ only in the
+    /// double-byte range.
     @Test
     void shiftJisAndMs932AgreeOnEveryConformantFile() {
         byte[] file = Fixtures.file(descriptor);
@@ -66,7 +60,7 @@ class EncodingMatrixTest {
                 .isEqualTo(viaMs932.batches().get(0).header().originatorName());
     }
 
-    /** And both round-trip byte for byte, because the writer never re-encodes (R-D5). */
+    /// And both round-trip byte for byte, because the writer never re-encodes (R-D5).
     @Test
     void everyEncodingRoundTripsTheSameBytes() {
         byte[] file = Fixtures.file(descriptor);
@@ -80,11 +74,9 @@ class EncodingMatrixTest {
         }
     }
 
-    /**
-     * UTF-8 is the expected failure. The bytes are single-byte katakana, so
-     * decoding them as UTF-8 cannot produce the name — and the library does not
-     * pretend otherwise.
-     */
+    /// UTF-8 is the expected failure. The bytes are single-byte katakana, so
+    /// decoding them as UTF-8 cannot produce the name — and the library does not
+    /// pretend otherwise.
     @Test
     void utf8MisreadsASingleByteFileRatherThanFailing() {
         byte[] file = Fixtures.file(descriptor);
@@ -100,7 +92,7 @@ class EncodingMatrixTest {
                 .isNotEqualTo(Fixtures.BENEFICIARY);
     }
 
-    /** A UTF-8 name does not fit the field it fits under MS932 — the one-byte assumption. */
+    /// A UTF-8 name does not fit the field it fits under MS932 — the one-byte assumption.
     @Test
     void aNameIsThreeTimesLongerInUtf8() {
         assertThat(ZenginCharset.MS932.encode(Fixtures.BANK_NAME)).hasSize(8);
@@ -115,11 +107,9 @@ class EncodingMatrixTest {
 
     // --------------------------------------------- the divergence, pinned exactly
 
-    /**
-     * Single-byte katakana is identical under both Japanese encodings. This is
-     * why the encoding choice does not matter for conformant content, so it is
-     * asserted rather than assumed.
-     */
+    /// Single-byte katakana is identical under both Japanese encodings. This is
+    /// why the encoding choice does not matter for conformant content, so it is
+    /// asserted rather than assumed.
     @Test
     void halfWidthKatakanaIsIdenticalUnderBothJapaneseEncodings() {
         Charset shiftJis = ZenginCharset.SHIFT_JIS.charset();
@@ -133,14 +123,12 @@ class EncodingMatrixTest {
         }
     }
 
-    /**
-     * The double-byte divergence, byte pair by byte pair — the table in
-     * {@code docs/encoding.md}, asserted so it cannot drift.
-     *
-     * <p>None of these byte pairs may appear in a conformant field. They are
-     * pinned because the difference is real and because a reader of that
-     * document deserves a table that is checked rather than remembered.
-     */
+    /// The double-byte divergence, byte pair by byte pair — the table in
+    /// `docs/encoding.md`, asserted so it cannot drift.
+    ///
+    /// None of these byte pairs may appear in a conformant field. They are
+    /// pinned because the difference is real and because a reader of that
+    /// document deserves a table that is checked rather than remembered.
     @Test
     void theDoubleByteDivergenceIsExactlyWhatTheDocumentationSays() {
         assertDivergence(0x81, 0x60, '〜', '～');   // wave dash / fullwidth tilde
@@ -176,14 +164,14 @@ class EncodingMatrixTest {
                 .isNotEqualTo(String.valueOf(ms932));
     }
 
-    /** Encoding a character the target cannot represent substitutes `?`, silently, both ways. */
+    /// Encoding a character the target cannot represent substitutes `?`, silently, both ways.
     @Test
     void anUnmappableCharacterBecomesAQuestionMark() {
         assertThat(ZenginCharset.SHIFT_JIS.encode("～")).containsExactly('?');
         assertThat(ZenginCharset.MS932.encode("〜")).containsExactly('?');
     }
 
-    /** Every charset the library offers resolves on this JVM. */
+    /// Every charset the library offers resolves on this JVM.
     @Test
     void everyDeclaredCharsetIsAvailable() {
         for (ZenginCharset charset : ZenginCharset.values()) {

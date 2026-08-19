@@ -1,24 +1,20 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * {@code convert} and {@code dryrun}, from the outside.
- *
- * <p>What matters here is not that the conversion works — that is tested where
- * the conversion lives. It is that the command cannot be used in a way that
- * hides what the conversion cost: the report goes to stderr so a redirect
- * cannot swallow it, the exit status distinguishes lossless from lossy from
- * dangerous, and there is no flag that turns the report off.
- */
+/// `convert` and `dryrun`, from the outside.
+///
+/// What matters here is not that the conversion works — that is tested where
+/// the conversion lives. It is that the command cannot be used in a way that
+/// hides what the conversion cost: the report goes to stderr so a redirect
+/// cannot swallow it, the exit status distinguishes lossless from lossy from
+/// dangerous, and there is no flag that turns the report off.
 class ConversionCommandTest {
 
     private static final String AS_OF = "--as-of=2026-09-01";
@@ -49,11 +45,9 @@ class ConversionCommandTest {
         assertThat(result.out()).isEmpty();
     }
 
-    /**
-     * Without {@code --out} the message goes to stdout and the report still
-     * goes to stderr, so a redirect produces a usable file and a readable
-     * account of what it cost.
-     */
+    /// Without `--out` the message goes to stdout and the report still
+    /// goes to stderr, so a redirect produces a usable file and a readable
+    /// account of what it cost.
     @Test
     void theMessageAndTheReportGoToDifferentPlaces(@TempDir Path directory) throws Exception {
         Cli result = Cli.run("convert", zenginFile(directory).toString(),
@@ -101,7 +95,7 @@ class ConversionCommandTest {
                 .isNotEqualTo(ExitCode.ERRORS.value());
     }
 
-    /** §27 spells it {@code pain.001}; so does the option. */
+    /// §27 spells it `pain.001`; so does the option.
     @Test
     void theTargetIsSpelledTheWayTheSpecificationSpellsIt(@TempDir Path directory)
             throws Exception {
@@ -143,11 +137,9 @@ class ConversionCommandTest {
         assertThat(result.err()).contains("sougou-furikomi", "kyuyo-furikomi");
     }
 
-    /**
-     * A conversion whose loss could misroute money stops, and says why.
-     *
-     * <p>A thirty-one-character reference into a ten-byte 顧客コード.
-     */
+    /// A conversion whose loss could misroute money stops, and says why.
+    ///
+    /// A thirty-one-character reference into a ten-byte 顧客コード.
     @Test
     void aCriticalLossStopsTheCommand(@TempDir Path directory) throws Exception {
         Path xml = directory.resolve("payments.xml");
@@ -171,13 +163,11 @@ class ConversionCommandTest {
         assertThat(directory.resolve("anyway.txt")).exists();
     }
 
-    /**
-     * JSON needs a stream of its own.
-     *
-     * <p>stderr already carries the reader's warnings, so a JSON report written
-     * there is not parseable however carefully it is produced — which is what
-     * this test found when it was written against stderr.
-     */
+    /// JSON needs a stream of its own.
+    ///
+    /// stderr already carries the reader's warnings, so a JSON report written
+    /// there is not parseable however carefully it is produced — which is what
+    /// this test found when it was written against stderr.
     @Test
     void theReportCanBeJsonWhenItHasSomewhereToGo(@TempDir Path directory) throws Exception {
         Path report = directory.resolve("loss.json");
@@ -203,14 +193,12 @@ class ConversionCommandTest {
         assertThat(result.err()).contains("全角");
     }
 
-    /**
-     * One {@code --charset} governs both reading and converting.
-     *
-     * <p>They are separate settings in the library — the reader has one and the
-     * mapping context has one — and a command that let them disagree would
-     * decode every name in the file with the wrong table while looking like it
-     * worked.
-     */
+    /// One `--charset` governs both reading and converting.
+    ///
+    /// They are separate settings in the library — the reader has one and the
+    /// mapping context has one — and a command that let them disagree would
+    /// decode every name in the file with the wrong table while looking like it
+    /// worked.
     @Test
     void oneCharsetGovernsBothReadingAndConverting(@TempDir Path directory) throws Exception {
         Path utf8 = directory.resolve("utf8.txt");
@@ -226,14 +214,12 @@ class ConversionCommandTest {
                 .contains("<Nm>ヤマダ</Nm>");
     }
 
-    /**
-     * A UTF-8 Zengin file with names short enough to fit.
-     *
-     * <p>Half-width katakana is one byte in MS932 and three in UTF-8, so the
-     * ordinary fixtures do not fit a 15-byte bank name at all — which is the
-     * concrete reason `docs/encoding.md` warns against choosing UTF-8. Four
-     * kana do fit, and four kana are enough to tell the two decodings apart.
-     */
+    /// A UTF-8 Zengin file with names short enough to fit.
+    ///
+    /// Half-width katakana is one byte in MS932 and three in UTF-8, so the
+    /// ordinary fixtures do not fit a 15-byte bank name at all — which is the
+    /// concrete reason `docs/encoding.md` warns against choosing UTF-8. Four
+    /// kana do fit, and four kana are enough to tell the two decodings apart.
     private static byte[] utf8File() {
         var descriptor = io.zengin4j.core.format.FormatRegistry.defaults()
                 .byId(io.zengin4j.core.format.FormatId.of("sougou-furikomi")).orElseThrow();
@@ -261,14 +247,12 @@ class ConversionCommandTest {
                 io.zengin4j.core.model.SeparatorStyle.CRLF, false);
     }
 
-    /**
-     * Every mapping flag reaches the context.
-     *
-     * <p>A mixin field that is declared and never read compiles, parses, prints
-     * in the help text and does nothing — the failure mode that ships. Each of
-     * these is asserted by its effect rather than by inspecting the context,
-     * because the effect is what a user is promised.
-     */
+    /// Every mapping flag reaches the context.
+    ///
+    /// A mixin field that is declared and never read compiles, parses, prints
+    /// in the help text and does nothing — the failure mode that ships. Each of
+    /// these is asserted by its effect rather than by inspecting the context,
+    /// because the effect is what a user is promised.
     @Test
     void everyMappingFlagReachesTheConversion(@TempDir Path directory) throws Exception {
         Path source = zenginFile(directory);
@@ -290,10 +274,8 @@ class ConversionCommandTest {
         assertThat(dropped.err()).contains("EndToEndIdPolicy.DROP");
     }
 
-    /**
-     * {@code --truncate} and {@code --unmappable} are only observable on the way
-     * down, where a name has to fit thirty bytes.
-     */
+    /// `--truncate` and `--unmappable` are only observable on the way
+    /// down, where a name has to fit thirty bytes.
     @Test
     void theTruncationFlagsReachTheInverseLeg(@TempDir Path directory) throws Exception {
         Path xml = directory.resolve("long-name.xml");

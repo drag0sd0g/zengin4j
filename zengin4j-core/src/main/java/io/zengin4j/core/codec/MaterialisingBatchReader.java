@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import io.zengin4j.core.error.MalformedFieldException;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.model.Batch;
@@ -10,15 +11,8 @@ import io.zengin4j.core.model.HeaderRecord;
 import io.zengin4j.core.model.MalformedRecord;
 import io.zengin4j.core.model.TrailerRecord;
 import io.zengin4j.core.model.ZenginRecord;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 
-/**
- * Groups the record stream into batches, materialising as it goes.
- */
+/// Groups the record stream into batches, materialising as it goes.
 final class MaterialisingBatchReader implements BatchReader {
 
     private final ZenginReader reader;
@@ -64,7 +58,7 @@ final class MaterialisingBatchReader implements BatchReader {
 
     @Override
     public List<MalformedRecord> unbatched() {
-        return Collections.unmodifiableList(new ArrayList<>(unbatched));
+        return List.copyOf(unbatched);
     }
 
     @Override

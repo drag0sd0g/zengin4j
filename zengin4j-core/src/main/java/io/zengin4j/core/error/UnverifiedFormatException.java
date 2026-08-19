@@ -1,43 +1,37 @@
 package io.zengin4j.core.error;
 
-/**
- * A format descriptor whose layout has not been confirmed against two
- * independent published sources was used without opting in.
- *
- * <p>This exception is the enforcement point of the verification protocol
- * (§0.3, R-0.1). Every descriptor shipped in 0.1.0 is {@code verified: false}.
- * Reading such a file requires
- * {@code ReaderOptions.builder().allowUnverifiedFormats(true)}, and building
- * one requires {@code ZenginFileBuilder#allowUnverifiedFormats(boolean)} —
- * opt-ins that exist so the decision to trust a provisional layout is recorded
- * in the caller's own source rather than assumed by this library.
- *
- * <p>The message names whichever of the two the caller actually needs. A
- * diagnostic that prescribes the wrong remedy costs more than one that says
- * nothing.
- *
- * @since 0.1.0
- */
+/// A format descriptor whose layout has not been confirmed against two
+/// independent published sources was used without opting in.
+///
+/// This exception is the enforcement point of the verification protocol
+/// (§0.3, R-0.1). Every descriptor shipped in 0.1.0 is `verified: false`.
+/// Reading such a file requires
+/// `ReaderOptions.builder().allowUnverifiedFormats(true)`, and building
+/// one requires `ZenginFileBuilder#allowUnverifiedFormats(boolean)` —
+/// opt-ins that exist so the decision to trust a provisional layout is recorded
+/// in the caller's own source rather than assumed by this library.
+///
+/// The message names whichever of the two the caller actually needs. A
+/// diagnostic that prescribes the wrong remedy costs more than one that says
+/// nothing.
+///
+/// @since 0.1.0
 public final class UnverifiedFormatException extends ZenginException {
 
-    /**
-     * Which operation was refused, so the message can name the right opt-in.
-     *
-     * @since 0.1.0
-     */
+    /// Which operation was refused, so the message can name the right opt-in.
+    ///
+    /// @since 0.1.0
     public enum Operation {
 
-        /** Parsing bytes into records. */
+        /// Parsing bytes into records.
         READING("parsing it may silently misread financial instructions",
                 "ReaderOptions.builder().allowUnverifiedFormats(true)",
                 "金融取引データを誤読する可能性があります",
                 "ReaderOptions.builder().allowUnverifiedFormats(true)"),
 
-        /**
-         * Placing values at descriptor-defined offsets. The harsher wording is
-         * deliberate: a misread lands in the caller's own system, where their
-         * reconciliation may catch it; a miswrite lands at a bank.
-         */
+        /// Placing values at descriptor-defined offsets. The harsher wording is
+        /// deliberate: a misread lands in the caller's own system, where their
+        /// reconciliation may catch it; a miswrite lands at a bank.
         BUILDING("the values may be written to the wrong byte offsets, producing a payment"
                         + " instruction that is wrong in a way nothing downstream will catch",
                 "ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)",
@@ -61,22 +55,18 @@ public final class UnverifiedFormatException extends ZenginException {
     private final String formatId;
     private final Operation operation;
 
-    /**
-     * Creates a diagnostic naming the unverified format, for a read.
-     *
-     * @param formatId the descriptor id, for example {@code "sougou-furikomi"}
-     */
+    /// Creates a diagnostic naming the unverified format, for a read.
+    ///
+    /// @param formatId the descriptor id, for example `"sougou-furikomi"`
     public UnverifiedFormatException(String formatId) {
         this(formatId, Operation.READING);
     }
 
-    /**
-     * Creates a diagnostic naming the unverified format and the operation
-     * refused.
-     *
-     * @param formatId  the descriptor id, for example {@code "sougou-furikomi"}
-     * @param operation what was refused, which selects the remedy named
-     */
+    /// Creates a diagnostic naming the unverified format and the operation
+    /// refused.
+    ///
+    /// @param formatId  the descriptor id, for example `"sougou-furikomi"`
+    /// @param operation what was refused, which selects the remedy named
     public UnverifiedFormatException(String formatId, Operation operation) {
         super("format '" + formatId + "' is marked verified: false — its byte layout has not been confirmed"
                         + " against two independent published sources, so " + operation.riskEn
@@ -89,20 +79,16 @@ public final class UnverifiedFormatException extends ZenginException {
         this.operation = operation;
     }
 
-    /**
-     * Returns the id of the unverified format.
-     *
-     * @return the descriptor id, never {@code null}
-     */
+    /// Returns the id of the unverified format.
+    ///
+    /// @return the descriptor id, never `null`
     public String formatId() {
         return formatId;
     }
 
-    /**
-     * Returns what was refused.
-     *
-     * @return the operation, never {@code null}
-     */
+    /// Returns what was refused.
+    ///
+    /// @return the operation, never `null`
     public Operation operation() {
         return operation;
     }

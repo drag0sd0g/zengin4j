@@ -1,5 +1,6 @@
 package io.zengin4j.core;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.codec.ParseMode;
@@ -20,29 +21,22 @@ import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.testing.Fixtures;
 import io.zengin4j.core.testing.RandomZenginFiles;
 import io.zengin4j.core.testing.Seeded;
-import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
 import org.junit.jupiter.api.Test;
 
-/**
- * The structural invariants of §21.1.
- *
- * <p>Round-tripping (INV-1, INV-2, INV-6) lives in {@code RoundTripProperties}.
- * INV-4 arrives with the transliteration engine in Epic 6, INV-5 with the
- * mapping layer in Epic 7.
- *
- * <p>INV-3 is covered here <em>and</em> by {@code ReaderFuzzTest}. This version
- * runs on every build and is cheap; Jazzer's is coverage-guided, finds inputs
- * random generation never would, and runs on demand.
- */
+/// The structural invariants of §21.1.
+///
+/// Round-tripping (INV-1, INV-2, INV-6) lives in `RoundTripProperties`.
+/// INV-4 arrives with the transliteration engine in Epic 6, INV-5 with the
+/// mapping layer in Epic 7.
+///
+/// INV-3 is covered here *and* by `ReaderFuzzTest`. This version
+/// runs on every build and is cheap; Jazzer's is coverage-guided, finds inputs
+/// random generation never would, and runs on demand.
 class InvariantProperties {
 
     private static final long SEED = 0x1234_2026L;
 
-    /** Bound on records read, so a defect shows up as a failure rather than a hang. */
+    /// Bound on records read, so a defect shows up as a failure rather than a hang.
     private static final int RECORD_LIMIT = 10_000;
 
     private static final FormatId GENERATED_ID = FormatId.of("generated");
@@ -51,10 +45,8 @@ class InvariantProperties {
     private static final FormatDescriptor DESCRIPTOR =
             REGISTRY.byId(Fixtures.SOUGOU_FURIKOMI).orElseThrow();
 
-    /**
-     * INV-3, for arbitrary input: reading terminates and throws nothing
-     * outside the declared hierarchy.
-     */
+    /// INV-3, for arbitrary input: reading terminates and throws nothing
+    /// outside the declared hierarchy.
     @Test
     void inv3_readingArbitraryBytesStaysInsideTheExceptionHierarchy() {
         Seeded.property("INV-3: arbitrary bytes", Seeded.DEFAULT_CASES, SEED,
@@ -65,11 +57,9 @@ class InvariantProperties {
                 });
     }
 
-    /**
-     * INV-3, for input that starts out valid: single-byte corruption,
-     * truncation, and both together. More interesting than random noise,
-     * because it reaches deep into the parser before failing.
-     */
+    /// INV-3, for input that starts out valid: single-byte corruption,
+    /// truncation, and both together. More interesting than random noise,
+    /// because it reaches deep into the parser before failing.
     @Test
     void inv3_readingCorruptedFilesStaysInsideTheExceptionHierarchy() {
         Seeded.property("INV-3: corrupted files", Seeded.DEFAULT_CASES, SEED + 1,
@@ -80,7 +70,7 @@ class InvariantProperties {
                 });
     }
 
-    /** INV-8: every shipped descriptor accounts for every byte of its record. */
+    /// INV-8: every shipped descriptor accounts for every byte of its record.
     @Test
     void inv8_everyShippedDescriptorAccountsForEveryByte() {
         for (FormatDescriptor format : REGISTRY.all()) {
@@ -100,16 +90,14 @@ class InvariantProperties {
         }
     }
 
-    /**
-     * INV-8, as a property of the descriptor model: a record layout is
-     * accepted exactly when its field lengths account for the declared record
-     * length, and it says so either way.
-     *
-     * <p>The check lives in the model rather than in a file reader on purpose.
-     * Since ADR-0016 the descriptors reach core as generated Java, so this is
-     * the one gate every layout passes through — generated, hand-built, or
-     * supplied at runtime by a consumer.
-     */
+    /// INV-8, as a property of the descriptor model: a record layout is
+    /// accepted exactly when its field lengths account for the declared record
+    /// length, and it says so either way.
+    ///
+    /// The check lives in the model rather than in a file reader on purpose.
+    /// Since ADR-0016 the descriptors reach core as generated Java, so this is
+    /// the one gate every layout passes through — generated, hand-built, or
+    /// supplied at runtime by a consumer.
     @Test
     void inv8_aLayoutIsAcceptedExactlyWhenItsFieldsAccountForEveryByte() {
         Seeded.property("INV-8: lengths account for the record", Seeded.DEFAULT_CASES, SEED + 2,
@@ -150,7 +138,7 @@ class InvariantProperties {
         return bytes;
     }
 
-    /** Flips a byte, truncates, or both. */
+    /// Flips a byte, truncates, or both.
     private static byte[] corrupt(Random random, byte[] valid) {
         byte[] copy = Arrays.copyOf(valid, valid.length);
         if (random.nextBoolean() && copy.length > 0) {

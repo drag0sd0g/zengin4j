@@ -1,5 +1,6 @@
 package io.zengin4j.core.testing;
 
+import module java.base;
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.codec.FieldCodec;
 import io.zengin4j.core.codec.PadPolicy;
@@ -13,20 +14,14 @@ import io.zengin4j.core.format.FormatRegistry;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.model.FileFraming;
-import java.io.ByteArrayOutputStream;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
-/**
- * Synthetic 総合振込 bytes for core's own tests.
- *
- * <p>Core cannot use zengin4j-testkit — testkit depends on core, and inverting
- * that for tests would put the module graph in the build's way. The overlap is
- * a few lines of field encoding.
- *
- * <p>Every value is invented (R-L1, P1).
- */
+/// Synthetic 総合振込 bytes for core's own tests.
+///
+/// Core cannot use zengin4j-testkit — testkit depends on core, and inverting
+/// that for tests would put the module graph in the build's way. The overlap is
+/// a few lines of field encoding.
+///
+/// Every value is invented (R-L1, P1).
 public final class Fixtures {
 
     public static final FormatId SOUGOU_FURIKOMI = FormatId.of("sougou-furikomi");
@@ -36,10 +31,10 @@ public final class Fixtures {
     public static final byte[] CR = {'\r'};
     public static final byte[] NO_SEPARATOR = {};
 
-    /** ﾃｽﾄｷﾞﾝｺｳ: eight bytes, rendering as seven characters — the ｷﾞ carries a standalone dakuten. */
+    /// ﾃｽﾄｷﾞﾝｺｳ: eight bytes, rendering as seven characters — the ｷﾞ carries a standalone dakuten.
     public static final String BANK_NAME = "ﾃｽﾄｷﾞﾝｺｳ";
 
-    /** ﾔﾏﾀﾞ ﾀﾛｳ: eight bytes, rendering as seven characters. */
+    /// ﾔﾏﾀﾞ ﾀﾛｳ: eight bytes, rendering as seven characters.
     public static final String BENEFICIARY = "ﾔﾏﾀﾞ ﾀﾛｳ";
 
     public static final String ACCOUNT = "9876543";
@@ -56,7 +51,7 @@ public final class Fixtures {
         return registry().byId(SOUGOU_FURIKOMI).orElseThrow();
     }
 
-    /** Options that accept the provisional bundled descriptor, silently. */
+    /// Options that accept the provisional bundled descriptor, silently.
     public static ReaderOptions options() {
         return optionsBuilder().build();
     }
@@ -70,17 +65,15 @@ public final class Fixtures {
                 });
     }
 
-    /**
-     * A builder that has already acknowledged the provisional layout.
-     *
-     * <p>Every bundled descriptor is {@code verified: false}, and building on
-     * one requires an explicit opt-in. Tests take it here so that the one test
-     * asserting the gate <em>fires</em> is the only place the raw
-     * {@code ZenginFileBuilder.forFormat} appears.
-     *
-     * @param descriptor the format to build
-     * @return a builder that will not refuse the descriptor
-     */
+    /// A builder that has already acknowledged the provisional layout.
+    ///
+    /// Every bundled descriptor is `verified: false`, and building on
+    /// one requires an explicit opt-in. Tests take it here so that the one test
+    /// asserting the gate *fires* is the only place the raw
+    /// `ZenginFileBuilder.forFormat` appears.
+    ///
+    /// @param descriptor the format to build
+    /// @return a builder that will not refuse the descriptor
     public static ZenginFileBuilder builder(FormatDescriptor descriptor) {
         return ZenginFileBuilder.forFormat(descriptor).allowUnverifiedFormats(true);
     }
@@ -134,23 +127,21 @@ public final class Fixtures {
         return encode(descriptor.record(RecordKind.END), Map.of());
     }
 
-    /** Header, one payment, trailer and end record, separated by CRLF. */
+    /// Header, one payment, trailer and end record, separated by CRLF.
     public static byte[] file(FormatDescriptor descriptor) {
         return join(CRLF, header(descriptor), data(descriptor), trailer(descriptor, 1, AMOUNT),
                 end(descriptor));
     }
 
-    /**
-     * The same four records, framed as asked.
-     *
-     * <p>Assembled here rather than through {@code ZenginWriters}, so a test
-     * that reads this and writes it again is comparing the writer against an
-     * independent assembly rather than against itself.
-     *
-     * @param descriptor the format
-     * @param framing    the framing to apply; must not be {@code MIXED}
-     * @return the framed file
-     */
+    /// The same four records, framed as asked.
+    ///
+    /// Assembled here rather than through `ZenginWriters`, so a test
+    /// that reads this and writes it again is comparing the writer against an
+    /// independent assembly rather than against itself.
+    ///
+    /// @param descriptor the format
+    /// @param framing    the framing to apply; must not be `MIXED`
+    /// @return the framed file
     public static byte[] framed(FormatDescriptor descriptor, FileFraming framing) {
         byte[] separator = framing.separator().bytes().orElseThrow();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -188,7 +179,7 @@ public final class Fixtures {
         return frame;
     }
 
-    /** Joins records, writing the separator after each one. */
+    /// Joins records, writing the separator after each one.
     public static byte[] join(byte[] separator, byte[]... records) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         for (byte[] record : records) {
@@ -204,7 +195,7 @@ public final class Fixtures {
         return out.toByteArray();
     }
 
-    /** The same layout under a different id, for registry and ambiguity tests. */
+    /// The same layout under a different id, for registry and ambiguity tests.
     public static FormatDescriptor renamed(FormatDescriptor descriptor, String newId) {
         FormatId id = FormatId.of(newId);
         Map<RecordKind, RecordDescriptor> records = new java.util.EnumMap<>(RecordKind.class);
@@ -215,7 +206,7 @@ public final class Fixtures {
                 descriptor.recordLength(), descriptor.verified(), List.of(), descriptor.note(), records);
     }
 
-    /** Replaces bytes at an offset, for building deliberately broken files. */
+    /// Replaces bytes at an offset, for building deliberately broken files.
     public static byte[] patch(byte[] source, int offset, String replacement) {
         byte[] copy = source.clone();
         byte[] bytes = ZenginCharset.defaultCharset().encode(replacement);

@@ -358,6 +358,16 @@ flowchart LR
 | **R-M6** | JPMS `module-info.java` for every module, plus `Automatic-Module-Name` in the manifest as fallback. |
 | **R-M7** | Java 21 baseline throughout. |
 
+> **Correction, 2026-08 — the baseline is Java 25, not 21.**
+>
+> R-M7 was right when it was written. A language baseline is a decision with an expiry date rather
+> than a fact about the format, and Java 25 is now an LTS with features this codebase has concrete
+> uses for. `options.release = 25`; the CI matrix drops its 21 leg.
+>
+> The cost is real and lands on somebody who is not in the room: anyone still on Java 21 — which is
+> what most enterprises run — can no longer use the library. Recorded in
+> [ADR-0036](docs/adr/0036-java-25-baseline.md), which also states how to reverse it.
+
 ## 8. Package structure
 
 ```

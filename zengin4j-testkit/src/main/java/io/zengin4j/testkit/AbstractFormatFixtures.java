@@ -1,27 +1,22 @@
 package io.zengin4j.testkit;
 
+import module java.base;
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.codec.ReaderOptions;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.model.SeparatorStyle;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
-/**
- * What every format's fixtures do the same way.
- *
- * <p>Assembling records into a file, wiring reader options and encoding through
- * {@link SyntheticRecords} are identical whatever the layout. Choosing which
- * field ids to populate is not, and stays with each subclass — that division is
- * the point, because the tempting shortcut is to assume the layouts differ only
- * in names.
- *
- * @since 0.3.0
- */
+/// What every format's fixtures do the same way.
+///
+/// Assembling records into a file, wiring reader options and encoding through
+/// [SyntheticRecords] are identical whatever the layout. Choosing which
+/// field ids to populate is not, and stays with each subclass — that division is
+/// the point, because the tempting shortcut is to assume the layouts differ only
+/// in names.
+///
+/// @since 0.3.0
 abstract class AbstractFormatFixtures implements FormatFixtures {
 
     private final FormatDescriptor descriptor;
@@ -32,16 +27,16 @@ abstract class AbstractFormatFixtures implements FormatFixtures {
         this.charset = Objects.requireNonNull(charset, "charset");
     }
 
-    /** Field values for the header, keyed by field id. */
+    /// Field values for the header, keyed by field id.
     abstract Map<String, String> headerValues();
 
-    /** Field values for a data record, keyed by field id. */
+    /// Field values for a data record, keyed by field id.
     abstract Map<String, String> dataValues(String name, long amount, String accountNumber);
 
-    /** Field values for the trailer, keyed by field id. */
+    /// Field values for the trailer, keyed by field id.
     abstract Map<String, String> trailerValues(int recordCount, long totalAmount);
 
-    /** The counterparty name, amount and account the no-argument {@link #data()} uses. */
+    /// The counterparty name, amount and account the no-argument [#data()] uses.
     abstract String exampleName();
 
     abstract long exampleAmount();

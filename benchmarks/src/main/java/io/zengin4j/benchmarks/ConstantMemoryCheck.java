@@ -1,5 +1,6 @@
 package io.zengin4j.benchmarks;
 
+import module java.base;
 import io.zengin4j.core.codec.ReaderOptions;
 import io.zengin4j.core.codec.RecordView;
 import io.zengin4j.core.codec.ZenginReader;
@@ -8,28 +9,23 @@ import io.zengin4j.core.format.FormatRegistry;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.testkit.SougouFurikomiFixtures;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Duration;
 
-/**
- * R-P2: constant memory on the streaming path, whatever the file size.
- *
- * <p>Streams a file of the requested size — 1 GB by default — under whatever
- * heap the JVM was given, and fails if it does not finish. The Gradle task runs
- * it under {@code -Xmx64m}.
- *
- * <p><strong>The constrained heap is the assertion.</strong> There is no
- * measurement to interpret and no threshold to argue about: if anything on the
- * read path retained per-record state, a 1 GB file at 122 bytes per record is
- * roughly nine million records, and the run would die with an
- * {@link OutOfMemoryError} long before the end. Completing is the result.
- *
- * <p>The input is generated on the fly rather than written to disk. A 1 GB
- * fixture is not something to create, keep or clean up in CI, and generating it
- * as a stream also proves the reader never needs the whole file at once — which
- * is the property under test.
- */
+/// R-P2: constant memory on the streaming path, whatever the file size.
+///
+/// Streams a file of the requested size — 1 GB by default — under whatever
+/// heap the JVM was given, and fails if it does not finish. The Gradle task runs
+/// it under `-Xmx64m`.
+///
+/// **The constrained heap is the assertion.** There is no
+/// measurement to interpret and no threshold to argue about: if anything on the
+/// read path retained per-record state, a 1 GB file at 122 bytes per record is
+/// roughly nine million records, and the run would die with an
+/// [OutOfMemoryError] long before the end. Completing is the result.
+///
+/// The input is generated on the fly rather than written to disk. A 1 GB
+/// fixture is not something to create, keep or clean up in CI, and generating it
+/// as a stream also proves the reader never needs the whole file at once — which
+/// is the property under test.
 public final class ConstantMemoryCheck {
 
     private static final int DEFAULT_BYTES = 1024 * 1024 * 1024;
@@ -37,12 +33,10 @@ public final class ConstantMemoryCheck {
     private ConstantMemoryCheck() {
     }
 
-    /**
-     * Runs the check.
-     *
-     * @param args optionally, the target size in bytes
-     * @throws IOException if generation fails
-     */
+    /// Runs the check.
+    ///
+    /// @param args optionally, the target size in bytes
+    /// @throws IOException if generation fails
     public static void main(String[] args) throws IOException {
         long target = args.length > 0 ? Long.parseLong(args[0]) : DEFAULT_BYTES;
         Runtime runtime = Runtime.getRuntime();
@@ -94,20 +88,18 @@ public final class ConstantMemoryCheck {
         }
     }
 
-    /**
-     * One synthetic 総合振込 file of arbitrary length, produced a batch at a
-     * time.
-     *
-     * <p><strong>One file, not many concatenated.</strong> Emitting whole files
-     * back to back would put a header after an end record, which the reader
-     * rightly refuses — it is not a valid file, and generating invalid input
-     * would test the error path rather than the memory property. Instead this
-     * emits repeated batches (header, payments, trailer), which R-C1 permits,
-     * and a single end record when the target size is reached.
-     *
-     * <p>Never holds more than one batch, so the generator does not defeat the
-     * property the reader is being tested for.
-     */
+    /// One synthetic 総合振込 file of arbitrary length, produced a batch at a
+    /// time.
+    ///
+    /// **One file, not many concatenated.** Emitting whole files
+    /// back to back would put a header after an end record, which the reader
+    /// rightly refuses — it is not a valid file, and generating invalid input
+    /// would test the error path rather than the memory property. Instead this
+    /// emits repeated batches (header, payments, trailer), which R-C1 permits,
+    /// and a single end record when the target size is reached.
+    ///
+    /// Never holds more than one batch, so the generator does not defeat the
+    /// property the reader is being tested for.
     private static final class GeneratedFileStream extends InputStream {
 
         private static final int PAYMENTS_PER_BATCH = 2000;
@@ -153,7 +145,7 @@ public final class ConstantMemoryCheck {
             return true;
         }
 
-        /** A header, its payments and its trailer — a well-formed batch, R-C1. */
+        /// A header, its payments and its trailer — a well-formed batch, R-C1.
         private byte[] batch() {
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             long total = 0;

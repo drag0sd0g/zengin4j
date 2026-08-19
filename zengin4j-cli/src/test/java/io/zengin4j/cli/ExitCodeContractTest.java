@@ -1,20 +1,16 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * The exit codes are a contract (R-CLI1).
- *
- * <p>Scripts branch on these. Changing what a value means would silently change
- * what somebody's pipeline does, so each one is pinned here rather than left to
- * whatever the code happens to return.
- */
+/// The exit codes are a contract (R-CLI1).
+///
+/// Scripts branch on these. Changing what a value means would silently change
+/// what somebody's pipeline does, so each one is pinned here rather than left to
+/// whatever the code happens to return.
 class ExitCodeContractTest {
 
     @TempDir
