@@ -31,7 +31,7 @@ jobs:
           distribution: temurin
           java-version: '25'
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       # A fuzzer that starts from nothing every night re-derives the same
       # shallow inputs every night. Restoring the corpus is what lets each run
