@@ -35,7 +35,7 @@ jobs:
           java-version: ${{ matrix.java }}
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       # `build` runs, in one command: compilation on the Java 25 baseline, the
       # tests, the JaCoCo floor on core (R-T16), the ArchUnit module rules
@@ -64,7 +64,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       # R-DOC6: an example that does not run is documentation of something that
       # used to work.
@@ -83,7 +83,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       # The unit tests drive the command objects in-process, which is right for
       # covering edge cases and cannot catch the things that only go wrong once
@@ -190,7 +190,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       # R-P2. The constrained heap is the assertion: a 1 GB file is roughly nine
       # million records, and anything on the read path retaining per-record
@@ -221,7 +221,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       # R-0.1, risk R2: the descriptor loader refuses `verified: true` below two
       # cited sources, and this task exercises every bundled descriptor through
