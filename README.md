@@ -3,7 +3,7 @@
 **A JVM library for the Japanese Zengin (全銀) fixed-length bank file formats, with bidirectional
 ISO 20022 mapping.**
 
-[日本語版 README](README.ja.md) · Apache-2.0 · Java 21
+[日本語版 README](README.ja.md) · Apache-2.0 · Java 25
 
 > **Not certified by 全国銀行協会, 全銀ネット or any financial institution.** Every format
 > descriptor in this release is `verified: false` — its byte layout has not been confirmed against
@@ -363,7 +363,10 @@ Architecture decision records live in [`docs/adr/`](docs/adr/).
 ./gradlew test -Pgolden.regenerate # rewrite the golden files, then read the diff
 ```
 
-Requires a JDK 21 or newer; the build targets Java 21 bytecode regardless of which you use.
+Requires a JDK 25 or newer; the build targets Java 25 bytecode regardless of which you use.
+The baseline moved from 21 in August 2026 — see
+[ADR-0036](docs/adr/0036-java-25-baseline.md) for what that buys and what it costs anyone
+still on 21.
 
 `build` is the gate: it fails on a test failure, on coverage below 90% line or 85% branch in
 `core`, on a module-dependency violation, on a descriptor whose field lengths do not add up, on

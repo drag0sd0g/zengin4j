@@ -1,72 +1,62 @@
 package io.zengin4j.cli.internal;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.List;
+import module java.base;
 
-/**
- * Lines two files' records up so a diff can compare like with like.
- *
- * <p>Positional pairing — record 3 against record 3 — is the obvious approach
- * and the wrong one: inserting a single payment near the top makes every later
- * record look changed, which is precisely the edit somebody most wants to see
- * clearly. So this is a longest-common-subsequence alignment over whole
- * records, the same thing a text diff does over lines.
- *
- * <p>Records are matched on their <em>bytes</em>. Two records that differ
- * anywhere are different records, which keeps the alignment honest: the pairing
- * step never has to guess what "the same payment" means, and guessing wrong
- * would attribute a changed amount to the wrong beneficiary.
- *
- * @since 0.3.0
- */
+/// Lines two files' records up so a diff can compare like with like.
+///
+/// Positional pairing — record 3 against record 3 — is the obvious approach
+/// and the wrong one: inserting a single payment near the top makes every later
+/// record look changed, which is precisely the edit somebody most wants to see
+/// clearly. So this is a longest-common-subsequence alignment over whole
+/// records, the same thing a text diff does over lines.
+///
+/// Records are matched on their *bytes*. Two records that differ
+/// anywhere are different records, which keeps the alignment honest: the pairing
+/// step never has to guess what "the same payment" means, and guessing wrong
+/// would attribute a changed amount to the wrong beneficiary.
+///
+/// @since 0.3.0
 public final class RecordAlignment {
 
-    /** What happened to a record between the two files. */
+    /// What happened to a record between the two files.
     public enum Change {
 
-        /** Present in both, unchanged. */
+        /// Present in both, unchanged.
         SAME,
 
-        /** Present only in the second file. */
+        /// Present only in the second file.
         ADDED,
 
-        /** Present only in the first file. */
+        /// Present only in the first file.
         REMOVED,
 
-        /** Aligned with a record in the same position that differs. */
+        /// Aligned with a record in the same position that differs.
         CHANGED
     }
 
-    /**
-     * One aligned pair.
-     *
-     * @param change      what happened
-     * @param leftNumber  the record number in the first file, or {@code 0}
-     * @param rightNumber the record number in the second file, or {@code 0}
-     * @param left        the first file's bytes, or {@code null} when added
-     * @param right       the second file's bytes, or {@code null} when removed
-     */
+    /// One aligned pair.
+    ///
+    /// @param change      what happened
+    /// @param leftNumber  the record number in the first file, or `0`
+    /// @param rightNumber the record number in the second file, or `0`
+    /// @param left        the first file's bytes, or `null` when added
+    /// @param right       the second file's bytes, or `null` when removed
     public record Pair(Change change, int leftNumber, int rightNumber, byte[] left, byte[] right) {
     }
 
     private RecordAlignment() {
     }
 
-    /**
-     * Aligns two lists of records.
-     *
-     * <p>A removal immediately followed by an addition is reported as one
-     * {@link Change#CHANGED} pair rather than two entries: an edited payment is
-     * one event, and showing it as a deletion plus an insertion makes the
-     * reader do the pairing themselves.
-     *
-     * @param before the first file's records, in order
-     * @param after  the second file's records, in order
-     * @return the aligned pairs, in order
-     */
+    /// Aligns two lists of records.
+    ///
+    /// A removal immediately followed by an addition is reported as one
+    /// [Change#CHANGED] pair rather than two entries: an edited payment is
+    /// one event, and showing it as a deletion plus an insertion makes the
+    /// reader do the pairing themselves.
+    ///
+    /// @param before the first file's records, in order
+    /// @param after  the second file's records, in order
+    /// @return the aligned pairs, in order
     public static List<Pair> align(List<byte[]> before, List<byte[]> after) {
         // Records that match at both ends need no alignment, and stripping them
         // is what makes this affordable in practice: the usual edit changes a
@@ -102,12 +92,10 @@ public final class RecordAlignment {
         return pairEdits(pairs);
     }
 
-    /**
-     * Aligns the part that actually differs.
-     *
-     * @param offset how many identical records were stripped from the front, so
-     *               the reported record numbers stay those of the whole file
-     */
+    /// Aligns the part that actually differs.
+    ///
+    /// @param offset how many identical records were stripped from the front, so
+    ///   the reported record numbers stay those of the whole file
     private static List<Pair> alignMiddle(List<byte[]> before, List<byte[]> after, int offset) {
         if (before.isEmpty() && after.isEmpty()) {
             return List.of();
@@ -144,16 +132,14 @@ public final class RecordAlignment {
         return new ArrayList<>(backwards);
     }
 
-    /**
-     * How many table cells this implementation will allocate.
-     *
-     * <p>Sixteen million {@code int}s is 64 MB — large enough that no realistic
-     * payment file reaches it after the common prefix and suffix are stripped,
-     * and small enough to fail with a sentence rather than with an
-     * {@link OutOfMemoryError}. The distinction matters more than the number: an
-     * {@code OutOfMemoryError} escapes as an uncaught {@code Error}, which exits
-     * with the same status as "the files differ".
-     */
+    /// How many table cells this implementation will allocate.
+    ///
+    /// Sixteen million `int`s is 64 MB — large enough that no realistic
+    /// payment file reaches it after the common prefix and suffix are stripped,
+    /// and small enough to fail with a sentence rather than with an
+    /// [OutOfMemoryError]. The distinction matters more than the number: an
+    /// `OutOfMemoryError` escapes as an uncaught `Error`, which exits
+    /// with the same status as "the files differ".
     static final long MAX_TABLE_CELLS = 16L * 1024 * 1024;
 
     private static void requireAffordable(int before, int after) {
@@ -163,17 +149,15 @@ public final class RecordAlignment {
         }
     }
 
-    /**
-     * Raised when two files differ too extensively to align field by field.
-     *
-     * <p>Note what it takes to get here: the common prefix and suffix have
-     * already been stripped, so this means thousands of records differ, and a
-     * field-level diff of thousands of changed payments is not a thing anybody
-     * reads. The useful answer at that size is the counts, which
-     * {@code zengin validate} and {@code zengin inspect} give per file.
-     *
-     * @since 0.3.0
-     */
+    /// Raised when two files differ too extensively to align field by field.
+    ///
+    /// Note what it takes to get here: the common prefix and suffix have
+    /// already been stripped, so this means thousands of records differ, and a
+    /// field-level diff of thousands of changed payments is not a thing anybody
+    /// reads. The useful answer at that size is the counts, which
+    /// `zengin validate` and `zengin inspect` give per file.
+    ///
+    /// @since 0.3.0
     public static final class TooLargeToAlignException extends RuntimeException {
 
         private static final long serialVersionUID = 1L;
@@ -187,22 +171,20 @@ public final class RecordAlignment {
         }
     }
 
-    /**
-     * Turns removals and additions that occupy the same gap into edits.
-     *
-     * <p>The backtrack emits them in <em>runs</em> — four removals then four
-     * additions, not four alternating pairs — so matching only immediate
-     * neighbours would report eight events where a reader sees four edited
-     * payments. Each run of differences is therefore taken as a whole and its
-     * removals paired positionally with its additions, leaving whichever side
-     * is longer to report the genuine additions or deletions.
-     *
-     * <p>Positional pairing within a run is a heuristic, and the same one every
-     * line-based diff uses for "changed". It can mis-pair when several records
-     * change at once in different ways; the field-level output makes that
-     * visible rather than hiding it, since a mis-pairing shows up as a record
-     * where every field differs.
-     */
+    /// Turns removals and additions that occupy the same gap into edits.
+    ///
+    /// The backtrack emits them in *runs* — four removals then four
+    /// additions, not four alternating pairs — so matching only immediate
+    /// neighbours would report eight events where a reader sees four edited
+    /// payments. Each run of differences is therefore taken as a whole and its
+    /// removals paired positionally with its additions, leaving whichever side
+    /// is longer to report the genuine additions or deletions.
+    ///
+    /// Positional pairing within a run is a heuristic, and the same one every
+    /// line-based diff uses for "changed". It can mis-pair when several records
+    /// change at once in different ways; the field-level output makes that
+    /// visible rather than hiding it, since a mis-pairing shows up as a record
+    /// where every field differs.
     private static List<Pair> pairEdits(List<Pair> pairs) {
         List<Pair> merged = new ArrayList<>(pairs.size());
         int index = 0;
@@ -236,13 +218,11 @@ public final class RecordAlignment {
         return merged;
     }
 
-    /**
-     * The classic LCS table.
-     *
-     * <p>{@code O(n·m)} in time and space. A Zengin file is thousands of
-     * records rather than millions, so the simple algorithm is the right one —
-     * and it is the one whose behaviour a reader of this code can predict.
-     */
+    /// The classic LCS table.
+    ///
+    /// `O(n·m)` in time and space. A Zengin file is thousands of
+    /// records rather than millions, so the simple algorithm is the right one —
+    /// and it is the one whose behaviour a reader of this code can predict.
     private static int[][] lcs(List<byte[]> before, List<byte[]> after) {
         int[][] lengths = new int[before.size() + 1][after.size() + 1];
         for (int i = 1; i <= before.size(); i++) {

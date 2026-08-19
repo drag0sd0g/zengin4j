@@ -1,5 +1,6 @@
 package io.zengin4j.core.model;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
@@ -9,20 +10,15 @@ import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.testing.Fixtures;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/**
- * The domain model's own contracts (§11).
- */
+/// The domain model's own contracts (§11).
 class ModelTest {
 
     private final FormatDescriptor format = Fixtures.descriptor();
     private final RecordDescriptor dataDescriptor = format.record(RecordKind.DATA);
 
-    /** R-D7: a total that will not fit is reported, never wrapped into a negative. */
+    /// R-D7: a total that will not fit is reported, never wrapped into a negative.
     @Test
     void reportsRatherThanWrapsAnOverflowingTotal() {
         Batch batch = new Batch(header(), List.of(data(Long.MAX_VALUE, 2), data(1L, 3)),
@@ -64,10 +60,8 @@ class ModelTest {
         assertThat(new FileFraming(false, SeparatorStyle.MIXED, false, false).isReproducible()).isFalse();
     }
 
-    /**
-     * OQ-4: the documented framing appends a separator to every record,
-     * including the last, so that is what a file built from scratch gets.
-     */
+    /// OQ-4: the documented framing appends a separator to every record,
+    /// including the last, so that is what a file built from scratch gets.
     @Test
     void conventionalFramingAppendsASeparatorAfterEveryRecord() {
         FileFraming conventional = FileFraming.conventional();
@@ -102,7 +96,7 @@ class ModelTest {
         assertThat(record).isNotEqualTo(new MalformedRecord(format.id(), 7, 840, bytes, "other reason"));
     }
 
-    /** R-CLI4: unparseable bytes are still payment data, so they do not go in a log line. */
+    /// R-CLI4: unparseable bytes are still payment data, so they do not go in a log line.
     @Test
     void malformedRecordToStringDoesNotPrintTheRecord() {
         MalformedRecord record = new MalformedRecord(format.id(), 7, 840, Fixtures.data(format), "reason");

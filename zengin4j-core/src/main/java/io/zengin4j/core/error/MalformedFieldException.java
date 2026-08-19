@@ -1,31 +1,27 @@
 package io.zengin4j.core.error;
 
-/**
- * A field could not be decoded as the type its descriptor declares — most
- * often a non-digit byte inside an {@code N} field.
- *
- * <p>Thrown by the eager accessors. Callers that expect to meet malformed data
- * (a validator, a diagnostic tool) should use the {@code Optional}-returning
- * accessors instead and report a finding rather than catch this.
- *
- * @since 0.1.0
- */
+/// A field could not be decoded as the type its descriptor declares — most
+/// often a non-digit byte inside an `N` field.
+///
+/// Thrown by the eager accessors. Callers that expect to meet malformed data
+/// (a validator, a diagnostic tool) should use the `Optional`-returning
+/// accessors instead and report a finding rather than catch this.
+///
+/// @since 0.1.0
 public final class MalformedFieldException extends ZenginException {
 
     private final long byteOffset;
     private final int offendingByte;
     private final String fieldId;
 
-    /**
-     * Creates a malformed-field diagnostic.
-     *
-     * @param fieldId       descriptor id of the field, for example
-     *                      {@code "amount"}
-     * @param byteOffset    absolute byte offset of the offending byte within
-     *                      the file, or within the record when the record's
-     *                      own offset is unknown
-     * @param offendingByte the offending byte, as an unsigned value
-     */
+    /// Creates a malformed-field diagnostic.
+    ///
+    /// @param fieldId       descriptor id of the field, for example
+    ///   `"amount"`
+    /// @param byteOffset    absolute byte offset of the offending byte within
+    ///   the file, or within the record when the record's
+    ///   own offset is unknown
+    /// @param offendingByte the offending byte, as an unsigned value
     public MalformedFieldException(String fieldId, long byteOffset, int offendingByte) {
         super("field '" + fieldId + "' at byte " + byteOffset + ": expected an ASCII digit '0'-'9', found 0x"
                         + hex(offendingByte) + ". An N field must contain digits only, zero padded on the left.",
@@ -40,29 +36,23 @@ public final class MalformedFieldException extends ZenginException {
         return String.format("%02X", b & 0xFF);
     }
 
-    /**
-     * Returns the absolute byte offset of the offending byte.
-     *
-     * @return a non-negative byte offset
-     */
+    /// Returns the absolute byte offset of the offending byte.
+    ///
+    /// @return a non-negative byte offset
     public long byteOffset() {
         return byteOffset;
     }
 
-    /**
-     * Returns the offending byte as an unsigned value in {@code 0..255}.
-     *
-     * @return the offending byte
-     */
+    /// Returns the offending byte as an unsigned value in `0..255`.
+    ///
+    /// @return the offending byte
     public int offendingByte() {
         return offendingByte & 0xFF;
     }
 
-    /**
-     * Returns the descriptor id of the field that failed to decode.
-     *
-     * @return the field id, never {@code null}
-     */
+    /// Returns the descriptor id of the field that failed to decode.
+    ///
+    /// @return the field id, never `null`
     public String fieldId() {
         return fieldId;
     }

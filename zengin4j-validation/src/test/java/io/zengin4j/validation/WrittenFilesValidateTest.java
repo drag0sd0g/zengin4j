@@ -1,5 +1,6 @@
 package io.zengin4j.validation;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.charset.ZenginCharset;
@@ -19,39 +20,30 @@ import io.zengin4j.testkit.FormatFixtures;
 import io.zengin4j.testkit.SyntheticRecords;
 import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.api.ValidationReport;
-import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * <strong>Anything this library writes, it accepts.</strong>
- *
- * <p>The end-to-end statement of a promise that has been broken three separate
- * ways during Epic 6, each time quietly:
- *
- * <ul>
- *   <li>the default write policy checked a value's length but not its
- *       characters, so a full-width name went into a half-width field;
- *   <li>a truncation marker that no field class permits;
- *   <li>a replacement byte that no field class permits, and another that
- *       stranded a voicing mark.
- * </ul>
- *
- * <p>Each was found by looking rather than by failing. This test is the general
- * form: build a record through the encoder under every policy, write it, read it
- * back, and run the validator over it. If the library can be made to produce a
- * file it reports on, that is a defect in the library, not in the file.
- *
- * <p>It lives in the validation module because that is the only place both sides
- * are visible — {@code core} writes, and {@code core} cannot see the rules.
- */
+/// **Anything this library writes, it accepts.**
+///
+/// The end-to-end statement of a promise that has been broken three separate
+/// ways during Epic 6, each time quietly:
+///
+/// - the default write policy checked a value's length but not its
+///   characters, so a full-width name went into a half-width field;
+/// - a truncation marker that no field class permits;
+/// - a replacement byte that no field class permits, and another that
+///   stranded a voicing mark.
+///
+/// Each was found by looking rather than by failing. This test is the general
+/// form: build a record through the encoder under every policy, write it, read it
+/// back, and run the validator over it. If the library can be made to produce a
+/// file it reports on, that is a defect in the library, not in the file.
+///
+/// It lives in the validation module because that is the only place both sides
+/// are visible — `core` writes, and `core` cannot see the rules.
 class WrittenFilesValidateTest {
 
-    /** Names covering every conversion the engine performs. */
+    /// Names covering every conversion the engine performs.
     private static final List<String> NAMES = List.of(
             "ﾔﾏﾀﾞ ﾀﾛｳ",        // already conformant
             "ガクブチ ジロウ",   // full width, voiced
@@ -70,10 +62,8 @@ class WrittenFilesValidateTest {
         return FormatFixtures.supported();
     }
 
-    /**
-     * Every policy, every format, every name: either refused, or written and
-     * clean.
-     */
+    /// Every policy, every format, every name: either refused, or written and
+    /// clean.
     @ParameterizedTest
     @MethodSource("formats")
     void whateverThePolicyWritesReadsBackWithoutASyntaxFinding(FormatId id) {
@@ -123,7 +113,7 @@ class WrittenFilesValidateTest {
         }
     }
 
-    /** Field values for a data record, whichever format's names they are. */
+    /// Field values for a data record, whichever format's names they are.
     private static Map<String, String> dataValues(FormatId id, String name) {
         Map<String, String> values = new LinkedHashMap<>();
         if (id.value().equals("kouza-furikae")) {

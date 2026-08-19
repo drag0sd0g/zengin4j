@@ -1,22 +1,20 @@
 package io.zengin4j.core.loss;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-/**
- * The loss vocabulary, including the severity semantics R-I16 asks to be tested.
- *
- * <p>These types are the reason nothing in this library loses information
- * quietly. They arrive in Epic 6 because transliteration needs them, and the
- * mapping layer builds on them rather than inventing a second set — so the
- * meanings are worth pinning now, while there is one caller, rather than later
- * when there are several.
- */
+/// The loss vocabulary, including the severity semantics R-I16 asks to be tested.
+///
+/// These types are the reason nothing in this library loses information
+/// quietly. They arrive in Epic 6 because transliteration needs them, and the
+/// mapping layer builds on them rather than inventing a second set — so the
+/// meanings are worth pinning now, while there is one caller, rather than later
+/// when there are several.
 class LossTest {
 
     private static LossEntry entry(LossKind kind, LossSeverity severity) {
@@ -25,13 +23,11 @@ class LossTest {
 
     // ------------------------------------------------------------- severity
 
-    /**
-     * R-I16 — the ordering is the semantics.
-     *
-     * <p>Informational is cosmetic, material alters a party or reference
-     * noticeably, critical could move money to the wrong place. Code that asks
-     * "is anything at least material?" depends on that order holding.
-     */
+    /// R-I16 — the ordering is the semantics.
+    ///
+    /// Informational is cosmetic, material alters a party or reference
+    /// noticeably, critical could move money to the wrong place. Code that asks
+    /// "is anything at least material?" depends on that order holding.
     @Test
     void severitiesAreOrderedFromCosmeticToDangerous() {
         assertThat(LossSeverity.values())

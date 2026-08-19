@@ -1,29 +1,19 @@
 package io.zengin4j.validation;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.validation.api.Messages;
 import io.zengin4j.validation.api.Rule;
 import io.zengin4j.validation.engine.Rules;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
-/**
- * {@code docs/validation-rules.md} matches the code.
- *
- * <p>That page is what a consumer reads to find the id they want to suppress
- * (R-V3). A reference listing an id that no longer exists, or omitting one that
- * does, sends them to suppress nothing and wonder why. Documentation that is
- * checked is documentation that stays true.
- */
+/// `docs/validation-rules.md` matches the code.
+///
+/// That page is what a consumer reads to find the id they want to suppress
+/// (R-V3). A reference listing an id that no longer exists, or omitting one that
+/// does, sends them to suppress nothing and wonder why. Documentation that is
+/// checked is documentation that stays true.
 class RuleReferenceTest {
 
     private static final Path REFERENCE = Path.of("..", "docs", "validation-rules.md");
@@ -31,7 +21,7 @@ class RuleReferenceTest {
     private static final Pattern ROW =
             Pattern.compile("^\\| `(V-\\d{3})` \\| (ERROR|WARNING|INFO) \\| (.+?) \\|$", Pattern.MULTILINE);
 
-    /** Every id the code can emit, with its default severity and description. */
+    /// Every id the code can emit, with its default severity and description.
     private static Map<String, String> fromCode() {
         Map<String, String> rows = new TreeMap<>();
         for (Rule rule : Rules.bundled()) {
@@ -72,7 +62,7 @@ class RuleReferenceTest {
         }
     }
 
-    /** The two ids that are not rules are documented too, since they appear in reports. */
+    /// The two ids that are not rules are documented too, since they appear in reports.
     @Test
     void theNonRuleIdsAreDocumented() throws IOException {
         String text = Files.readString(REFERENCE, StandardCharsets.UTF_8);
@@ -85,14 +75,12 @@ class RuleReferenceTest {
         }
     }
 
-    /**
-     * The README's rule count is the real one.
-     *
-     * <p>A number in prose is the first thing to go stale and the last thing
-     * anyone notices. If this fails, add the rule to the README sentence as well
-     * as to the code — it is a one-word edit, and the alternative is a headline
-     * figure that quietly drifts.
-     */
+    /// The README's rule count is the real one.
+    ///
+    /// A number in prose is the first thing to go stale and the last thing
+    /// anyone notices. If this fails, add the rule to the README sentence as well
+    /// as to the code — it is a one-word edit, and the alternative is a headline
+    /// figure that quietly drifts.
     @Test
     void theReadmeRuleCountIsCurrent() throws IOException {
         int registered = Rules.bundled().size();
@@ -103,7 +91,7 @@ class RuleReferenceTest {
                 .contains("Validation: " + registered + " rules across six tiers");
     }
 
-    /** Composite rules are documented as such, so a reader is not surprised. */
+    /// Composite rules are documented as such, so a reader is not surprised.
     @Test
     void rulesThatEmitSeveralIdsAreDocumented() throws IOException {
         String text = Files.readString(REFERENCE, StandardCharsets.UTF_8);

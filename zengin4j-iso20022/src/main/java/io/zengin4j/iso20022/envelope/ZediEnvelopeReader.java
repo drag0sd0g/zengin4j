@@ -1,76 +1,62 @@
 package io.zengin4j.iso20022.envelope;
 
+import module java.base;
 import io.zengin4j.core.error.ZenginIOException;
 import io.zengin4j.iso20022.xml.MalformedXmlException;
 import io.zengin4j.iso20022.xml.XmlElement;
 import io.zengin4j.iso20022.xml.XmlParser;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 
-/**
- * Splits a ZEDI file into independently parseable messages.
- *
- * <p><strong>A ZEDI file is not a single XML document.</strong> The profile
- * concatenates the {@code head.001} business application header with the
- * message body at XML-declaration granularity, so a file that carries one
- * payment instruction contains two XML declarations, and one that carries three
- * groups contains six. Handing any of them to an XML parser fails on the second
- * declaration, which is why generic ISO 20022 tooling cannot read these files
- * at all.
- *
- * <p>This reader scans the bytes for declaration boundaries, cuts the file into
- * segments at them, and parses each segment on its own.
- *
- * <h2>Why the scan is safe</h2>
- *
- * <p>The obvious worry is a false boundary: a {@code <?xml} sequence occurring
- * inside a message rather than starting one, which would cut a document in
- * half. Three things bound it, and the third is what actually settles it.
- *
- * <ol>
- *   <li>Character content cannot contain a literal {@code <}. Well-formed XML
- *       requires it escaped as {@code &lt;}, so a beneficiary name or a
- *       remittance line that happens to read {@code <?xml} is not those bytes
- *       by the time it reaches a file.
- *   <li>The base64 alphabet — {@code A–Z a–z 0–9 + / =} — does not include
- *       {@code <}, so the encoded 金融EDI payload cannot contain the sequence
- *       however large it is (R-I8).
- *   <li>Neither of those covers comments or CDATA sections, where {@code <?xml}
- *       <em>is</em> legal. The profile uses neither, but "the profile does not
- *       do that" is an assumption and not a guarantee. So the split is
- *       <strong>checked rather than assumed</strong>: every segment must parse
- *       as a well-formed document, and a false boundary necessarily produces
- *       one that does not — it would end mid-element. The diagnostic names this
- *       possibility explicitly.
- * </ol>
- *
- * <p>See {@code docs/adr/0032-splitting-on-declaration-boundaries.md}.
- *
- * @since 0.5.0
- */
+/// Splits a ZEDI file into independently parseable messages.
+///
+/// **A ZEDI file is not a single XML document.** The profile
+/// concatenates the `head.001` business application header with the
+/// message body at XML-declaration granularity, so a file that carries one
+/// payment instruction contains two XML declarations, and one that carries three
+/// groups contains six. Handing any of them to an XML parser fails on the second
+/// declaration, which is why generic ISO 20022 tooling cannot read these files
+/// at all.
+///
+/// This reader scans the bytes for declaration boundaries, cuts the file into
+/// segments at them, and parses each segment on its own.
+///
+/// ## Why the scan is safe
+///
+/// The obvious worry is a false boundary: a `<?xml` sequence occurring
+/// inside a message rather than starting one, which would cut a document in
+/// half. Three things bound it, and the third is what actually settles it.
+///
+/// - Character content cannot contain a literal `<`. Well-formed XML
+///   requires it escaped as `<`, so a beneficiary name or a
+///   remittance line that happens to read `<?xml` is not those bytes
+///   by the time it reaches a file.
+/// - The base64 alphabet — `A–Z a–z 0–9 + / =` — does not include
+///   `<`, so the encoded 金融EDI payload cannot contain the sequence
+///   however large it is (R-I8).
+/// - Neither of those covers comments or CDATA sections, where `<?xml`
+///   *is* legal. The profile uses neither, but "the profile does not
+///   do that" is an assumption and not a guarantee. So the split is
+///   **checked rather than assumed**: every segment must parse
+///   as a well-formed document, and a false boundary necessarily produces
+///   one that does not — it would end mid-element. The diagnostic names this
+///   possibility explicitly.
+///
+/// See `docs/adr/0032-splitting-on-declaration-boundaries.md`.
+///
+/// @since 0.5.0
 public final class ZediEnvelopeReader {
 
-    /** The bytes that open an XML declaration. ASCII, and the same in UTF-8. */
+    /// The bytes that open an XML declaration. ASCII, and the same in UTF-8.
     private static final byte[] DECLARATION = "<?xml".getBytes(StandardCharsets.US_ASCII);
 
     private ZediEnvelopeReader() {
     }
 
-    /**
-     * Reads a file.
-     *
-     * @param path the file to read
-     * @return the messages it contains, with their exact bytes
-     * @throws ZenginIOException     if the file cannot be read
-     * @throws MalformedXmlException if a segment is not well-formed XML
-     */
+    /// Reads a file.
+    ///
+    /// @param path the file to read
+    /// @return the messages it contains, with their exact bytes
+    /// @throws ZenginIOException     if the file cannot be read
+    /// @throws MalformedXmlException if a segment is not well-formed XML
     public static ZediFile read(Path path) {
         Objects.requireNonNull(path, "path");
         try {
@@ -80,14 +66,12 @@ public final class ZediEnvelopeReader {
         }
     }
 
-    /**
-     * Reads a stream to its end.
-     *
-     * @param input the stream; the caller closes it
-     * @return the messages it contains, with their exact bytes
-     * @throws ZenginIOException     if the stream cannot be read
-     * @throws MalformedXmlException if a segment is not well-formed XML
-     */
+    /// Reads a stream to its end.
+    ///
+    /// @param input the stream; the caller closes it
+    /// @return the messages it contains, with their exact bytes
+    /// @throws ZenginIOException     if the stream cannot be read
+    /// @throws MalformedXmlException if a segment is not well-formed XML
     public static ZediFile read(InputStream input) {
         Objects.requireNonNull(input, "input");
         try {
@@ -97,14 +81,12 @@ public final class ZediEnvelopeReader {
         }
     }
 
-    /**
-     * Reads a file already in memory.
-     *
-     * @param bytes the file's bytes
-     * @return the messages it contains, with their exact bytes
-     * @throws MalformedXmlException if a segment is not well-formed XML, or the
-     *                               file contains no XML declaration at all
-     */
+    /// Reads a file already in memory.
+    ///
+    /// @param bytes the file's bytes
+    /// @return the messages it contains, with their exact bytes
+    /// @throws MalformedXmlException if a segment is not well-formed XML, or the
+    ///   file contains no XML declaration at all
     public static ZediFile read(byte[] bytes) {
         Objects.requireNonNull(bytes, "bytes");
         List<Integer> boundaries = findDeclarationBoundaries(bytes);
@@ -118,7 +100,7 @@ public final class ZediEnvelopeReader {
                     null);
         }
 
-        byte[] preamble = Arrays.copyOfRange(bytes, 0, boundaries.get(0));
+        byte[] preamble = Arrays.copyOfRange(bytes, 0, boundaries.getFirst());
         List<Segment> segments = new ArrayList<>(boundaries.size());
         for (int i = 0; i < boundaries.size(); i++) {
             int start = boundaries.get(i);
@@ -128,12 +110,10 @@ public final class ZediEnvelopeReader {
         return new ZediFile(preamble, pair(segments));
     }
 
-    /**
-     * Every offset at which an XML declaration starts.
-     *
-     * @param bytes the file's bytes
-     * @return the offsets, ascending
-     */
+    /// Every offset at which an XML declaration starts.
+    ///
+    /// @param bytes the file's bytes
+    /// @return the offsets, ascending
     static List<Integer> findDeclarationBoundaries(byte[] bytes) {
         List<Integer> found = new ArrayList<>();
         outer:
@@ -166,14 +146,12 @@ public final class ZediEnvelopeReader {
         }
     }
 
-    /**
-     * Pairs each body with the header in front of it.
-     *
-     * <p>Pairing by root element rather than by position, so a bare body — a
-     * {@code pain.001} with no header, which is what most test fixtures and
-     * some senders produce — reads as a message with no header instead of being
-     * mistaken for a header with no body.
-     */
+    /// Pairs each body with the header in front of it.
+    ///
+    /// Pairing by root element rather than by position, so a bare body — a
+    /// `pain.001` with no header, which is what most test fixtures and
+    /// some senders produce — reads as a message with no header instead of being
+    /// mistaken for a header with no body.
     private static List<ZediMessage> pair(List<Segment> segments) {
         List<ZediMessage> messages = new ArrayList<>();
         Segment pendingHeader = null;
@@ -211,7 +189,7 @@ public final class ZediEnvelopeReader {
                 null);
     }
 
-    /** A parsed slice of the file, and the bytes it was parsed from. */
+    /// A parsed slice of the file, and the bytes it was parsed from.
     private record Segment(XmlElement root, byte[] bytes) {
         boolean isHeader() {
             return root.name().equals(BusinessApplicationHeader.ROOT);

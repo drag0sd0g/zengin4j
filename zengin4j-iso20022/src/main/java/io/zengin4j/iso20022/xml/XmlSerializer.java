@@ -1,25 +1,23 @@
 package io.zengin4j.iso20022.xml;
 
-import java.nio.charset.StandardCharsets;
+import module java.base;
 
-/**
- * Writes an {@link XmlElement} tree back out as bytes.
- *
- * <p>Hand-written, for the same reason the JSON and SARIF writers are
- * (ADR-0022, ADR-0031): the output shape is fixed and narrow, the alternative
- * is a dependency in a module whose value is partly that it has none, and a
- * hand-written writer is only dangerous when nothing checks it. Something does
- * — every document this produces is parsed back by a real parser in the tests,
- * and by the XSD when one is supplied.
- *
- * <p>Output is deterministic: same tree, same bytes, always. That is what makes
- * a golden file meaningful and a diff between two runs readable.
- *
- * @since 0.5.0
- */
+/// Writes an [XmlElement] tree back out as bytes.
+///
+/// Hand-written, for the same reason the JSON and SARIF writers are
+/// (ADR-0022, ADR-0031): the output shape is fixed and narrow, the alternative
+/// is a dependency in a module whose value is partly that it has none, and a
+/// hand-written writer is only dangerous when nothing checks it. Something does
+/// — every document this produces is parsed back by a real parser in the tests,
+/// and by the XSD when one is supplied.
+///
+/// Output is deterministic: same tree, same bytes, always. That is what makes
+/// a golden file meaningful and a diff between two runs readable.
+///
+/// @since 0.5.0
 public final class XmlSerializer {
 
-    /** The declaration the profile uses, followed by CRLF (R-I6). */
+    /// The declaration the profile uses, followed by CRLF (R-I6).
     public static final String DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
     private static final String INDENT = "  ";
@@ -28,22 +26,18 @@ public final class XmlSerializer {
     private XmlSerializer() {
     }
 
-    /**
-     * Serialises a document, declaration included.
-     *
-     * @param root the root element
-     * @return UTF-8 bytes, CRLF line endings
-     */
+    /// Serialises a document, declaration included.
+    ///
+    /// @param root the root element
+    /// @return UTF-8 bytes, CRLF line endings
     public static byte[] toBytes(XmlElement root) {
         return toText(root).getBytes(StandardCharsets.UTF_8);
     }
 
-    /**
-     * Serialises a document, declaration included.
-     *
-     * @param root the root element
-     * @return the document text, CRLF line endings
-     */
+    /// Serialises a document, declaration included.
+    ///
+    /// @param root the root element
+    /// @return the document text, CRLF line endings
     public static String toText(XmlElement root) {
         StringBuilder out = new StringBuilder(DECLARATION).append(CRLF);
         write(root, "", "", out);
@@ -81,16 +75,14 @@ public final class XmlSerializer {
         out.append("</").append(element.name()).append('>').append(CRLF);
     }
 
-    /**
-     * Escapes character content.
-     *
-     * <p>{@code >} is escaped although only {@code ]]>} requires it. Escaping it
-     * unconditionally costs three bytes and removes a case nobody would think
-     * to test.
-     *
-     * @param text the text
-     * @return the escaped text
-     */
+    /// Escapes character content.
+    ///
+    /// `>` is escaped although only `]]>` requires it. Escaping it
+    /// unconditionally costs three bytes and removes a case nobody would think
+    /// to test.
+    ///
+    /// @param text the text
+    /// @return the escaped text
     static String escapeText(String text) {
         StringBuilder out = new StringBuilder(text.length());
         for (int i = 0; i < text.length(); i++) {
@@ -121,11 +113,9 @@ public final class XmlSerializer {
         return out.toString();
     }
 
-    /**
-     * XML 1.0 admits tab, newline and carriage return and no other control
-     * character. There is no escape for the rest — {@code &#x1;} is as illegal
-     * as the raw byte — so a document containing one cannot be written at all.
-     */
+    /// XML 1.0 admits tab, newline and carriage return and no other control
+    /// character. There is no escape for the rest — `&#x1;` is as illegal
+    /// as the raw byte — so a document containing one cannot be written at all.
     private static void appendChecked(char c, StringBuilder out) {
         if (c < 0x20 && c != '\t' && c != '\n' && c != '\r') {
             throw new IllegalArgumentException(String.format(

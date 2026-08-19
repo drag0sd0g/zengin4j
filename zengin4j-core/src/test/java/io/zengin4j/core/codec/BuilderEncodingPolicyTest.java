@@ -21,16 +21,14 @@ import io.zengin4j.core.model.DataRecord;
 import io.zengin4j.core.model.ZenginFile;
 import org.junit.jupiter.api.Test;
 
-/**
- * R-C18's policies, reached from the builder rather than from the encoder.
- *
- * <p>They were implemented on {@link RecordEncoder} and unreachable from here,
- * which made them unreachable in practice: {@link ZenginFileBuilder} is the
- * documented way to build a file, and a caller who dropped down to the encoder
- * to get transliteration gave up the trailer arithmetic and record numbering
- * this class exists for. A requirement that can only be used by abandoning the
- * API is not really implemented.
- */
+/// R-C18's policies, reached from the builder rather than from the encoder.
+///
+/// They were implemented on [RecordEncoder] and unreachable from here,
+/// which made them unreachable in practice: [ZenginFileBuilder] is the
+/// documented way to build a file, and a caller who dropped down to the encoder
+/// to get transliteration gave up the trailer arithmetic and record numbering
+/// this class exists for. A requirement that can only be used by abandoning the
+/// API is not really implemented.
 class BuilderEncodingPolicyTest {
 
     private static final FormatDescriptor SOUGOU = FormatRegistry.defaults()
@@ -84,7 +82,7 @@ class BuilderEncodingPolicyTest {
         assertThat(loss.build().entries()).isNotEmpty();
     }
 
-    /** And the trailer arithmetic still happens, which was the whole point. */
+    /// And the trailer arithmetic still happens, which was the whole point.
     @Test
     void transliteratingDoesNotCostTheBuilderSTrailerComputation() {
         ZenginFile file = builder(SOUGOU)
@@ -162,12 +160,10 @@ class BuilderEncodingPolicyTest {
 
     // ----------------------------------------------------------- the promise
 
-    /**
-     * Whatever policy the builder is given, the file it produces is writable.
-     *
-     * <p>The same claim {@code WritePolicyTest} makes for the encoder, restated
-     * for the path callers actually use.
-     */
+    /// Whatever policy the builder is given, the file it produces is writable.
+    ///
+    /// The same claim `WritePolicyTest` makes for the encoder, restated
+    /// for the path callers actually use.
     @Test
     void everyFileTheBuilderProducesIsWritable() {
         for (CharacterWritePolicy policy : CharacterWritePolicy.values()) {
@@ -200,13 +196,11 @@ class BuilderEncodingPolicyTest {
 
     // ------------------------------------------------------------- the shape
 
-    /**
-     * The collector is not optional.
-     *
-     * <p>Every policy but {@code REJECT} alters somebody's name to make it fit.
-     * Requiring a collector is the smallest way to stop that being a decision
-     * nobody records (P5).
-     */
+    /// The collector is not optional.
+    ///
+    /// Every policy but `REJECT` alters somebody's name to make it fit.
+    /// Requiring a collector is the smallest way to stop that being a decision
+    /// nobody records (P5).
     @Test
     void aPolicyCannotBeChosenWithoutSomewhereToRecordWhatItDid() {
         assertThatNullPointerException()

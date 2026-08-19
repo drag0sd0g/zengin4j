@@ -1,5 +1,6 @@
 package io.zengin4j.testkit;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.charset.CharacterSet;
@@ -12,40 +13,34 @@ import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.model.Batch;
 import io.zengin4j.core.model.DataRecord;
 import io.zengin4j.core.model.ZenginFile;
-import java.io.ByteArrayInputStream;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * Everything the generator writes is writable in every format.
- *
- * <p>This exists because it did not, and the gap cost something. The name list
- * contained ﾀﾞﾐｰ ｻﾌﾞﾛｳ — with a 長音 ｰ, which the standard never permits — and
- * the fixture tests did not catch it, because they check the worked-example
- * record rather than generated output. It surfaced only when
- * {@code zengin validate} was run over a 25-payment payroll file and reported
- * six {@code V-202} errors against this project's own generator.
- *
- * <p>The lesson is about coverage of the <em>data</em>, not of the code: every
- * line of the generator was covered while one of its eight values was wrong. So
- * these tests generate enough records to draw every name, and check each
- * against the strictest field it could land in.
- */
+/// Everything the generator writes is writable in every format.
+///
+/// This exists because it did not, and the gap cost something. The name list
+/// contained ﾀﾞﾐｰ ｻﾌﾞﾛｳ — with a 長音 ｰ, which the standard never permits — and
+/// the fixture tests did not catch it, because they check the worked-example
+/// record rather than generated output. It surfaced only when
+/// `zengin validate` was run over a 25-payment payroll file and reported
+/// six `V-202` errors against this project's own generator.
+///
+/// The lesson is about coverage of the *data*, not of the code: every
+/// line of the generator was covered while one of its eight values was wrong. So
+/// these tests generate enough records to draw every name, and check each
+/// against the strictest field it could land in.
 class GeneratorNamesTest {
 
-    /** Enough payments that all eight names are drawn with overwhelming probability. */
+    /// Enough payments that all eight names are drawn with overwhelming probability.
     private static final int ENOUGH_TO_DRAW_EVERY_NAME = 200;
 
     static List<FormatId> formats() {
         return FormatFixtures.supported();
     }
 
-    /**
-     * Every generated text field satisfies its own character class, for every
-     * format — including the payroll formats, which are strictest.
-     */
+    /// Every generated text field satisfies its own character class, for every
+    /// format — including the payroll formats, which are strictest.
     @ParameterizedTest
     @MethodSource("formats")
     void everyGeneratedTextFieldIsWritableInItsClass(FormatId id) {
@@ -78,11 +73,9 @@ class GeneratorNamesTest {
         }
     }
 
-    /**
-     * Every name in the list, held against the strictest class any format uses
-     * for a name — checked directly, so a bad name fails even if the random
-     * draw happens not to pick it.
-     */
+    /// Every name in the list, held against the strictest class any format uses
+    /// for a name — checked directly, so a bad name fails even if the random
+    /// draw happens not to pick it.
     @Test
     void everyNameInTheListIsValidUnderTheStrictestNameClass() {
         for (String name : generatedNames()) {
@@ -97,7 +90,7 @@ class GeneratorNamesTest {
         }
     }
 
-    /** The specific byte that got through: 0xB0, the 長音 ｰ. */
+    /// The specific byte that got through: 0xB0, the 長音 ｰ.
     @Test
     void noGeneratedNameContainsTheProlongedSoundMark() {
         for (String name : generatedNames()) {
@@ -108,7 +101,7 @@ class GeneratorNamesTest {
         }
     }
 
-    /** Small kana are excluded from every class too. */
+    /// Small kana are excluded from every class too.
     @Test
     void noGeneratedNameContainsASmallKana() {
         for (String name : generatedNames()) {
@@ -121,11 +114,9 @@ class GeneratorNamesTest {
         }
     }
 
-    /**
-     * The names the generator can actually emit, recovered from generated
-     * output rather than from a copy of the list — a copy would agree with
-     * itself while the real list drifted.
-     */
+    /// The names the generator can actually emit, recovered from generated
+    /// output rather than from a copy of the list — a copy would agree with
+    /// itself while the real list drifted.
     private static List<String> generatedNames() {
         FormatFixtures fixtures = SougouFurikomiFixtures.create();
         byte[] bytes = ZenginGenerator.builder()

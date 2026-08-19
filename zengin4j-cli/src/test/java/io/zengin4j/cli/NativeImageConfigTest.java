@@ -1,31 +1,22 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
-/**
- * A native image would find everything it needs at run time.
- *
- * <p>GraalVM includes no resource it has not been told about and can reflect
- * over no class it has not been told about, and both failures happen only in
- * the built binary — long after the tests that would have caught them. These
- * checks move the failure to build time.
- *
- * <p>picocli-codegen generates the reflection half on every compile and cannot
- * go stale. The resource half is hand-written, because the processor knows only
- * about picocli's own resources, so it is the half that needs guarding.
- */
+/// A native image would find everything it needs at run time.
+///
+/// GraalVM includes no resource it has not been told about and can reflect
+/// over no class it has not been told about, and both failures happen only in
+/// the built binary — long after the tests that would have caught them. These
+/// checks move the failure to build time.
+///
+/// picocli-codegen generates the reflection half on every compile and cannot
+/// go stale. The resource half is hand-written, because the processor knows only
+/// about picocli's own resources, so it is the half that needs guarding.
 class NativeImageConfigTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -36,7 +27,7 @@ class NativeImageConfigTest {
     private static final Path GENERATED = Path.of("build", "classes", "java", "main", "META-INF",
             "native-image", "picocli-generated");
 
-    /** Resources loaded by name at run time, wherever in the build they live. */
+    /// Resources loaded by name at run time, wherever in the build they live.
     private static List<String> runtimeResources() throws IOException {
         List<String> found = new ArrayList<>();
         for (String module : List.of("zengin4j-core", "zengin4j-validation", "zengin4j-testkit")) {
@@ -87,14 +78,12 @@ class NativeImageConfigTest {
         }
     }
 
-    /**
-     * The generated reflection config covers every command.
-     *
-     * <p>Not a duplicate of what the processor does — a check that the
-     * processor ran at all. It is wired through {@code annotationProcessor}, and
-     * a dependency-scope change would silently disable it, leaving a native
-     * image that builds and then cannot parse its own arguments.
-     */
+    /// The generated reflection config covers every command.
+    ///
+    /// Not a duplicate of what the processor does — a check that the
+    /// processor ran at all. It is wired through `annotationProcessor`, and
+    /// a dependency-scope change would silently disable it, leaving a native
+    /// image that builds and then cannot parse its own arguments.
     @Test
     void theGeneratedReflectionConfigCoversEveryCommand() throws Exception {
         Path reflect = GENERATED.resolve(Path.of("io.github.drag0sd0g", "zengin4j-cli",
@@ -119,7 +108,7 @@ class NativeImageConfigTest {
                 "io.zengin4j.cli.command.ReadingOptions");
     }
 
-    /** Enums used as option types are reflected over when picocli converts them. */
+    /// Enums used as option types are reflected over when picocli converts them.
     @Test
     void theGeneratedConfigCoversTheEnumsUsedAsOptionTypes() throws Exception {
         Path reflect = GENERATED.resolve(Path.of("io.github.drag0sd0g", "zengin4j-cli",

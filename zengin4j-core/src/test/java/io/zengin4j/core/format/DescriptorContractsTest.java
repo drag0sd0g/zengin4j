@@ -1,21 +1,16 @@
 package io.zengin4j.core.format;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 import io.zengin4j.core.error.FormatDescriptorException;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/**
- * The descriptor types defend their own invariants, whether they were loaded
- * from YAML or built in code by a consumer registering a variant (R-X1).
- */
+/// The descriptor types defend their own invariants, whether they were loaded
+/// from YAML or built in code by a consumer registering a variant (R-X1).
 class DescriptorContractsTest {
 
     private static final FormatId ID = FormatId.of("example");
@@ -209,7 +204,7 @@ class DescriptorContractsTest {
         assertThat(closed.byCode("2")).isEmpty();
     }
 
-    /** R-0.1 applies to code lists too: a claim of verification needs evidence. */
+    /// R-0.1 applies to code lists too: a claim of verification needs evidence.
     @Test
     void codeListsCannotClaimVerificationWithoutSources() {
         assertThatIllegalArgumentException()

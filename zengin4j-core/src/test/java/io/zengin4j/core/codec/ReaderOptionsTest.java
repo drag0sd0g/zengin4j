@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
@@ -8,13 +9,9 @@ import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.format.FormatRegistry;
 import io.zengin4j.core.testing.Fixtures;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * The defaults matter: they are what a caller who reads no documentation gets.
- */
+/// The defaults matter: they are what a caller who reads no documentation gets.
 class ReaderOptionsTest {
 
     @Test

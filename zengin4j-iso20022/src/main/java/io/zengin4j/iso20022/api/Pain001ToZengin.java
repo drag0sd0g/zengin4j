@@ -1,5 +1,6 @@
 package io.zengin4j.iso20022.api;
 
+import module java.base;
 import io.zengin4j.core.codec.EncodingOptions;
 import io.zengin4j.core.codec.ZenginFileBuilder;
 import io.zengin4j.core.format.FieldDescriptor;
@@ -25,25 +26,20 @@ import io.zengin4j.iso20022.pain001.Money;
 import io.zengin4j.iso20022.pain001.Pain001Document;
 import io.zengin4j.iso20022.pain001.PaymentInstruction;
 import io.zengin4j.iso20022.xml.XmlElement;
-import java.time.MonthDay;
-import java.util.List;
-import java.util.Optional;
 
-/**
- * The downward leg: a {@code pain.001} document becomes a Zengin file.
- *
- * <p>This is where conversion stops being a translation and starts being a
- * choice. A creditor name has 140 characters of any script and thirty bytes of
- * half-width katakana to land in; a reference has thirty-five characters and
- * ten bytes; a date has a year that the destination cannot hold. Nothing here
- * can be made lossless, so everything here is reported.
- *
- * <p>Values the XML does not carry come from {@link MappingContext}, which is
- * required rather than defaulted (R-I20). 委託者コード in particular: an
- * initiating party identifier is not required to be the originator code the
- * receiving bank knows, and assuming it is would produce a file the bank
- * rejects for a reason nobody could see in the XML.
- */
+/// The downward leg: a `pain.001` document becomes a Zengin file.
+///
+/// This is where conversion stops being a translation and starts being a
+/// choice. A creditor name has 140 characters of any script and thirty bytes of
+/// half-width katakana to land in; a reference has thirty-five characters and
+/// ten bytes; a date has a year that the destination cannot hold. Nothing here
+/// can be made lossless, so everything here is reported.
+///
+/// Values the XML does not carry come from [MappingContext], which is
+/// required rather than defaulted (R-I20). 委託者コード in particular: an
+/// initiating party identifier is not required to be the originator code the
+/// receiving bank knows, and assuming it is would produce a file the bank
+/// rejects for a reason nobody could see in the XML.
 final class Pain001ToZengin {
 
     private final MappingContext context;
@@ -60,7 +56,7 @@ final class Pain001ToZengin {
 
         PaymentInstruction first = document.payments().isEmpty()
                 ? null
-                : document.payments().get(0);
+                : document.payments().getFirst();
 
         ZenginFileBuilder builder = ZenginFileBuilder.forFormat(descriptor)
                 .allowUnverifiedFormats(true)
@@ -108,19 +104,17 @@ final class Pain001ToZengin {
         return new MappingResult<>(builder.build(), MappingLossReport.of(loss.build()));
     }
 
-    /**
-     * Several {@code PmtInf} blocks become one batch, and that costs something
-     * only when they disagree.
-     *
-     * <p>A Zengin batch has one header, so one execution date, one debit
-     * account and one originating bank. When the blocks agree on all three the
-     * flattening loses only the grouping, which nothing downstream reads —
-     * reported {@code INFORMATIONAL}. When they disagree, the first block's
-     * values are applied to every payment in the file, including payments that
-     * asked for a different date or a different account: that is
-     * {@code CRITICAL}, and it is not a subtle difference to bury in a note
-     * about structure.
-     */
+    /// Several `PmtInf` blocks become one batch, and that costs something
+    /// only when they disagree.
+    ///
+    /// A Zengin batch has one header, so one execution date, one debit
+    /// account and one originating bank. When the blocks agree on all three the
+    /// flattening loses only the grouping, which nothing downstream reads —
+    /// reported `INFORMATIONAL`. When they disagree, the first block's
+    /// values are applied to every payment in the file, including payments that
+    /// asked for a different date or a different account: that is
+    /// `CRITICAL`, and it is not a subtle difference to bury in a note
+    /// about structure.
     private void reportFlattening(Pain001Document document) {
         if (document.payments().size() < 2) {
             return;
@@ -158,21 +152,19 @@ final class Pain001ToZengin {
                         + "明細も含まれます。"));
     }
 
-    /**
-     * The document said one thing and its own payments say another.
-     *
-     * <p>The mirror of the trailer cross-check on the upward leg, and it was
-     * missing: {@code GrpHdr/NbOfTxs} and {@code CtrlSum} are read on the way
-     * out, computed on the way in, and until this existed nothing compared them
-     * to the payments the document actually carries. A {@code pain.001} that
-     * contradicts itself is exactly as suspect as a Zengin file whose trailer
-     * does — and V-301 and V-302 have caught the latter since Epic 4.
-     *
-     * <p>The payments are what is converted, because they are what the money
-     * is. The disagreement is {@code CRITICAL}: neither number can be trusted
-     * once they differ, and the one that was wrong might be the one somebody
-     * reconciles against.
-     */
+    /// The document said one thing and its own payments say another.
+    ///
+    /// The mirror of the trailer cross-check on the upward leg, and it was
+    /// missing: `GrpHdr/NbOfTxs` and `CtrlSum` are read on the way
+    /// out, computed on the way in, and until this existed nothing compared them
+    /// to the payments the document actually carries. A `pain.001` that
+    /// contradicts itself is exactly as suspect as a Zengin file whose trailer
+    /// does — and V-301 and V-302 have caught the latter since Epic 4.
+    ///
+    /// The payments are what is converted, because they are what the money
+    /// is. The disagreement is `CRITICAL`: neither number can be trusted
+    /// once they differ, and the one that was wrong might be the one somebody
+    /// reconciles against.
     private void crossCheckGroupHeader(Pain001Document document, XmlElement body) {
         Optional<XmlElement> header = body.at(Pain001Document.ELEMENT + "/" + GroupHeader.ELEMENT);
         if (header.isEmpty()) {
@@ -208,15 +200,13 @@ final class Pain001ToZengin {
                         .at(IsoPaths.CONTROL_SUM, "trailer.totalAmount")));
     }
 
-    /**
-     * The debtor's own reference, which the Zengin formats have no field for.
-     *
-     * <p>{@code InstrId} is optional and distinct from {@code EndToEndId}: it is
-     * the debtor's reference to its own bank, not the one the creditor
-     * reconciles against. There is nowhere to put it — both 顧客コード fields are
-     * already spoken for by the {@code EndToEndId} policy and the remittance
-     * text — so it is dropped, and said to be.
-     */
+    /// The debtor's own reference, which the Zengin formats have no field for.
+    ///
+    /// `InstrId` is optional and distinct from `EndToEndId`: it is
+    /// the debtor's reference to its own bank, not the one the creditor
+    /// reconciles against. There is nowhere to put it — both 顧客コード fields are
+    /// already spoken for by the `EndToEndId` policy and the remittance
+    /// text — so it is dropped, and said to be.
     private void reportDroppedInstructionIds(Pain001Document document) {
         long carrying = document.transactions().stream()
                 .filter(transaction -> !transaction.instructionId().isBlank())
@@ -236,13 +226,11 @@ final class Pain001ToZengin {
                 .at(IsoPaths.INSTRUCTION_ID, ""));
     }
 
-    /**
-     * The XML named one originator and the context named another.
-     *
-     * <p>The context wins — an initiating party identifier is not required to be
-     * the code the receiving bank knows (R-I20). Silent when they agree, because
-     * then nothing was replaced.
-     */
+    /// The XML named one originator and the context named another.
+    ///
+    /// The context wins — an initiating party identifier is not required to be
+    /// the code the receiving bank knows (R-I20). Silent when they agree, because
+    /// then nothing was replaced.
     private void reportOriginatorCodeOverride(Pain001Document document) {
         String declared = document.groupHeader().initiatingParty().identifier();
         if (declared.isBlank() || declared.equals(context.originatorCode())) {
@@ -261,21 +249,19 @@ final class Pain001ToZengin {
                 .at(IsoPaths.INITIATING_PARTY_ID, "header.originatorCode"));
     }
 
-    /**
-     * Fields the ISO side never carried, left at the format's own default.
-     *
-     * <p>Reported once per file rather than once per payment: the fact is a
-     * property of the mapping, and thirty thousand identical lines would bury
-     * the one that matters.
-     *
-     * <p>振込指定区分 is the one worth naming. It is dropped on the way out —
-     * ISO 20022 does not model how an instruction reaches the beneficiary's
-     * bank — so on the way back there is nothing to restore it from, and the
-     * field takes its numeric default of 0. Several institutions document that
-     * as the required value for an unused field; the bundled code list carries
-     * 7 and 8, so V-205 notes it as outside the list. Both are right, and a
-     * reader deserves to know which they are looking at.
-     */
+    /// Fields the ISO side never carried, left at the format's own default.
+    ///
+    /// Reported once per file rather than once per payment: the fact is a
+    /// property of the mapping, and thirty thousand identical lines would bury
+    /// the one that matters.
+    ///
+    /// 振込指定区分 is the one worth naming. It is dropped on the way out —
+    /// ISO 20022 does not model how an instruction reaches the beneficiary's
+    /// bank — so on the way back there is nothing to restore it from, and the
+    /// field takes its numeric default of 0. Several institutions document that
+    /// as the required value for an unused field; the bundled code list carries
+    /// 7 and 8, so V-205 notes it as outside the list. Both are right, and a
+    /// reader deserves to know which they are looking at.
     private void reportFieldsWithNoIsoSource(Pain001Document document) {
         if (document.payments().isEmpty()) {
             return;
@@ -321,16 +307,14 @@ final class Pain001ToZengin {
         });
     }
 
-    /**
-     * A member id that is not four digits plus three.
-     *
-     * <p>Within 全銀システム a participant is an office, and an office is 銀行番号
-     * followed by 支店番号 — seven digits. A sender that wrote something else is
-     * not producing a malformed file, but this mapping cannot say where the
-     * bank ends and the branch begins, and guessing would put digits in the
-     * wrong field. Reported {@code CRITICAL}: a wrong branch code sends the
-     * payment to a different office.
-     */
+    /// A member id that is not four digits plus three.
+    ///
+    /// Within 全銀システム a participant is an office, and an office is 銀行番号
+    /// followed by 支店番号 — seven digits. A sender that wrote something else is
+    /// not producing a malformed file, but this mapping cannot say where the
+    /// bank ends and the branch begins, and guessing would put digits in the
+    /// wrong field. Reported `CRITICAL`: a wrong branch code sends the
+    /// payment to a different office.
     private void reportUnsplittableMember(Agent agent, String memberPath, String targetField) {
         if (agent.splitsCleanly()) {
             return;
@@ -347,15 +331,13 @@ final class Pain001ToZengin {
                 .at(memberPath, targetField));
     }
 
-    /**
-     * The amount, or a diagnosis of why it cannot be one.
-     *
-     * <p>Two things a {@code pain.001} can say that a Zengin file cannot: a
-     * currency other than JPY, and a fraction of a unit. Neither is rounded —
-     * both are {@code CRITICAL}, because quietly turning 1000.50 EUR into 1000
-     * JPY is exactly the class of mistake this whole module exists to make
-     * visible.
-     */
+    /// The amount, or a diagnosis of why it cannot be one.
+    ///
+    /// Two things a `pain.001` can say that a Zengin file cannot: a
+    /// currency other than JPY, and a fraction of a unit. Neither is rounded —
+    /// both are `CRITICAL`, because quietly turning 1000.50 EUR into 1000
+    /// JPY is exactly the class of mistake this whole module exists to make
+    /// visible.
     private long amount(CreditTransferTransaction transaction, FormatDescriptor descriptor) {
         Money money = transaction.amount();
         long limit = maximumFor(descriptor);
@@ -396,13 +378,11 @@ final class Pain001ToZengin {
         return representable(money, limit);
     }
 
-    /**
-     * The largest amount 振込金額 can hold, from its declared width.
-     *
-     * <p>Ten digits in 総合振込. Read from the descriptor rather than written
-     * here, because a format with a wider field would otherwise be silently
-     * held to this one's limit.
-     */
+    /// The largest amount 振込金額 can hold, from its declared width.
+    ///
+    /// Ten digits in 総合振込. Read from the descriptor rather than written
+    /// here, because a format with a wider field would otherwise be silently
+    /// held to this one's limit.
     private static long maximumFor(FormatDescriptor descriptor) {
         int digits = descriptor.record(RecordKind.DATA).field("amount").length();
         long limit = 1;
@@ -412,20 +392,18 @@ final class Pain001ToZengin {
         return limit - 1;
     }
 
-    /**
-     * An amount the field cannot hold, reported rather than thrown.
-     *
-     * <p>A {@code pain.001} may legitimately carry a figure larger than ten
-     * digits, or a negative one, and neither can go into 振込金額. Letting the
-     * encoder throw would take a whole file down for one payment, and would do
-     * it with an exception that is not part of this module's vocabulary — so
-     * the payment is written as zero and the entry is {@code CRITICAL}.
-     *
-     * <p>Zero is not a repair. Under the default threshold the conversion
-     * refuses and nobody sees it; under {@code acceptAnyLoss} the caller asked
-     * for a best-effort file and the report says exactly which payment is
-     * wrong and by how much.
-     */
+    /// An amount the field cannot hold, reported rather than thrown.
+    ///
+    /// A `pain.001` may legitimately carry a figure larger than ten
+    /// digits, or a negative one, and neither can go into 振込金額. Letting the
+    /// encoder throw would take a whole file down for one payment, and would do
+    /// it with an exception that is not part of this module's vocabulary — so
+    /// the payment is written as zero and the entry is `CRITICAL`.
+    ///
+    /// Zero is not a repair. Under the default threshold the conversion
+    /// refuses and nobody sees it; under `acceptAnyLoss` the caller asked
+    /// for a best-effort file and the report says exactly which payment is
+    /// wrong and by how much.
     private long representable(Money money, long limit) {
         java.math.BigInteger whole = money.amount().toBigInteger();
 
@@ -458,9 +436,7 @@ final class Pain001ToZengin {
         return whole.longValueExact();
     }
 
-    /**
-     * Where the reference lands, and what it costs to put it there.
-     */
+    /// Where the reference lands, and what it costs to put it there.
     private void reference(ZenginFileBuilder.FieldValues values, FormatDescriptor descriptor,
             CreditTransferTransaction transaction) {
         String endToEnd = transaction.endToEndId();
@@ -508,10 +484,8 @@ final class Pain001ToZengin {
         }
     }
 
-    /**
-     * A base64 金融EDI attachment cannot go into twenty bytes, and pretending
-     * otherwise would put a fragment of an encoding into a field a bank reads.
-     */
+    /// A base64 金融EDI attachment cannot go into twenty bytes, and pretending
+    /// otherwise would put a fragment of an encoding into a field a bank reads.
     private String ediPayload(EdiAttachment attachment) {
         loss.record(LossEntry.of(LossKind.DROPPED, LossSeverity.MATERIAL,
                         attachment.toString(), "",
@@ -529,9 +503,7 @@ final class Pain001ToZengin {
 
     // ------------------------------------------------------------------ dates
 
-    /**
-     * The year is dropped, and that is not recoverable.
-     */
+    /// The year is dropped, and that is not recoverable.
     private MonthDay executionDate(PaymentInstruction instruction) {
         MonthDay monthDay = MonthDay.of(instruction.requestedExecutionDate().getMonth(),
                 instruction.requestedExecutionDate().getDayOfMonth());
@@ -551,10 +523,8 @@ final class Pain001ToZengin {
 
     // ----------------------------------------------------------- 預金種目
 
-    /**
-     * 預金種目 came from a proprietary code, so it either round-trips exactly or
-     * is not there at all.
-     */
+    /// 預金種目 came from a proprietary code, so it either round-trips exactly or
+    /// is not there at all.
     private String accountType(String proprietary, String sourcePath, String targetField) {
         if (proprietary.length() > 1) {
             loss.record(LossEntry.of(LossKind.COERCED, LossSeverity.CRITICAL, proprietary, "1",
@@ -584,15 +554,13 @@ final class Pain001ToZengin {
 
     // --------------------------------------------------------- transliteration
 
-    /**
-     * Full-width to half-width, into the field it has to fit.
-     *
-     * <p>Everything hard about this module is in this method. The engine
-     * decides what a name becomes; what happens here is deciding what to do
-     * when it cannot become anything — which, under the default policies, is to
-     * refuse rather than to write an approximation of somebody's name into a
-     * payment instruction.
-     */
+    /// Full-width to half-width, into the field it has to fit.
+    ///
+    /// Everything hard about this module is in this method. The engine
+    /// decides what a name becomes; what happens here is deciding what to do
+    /// when it cannot become anything — which, under the default policies, is to
+    /// refuse rather than to write an approximation of somebody's name into a
+    /// payment instruction.
     private String narrow(String text, FormatDescriptor descriptor, RecordKind kind,
             String fieldId, String sourcePath, LossSeverity severity) {
         if (text == null || text.isBlank()) {
@@ -630,27 +598,25 @@ final class Pain001ToZengin {
         }
     }
 
-    /**
-     * An identifier, or nothing, but never a shortened version of one.
-     *
-     * <p>ISO 20022 gives an account number thirty-four characters and a
-     * clearing-system member id thirty-five; the Zengin fields are seven and
-     * four and three. A sender can legitimately fill them, and until this
-     * existed the encoder threw an untyped {@code IllegalArgumentException}
-     * from inside the builder — a whole file lost to one payment, in an
-     * exception outside this module's vocabulary.
-     *
-     * <p><strong>Not truncated.</strong> Half an account number is a different
-     * account, and a file carrying one looks perfectly valid.
-     *
-     * <p>The value is not written, which for a numeric field means the field
-     * takes its padding — zeros, not spaces. That is not a safe outcome either:
-     * {@code 0000000} is a well-formed account number and no validation rule
-     * will object to it. It is survivable only because the entry is
-     * {@code CRITICAL} and the default threshold therefore stops the conversion
-     * before anybody sees the file. A caller who passes {@code acceptAnyLoss}
-     * gets a file with a zeroed identifier and a report saying which payment.
-     */
+    /// An identifier, or nothing, but never a shortened version of one.
+    ///
+    /// ISO 20022 gives an account number thirty-four characters and a
+    /// clearing-system member id thirty-five; the Zengin fields are seven and
+    /// four and three. A sender can legitimately fill them, and until this
+    /// existed the encoder threw an untyped `IllegalArgumentException`
+    /// from inside the builder — a whole file lost to one payment, in an
+    /// exception outside this module's vocabulary.
+    ///
+    /// **Not truncated.** Half an account number is a different
+    /// account, and a file carrying one looks perfectly valid.
+    ///
+    /// The value is not written, which for a numeric field means the field
+    /// takes its padding — zeros, not spaces. That is not a safe outcome either:
+    /// `0000000` is a well-formed account number and no validation rule
+    /// will object to it. It is survivable only because the entry is
+    /// `CRITICAL` and the default threshold therefore stops the conversion
+    /// before anybody sees the file. A caller who passes `acceptAnyLoss`
+    /// gets a file with a zeroed identifier and a report saying which payment.
     private String identifier(String value, FormatDescriptor descriptor, RecordKind kind,
             String fieldId, String sourcePath) {
         if (value == null || value.isBlank()) {
@@ -680,12 +646,10 @@ final class Pain001ToZengin {
         return "";
     }
 
-    /**
-     * A value that is already writable, cut to the field it goes in.
-     *
-     * <p>References and remittance codes are not names — they are ASCII, and
-     * transliterating them would be wrong. They still have to fit.
-     */
+    /// A value that is already writable, cut to the field it goes in.
+    ///
+    /// References and remittance codes are not names — they are ASCII, and
+    /// transliterating them would be wrong. They still have to fit.
     private String fit(String value, FormatDescriptor descriptor, String fieldId,
             String sourcePath, LossSeverity severity) {
         if (value == null || value.isBlank()) {

@@ -1,23 +1,20 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * {@code --out-format=json} works on every command (R-CLI2).
- *
- * <p>Checked by parsing the output with a real parser rather than by looking
- * for substrings. A hand-written writer that emits <em>almost</em> valid JSON
- * passes every {@code contains} assertion and fails in the consumer, which is
- * the one place the failure is expensive — the same reasoning as ADR-0022.
- */
+/// `--out-format=json` works on every command (R-CLI2).
+///
+/// Checked by parsing the output with a real parser rather than by looking
+/// for substrings. A hand-written writer that emits *almost* valid JSON
+/// passes every `contains` assertion and fails in the consumer, which is
+/// the one place the failure is expensive — the same reasoning as ADR-0022.
 class JsonOutputTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -83,13 +80,11 @@ class JsonOutputTest {
         assertThat(driver.get("rules")).isNotEmpty();
     }
 
-    /**
-     * A result carries the file it is about, so a CI consumer can annotate it.
-     *
-     * <p>Needs a file with findings: a clean run has no results and therefore
-     * no locations, which is correct and also why the previous shape of this
-     * test was checking nothing.
-     */
+    /// A result carries the file it is about, so a CI consumer can annotate it.
+    ///
+    /// Needs a file with findings: a clean run has no results and therefore
+    /// no locations, which is correct and also why the previous shape of this
+    /// test was checking nothing.
     @Test
     void sarifResultsNameTheFileTheyConcern() throws Exception {
         java.nio.file.Files.write(directory.resolve("dup.txt"),
@@ -201,7 +196,7 @@ class JsonOutputTest {
         assertThat(json.get("path").asText()).isEqualTo(target.toString());
     }
 
-    /** Japanese passes through as itself rather than as {@code \\u} escapes. */
+    /// Japanese passes through as itself rather than as `\\u` escapes.
     @Test
     void japaneseTextIsReadableInTheOutput() throws Exception {
         Cli result = Cli.run("explain", "--format=sougou-furikomi", "--out-format=json");
@@ -211,7 +206,7 @@ class JsonOutputTest {
         assertThat(MAPPER.readTree(result.out()).get("nameJa").asText()).isEqualTo("総合振込");
     }
 
-    /** SARIF carries findings; the commands that report no findings say so. */
+    /// SARIF carries findings; the commands that report no findings say so.
     @Test
     void commandsWithoutFindingsRefuseSarifRatherThanEmittingSomethingWrong() {
         for (String[] arguments : List.of(

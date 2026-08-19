@@ -1,54 +1,36 @@
 package io.zengin4j.validation.calendar;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.MonthDay;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import module java.base;
 
-/**
- * When Japanese financial institutions move money (R-V6, R-V7).
- *
- * <p>A day is a business day unless it is a weekend, a public holiday, or in
- * the year-end closure. The third is the one that surprises people: 2 and 3
- * January are not public holidays, and financial institutions are shut anyway —
- * a transfer dated 2 January does not settle on 2 January, whatever a holiday
- * calendar says.
- *
- * <p><strong>The holidays are data, not an algorithm.</strong> They come from
- * the Cabinet Office's published CSV, bundled as a resource (permitted by
- * R-M2). Two of them — 春分の日 and 秋分の日 — are fixed by an astronomical
- * determination published in February of the preceding year, so no computation
- * gives them reliably for an arbitrary future year. Substitute holidays
- * (振替休日) and bridge holidays (国民の休日) are already in the source and are
- * not derived here either.
- *
- * <p>That is why {@link #validUntil()} exists and why going past it throws
- * rather than guesses (R-V7). A calendar that extrapolated would be
- * confidently wrong on exactly the dates a payment file is most likely to be
- * scheduled near, and would be wrong silently.
- *
- * @since 0.2.0
- */
+/// When Japanese financial institutions move money (R-V6, R-V7).
+///
+/// A day is a business day unless it is a weekend, a public holiday, or in
+/// the year-end closure. The third is the one that surprises people: 2 and 3
+/// January are not public holidays, and financial institutions are shut anyway —
+/// a transfer dated 2 January does not settle on 2 January, whatever a holiday
+/// calendar says.
+///
+/// **The holidays are data, not an algorithm.** They come from
+/// the Cabinet Office's published CSV, bundled as a resource (permitted by
+/// R-M2). Two of them — 春分の日 and 秋分の日 — are fixed by an astronomical
+/// determination published in February of the preceding year, so no computation
+/// gives them reliably for an arbitrary future year. Substitute holidays
+/// (振替休日) and bridge holidays (国民の休日) are already in the source and are
+/// not derived here either.
+///
+/// That is why [#validUntil()] exists and why going past it throws
+/// rather than guesses (R-V7). A calendar that extrapolated would be
+/// confidently wrong on exactly the dates a payment file is most likely to be
+/// scheduled near, and would be wrong silently.
+///
+/// @since 0.2.0
 public final class JapaneseBankCalendar implements BusinessCalendar {
 
     private static final String RESOURCE = "japanese-holidays.csv";
 
-    /**
-     * 31 December to 3 January. Only 1 January is a public holiday; the rest
-     * is 金融機関の休業日, established by the Banking Act's implementing
-     * regulations rather than by the holidays act, and just as closed.
-     */
+    /// 31 December to 3 January. Only 1 January is a public holiday; the rest
+    /// is 金融機関の休業日, established by the Banking Act's implementing
+    /// regulations rather than by the holidays act, and just as closed.
     private static final MonthDay CLOSURE_FROM = MonthDay.of(12, 31);
     private static final MonthDay CLOSURE_UNTIL = MonthDay.of(1, 3);
 
@@ -62,11 +44,9 @@ public final class JapaneseBankCalendar implements BusinessCalendar {
         this.horizon = loaded.horizon();
     }
 
-    /**
-     * The calendar built from the bundled Cabinet Office data.
-     *
-     * @return the calendar, never {@code null}
-     */
+    /// The calendar built from the bundled Cabinet Office data.
+    ///
+    /// @return the calendar, never `null`
     public static JapaneseBankCalendar bundled() {
         return BUNDLED;
     }
@@ -118,22 +98,18 @@ public final class JapaneseBankCalendar implements BusinessCalendar {
         return horizon;
     }
 
-    /**
-     * The holiday's name, if the date is one.
-     *
-     * @param date the date to look up
-     * @return the name, or empty
-     */
+    /// The holiday's name, if the date is one.
+    ///
+    /// @param date the date to look up
+    /// @return the name, or empty
     public Optional<String> holidayName(LocalDate date) {
         return Optional.ofNullable(holidays.get(date));
     }
 
-    /**
-     * Whether a date falls in the year-end closure.
-     *
-     * @param date the date to test
-     * @return {@code true} for 31 December through 3 January
-     */
+    /// Whether a date falls in the year-end closure.
+    ///
+    /// @param date the date to test
+    /// @return `true` for 31 December through 3 January
     public boolean inYearEndClosure(LocalDate date) {
         MonthDay monthDay = MonthDay.from(date);
         return monthDay.equals(CLOSURE_FROM) || monthDay.compareTo(CLOSURE_UNTIL) <= 0;
@@ -163,26 +139,24 @@ public final class JapaneseBankCalendar implements BusinessCalendar {
         }
     }
 
-    /**
-     * Reads holiday data from a file in the bundled format (R-V7).
-     *
-     * <p>The bundled data expires, and a released jar cannot be re-cut every
-     * February when the Cabinet Office publishes the next year's equinoxes.
-     * This is the way out: same format, same rules, data the caller controls.
-     *
-     * <p>The format is one {@code YYYY-MM-DD,name} per line, a
-     * {@code horizon=YYYY-MM-DD} line stating the last date the data covers,
-     * and {@code #} comments. <strong>The horizon is required.</strong> Without
-     * it the calendar could not tell "this is a business day" from "I have no
-     * data for that year", and the second answer dressed up as the first is how
-     * a payment gets dated to a day the banks are shut.
-     *
-     * @param path the CSV file
-     * @return a calendar over that data
-     * @throws UncheckedIOException  if the file cannot be read
-     * @throws IllegalArgumentException if it declares no horizon or holds an
-     *                                  unparseable line
-     */
+    /// Reads holiday data from a file in the bundled format (R-V7).
+    ///
+    /// The bundled data expires, and a released jar cannot be re-cut every
+    /// February when the Cabinet Office publishes the next year's equinoxes.
+    /// This is the way out: same format, same rules, data the caller controls.
+    ///
+    /// The format is one `YYYY-MM-DD,name` per line, a
+    /// `horizon=YYYY-MM-DD` line stating the last date the data covers,
+    /// and `#` comments. **The horizon is required.** Without
+    /// it the calendar could not tell "this is a business day" from "I have no
+    /// data for that year", and the second answer dressed up as the first is how
+    /// a payment gets dated to a day the banks are shut.
+    ///
+    /// @param path the CSV file
+    /// @return a calendar over that data
+    /// @throws UncheckedIOException  if the file cannot be read
+    /// @throws IllegalArgumentException if it declares no horizon or holds an
+    ///   unparseable line
     public static JapaneseBankCalendar fromCsv(Path path) {
         Objects.requireNonNull(path, "path");
         try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {

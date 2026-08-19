@@ -1,26 +1,21 @@
 package io.zengin4j.iso20022.xml;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * The XML layer, including what it does with input that is trying to hurt it.
- *
- * <p>A payment file arrives from another organisation's system. The standard
- * XML attacks cost a few hundred bytes to mount and can read local files or
- * exhaust a heap, and every one of them is a default that has to be switched
- * off explicitly — which is exactly the kind of thing that is switched off
- * once, never tested, and quietly switched back on by a refactor.
- */
+/// The XML layer, including what it does with input that is trying to hurt it.
+///
+/// A payment file arrives from another organisation's system. The standard
+/// XML attacks cost a few hundred bytes to mount and can read local files or
+/// exhaust a heap, and every one of them is a default that has to be switched
+/// off explicitly — which is exactly the kind of thing that is switched off
+/// once, never tested, and quietly switched back on by a refactor.
 class XmlTest {
 
     private static byte[] bytes(String text) {
@@ -29,10 +24,8 @@ class XmlTest {
 
     // --------------------------------------------------------------- hardening
 
-    /**
-     * XXE: the classic. Without {@code SUPPORT_DTD=false} this reads a local
-     * file into an element and hands it to whoever asked for the payment.
-     */
+    /// XXE: the classic. Without `SUPPORT_DTD=false` this reads a local
+    /// file into an element and hands it to whoever asked for the payment.
     @Test
     void externalEntitiesCannotReadTheFilesystem(@TempDir Path directory) throws Exception {
         Path secret = directory.resolve("secret.txt");
@@ -46,11 +39,9 @@ class XmlTest {
                 .isThrownBy(() -> XmlParser.parse(bytes(attack)));
     }
 
-    /**
-     * The billion laughs: a few hundred bytes that expand to gigabytes.
-     * Refusing DTDs outright removes the whole family, rather than trying to
-     * bound an expansion whose whole point is that bounds get raised.
-     */
+    /// The billion laughs: a few hundred bytes that expand to gigabytes.
+    /// Refusing DTDs outright removes the whole family, rather than trying to
+    /// bound an expansion whose whole point is that bounds get raised.
     @Test
     void nestedEntityExpansionIsRefused() {
         StringBuilder attack = new StringBuilder("<?xml version=\"1.0\"?>\n<!DOCTYPE lolz [\n")
@@ -76,13 +67,11 @@ class XmlTest {
                 .withMessageContaining("nested more than");
     }
 
-    /**
-     * The depth guard must be this library's, not the JDK's.
-     *
-     * <p>{@code jdk.xml.maxElementDepth} defaults to 100 and is a system
-     * property a host can raise or disable. A limit set at 100 here would never
-     * run — and would look like protection while providing none.
-     */
+    /// The depth guard must be this library's, not the JDK's.
+    ///
+    /// `jdk.xml.maxElementDepth` defaults to 100 and is a system
+    /// property a host can raise or disable. A limit set at 100 here would never
+    /// run — and would look like protection while providing none.
     @Test
     void theDepthGuardFiresBeforeTheJdkOwnLimit() {
         assertThat(XmlParser.MAX_DEPTH).isLessThan(100);
@@ -102,18 +91,16 @@ class XmlTest {
         assertThat(XmlParser.MAX_ELEMENTS).isGreaterThan(1_000_000);
     }
 
-    /**
-     * The JDK's parser cannot always say what is wrong, and must not escape.
-     *
-     * <p>A DTD containing an invalid character sends Xerces looking for the
-     * message key {@code InvalidCharInDTD}, which is missing from its own
-     * bundle, so it throws {@code MissingResourceException} from inside the
-     * error reporter — past every checked exception it declares. Found by
-     * fuzzing, in forty-two bytes.
-     *
-     * <p>The contract is absolute: any byte sequence either parses or raises
-     * {@link MalformedXmlException}.
-     */
+    /// The JDK's parser cannot always say what is wrong, and must not escape.
+    ///
+    /// A DTD containing an invalid character sends Xerces looking for the
+    /// message key `InvalidCharInDTD`, which is missing from its own
+    /// bundle, so it throws `MissingResourceException` from inside the
+    /// error reporter — past every checked exception it declares. Found by
+    /// fuzzing, in forty-two bytes.
+    ///
+    /// The contract is absolute: any byte sequence either parses or raises
+    /// [MalformedXmlException].
     @Test
     void aParserFailureThatIsNotAStreamExceptionIsStillMalformedXml() {
         byte[] brokenDtd = bytes("<?xml version=\"1.0\"?><!DOCTYPE x PUBLIC \"\" \"\"[>");
@@ -182,16 +169,14 @@ class XmlTest {
         assertThat(root.textAt("b")).isEmpty();
     }
 
-    /**
-     * Mixed content is legal XML and is refused, in this module's vocabulary.
-     *
-     * <p>Found by fuzzing after 116 runs. It used to throw the
-     * {@code IllegalStateException} the <em>builder</em> raises for a mapping
-     * mistake — straight out of the parser, past the whole declared exception
-     * hierarchy, on input a sender can simply write. The two refusals look the
-     * same and mean different things: one is a document this library cannot
-     * represent, the other is a bug in the mapper.
-     */
+    /// Mixed content is legal XML and is refused, in this module's vocabulary.
+    ///
+    /// Found by fuzzing after 116 runs. It used to throw the
+    /// `IllegalStateException` the *builder* raises for a mapping
+    /// mistake — straight out of the parser, past the whole declared exception
+    /// hierarchy, on input a sender can simply write. The two refusals look the
+    /// same and mean different things: one is a document this library cannot
+    /// represent, the other is a bug in the mapper.
     @Test
     void mixedContentIsRefusedAsMalformedRatherThanAsAMappingMistake() {
         assertThatExceptionOfType(MalformedXmlException.class)
@@ -201,7 +186,7 @@ class XmlTest {
                 .withMessageContaining("'text'");
     }
 
-    /** Whitespace between elements is not mixed content. */
+    /// Whitespace between elements is not mixed content.
     @Test
     void whitespaceBetweenElementsIsNotMixedContent() {
         XmlElement root = XmlParser.parse(bytes(
@@ -211,7 +196,7 @@ class XmlTest {
         assertThat(root.text()).isEmpty();
     }
 
-    /** Text before a child counts too, not only after. */
+    /// Text before a child counts too, not only after.
     @Test
     void textBeforeAChildIsAlsoMixedContent() {
         assertThatExceptionOfType(MalformedXmlException.class)
@@ -251,11 +236,9 @@ class XmlTest {
                 .contains("a\"b<c&d");
     }
 
-    /**
-     * XML 1.0 has no representation for most control characters — not even an
-     * escape — so a document containing one cannot be written at all. Saying so
-     * beats emitting a file no parser will read.
-     */
+    /// XML 1.0 has no representation for most control characters — not even an
+    /// escape — so a document containing one cannot be written at all. Saying so
+    /// beats emitting a file no parser will read.
     @Test
     void aControlCharacterCannotBeWritten() {
         XmlElement root = XmlElement.element("Nm").text("beforeafter").build();
@@ -345,11 +328,9 @@ class XmlTest {
 
     // --------------------------------------------------------------- date-time
 
-    /**
-     * {@code xs:dateTime} requires seconds. {@code OffsetDateTime.toString()}
-     * omits them when they are zero, which parses back perfectly and is invalid
-     * on the wire — the sort of thing only a schema notices.
-     */
+    /// `xs:dateTime` requires seconds. `OffsetDateTime.toString()`
+    /// omits them when they are zero, which parses back perfectly and is invalid
+    /// on the wire — the sort of thing only a schema notices.
     @Test
     void aTimestampAlwaysCarriesItsSeconds() {
         assertThat(IsoDateTime.format(OffsetDateTime.parse("2026-09-01T00:00Z")))

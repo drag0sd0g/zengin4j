@@ -1,5 +1,7 @@
 package io.zengin4j.iso20022.pain001;
 
+import module java.base;
+import module java.xml;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -12,44 +14,31 @@ import io.zengin4j.iso20022.envelope.MessageId;
 import io.zengin4j.iso20022.envelope.ZediMessage;
 import io.zengin4j.iso20022.xml.XmlSerializer;
 import io.zengin4j.testkit.FormatFixtures;
-import java.io.ByteArrayInputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import javax.xml.XMLConstants;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXParseException;
 
-/**
- * R-I21 — the generated XML, checked against the official schemas.
- *
- * <p><strong>Skipped unless you supply the schemas.</strong> The ISO 20022
- * message definitions are published by ISO 20022 under terms this repository
- * does not redistribute under, so they are not committed here (ADR-0031).
- * Download {@code pain.001.001.03.xsd} and {@code head.001.001.01.xsd} from
- * <a href="https://www.iso20022.org/iso-20022-message-definitions">iso20022.org</a>
- * into a directory and run:
- *
- * <pre>./gradlew :zengin4j-iso20022:validateAgainstXsd -Pxsd.dir=/path/to/schemas</pre>
- *
- * <p>Deliberately not part of {@code check}. A gate that passes silently when
- * its input is missing is worse than an absent one, because it reads like
- * coverage nobody has — so this skips loudly instead, and the test that always
- * runs is {@link Pain001ModelTest}, which sends every element through a real
- * parser.
- *
- * <p>The schema factory is configured to resolve nothing outside the directory
- * it was given. A validator that fetched an import over the network would put
- * a socket in the middle of a payment conversion.
- */
+/// R-I21 — the generated XML, checked against the official schemas.
+///
+/// **Skipped unless you supply the schemas.** The ISO 20022
+/// message definitions are published by ISO 20022 under terms this repository
+/// does not redistribute under, so they are not committed here (ADR-0031).
+/// Download `pain.001.001.03.xsd` and `head.001.001.01.xsd` from
+/// [iso20022.org](https://www.iso20022.org/iso-20022-message-definitions)
+/// into a directory and run:
+///
+/// ```
+/// ./gradlew :zengin4j-iso20022:validateAgainstXsd -Pxsd.dir=/path/to/schemas
+/// ```
+///
+/// Deliberately not part of {@code check}. A gate that passes silently when
+/// its input is missing is worse than an absent one, because it reads like
+/// coverage nobody has — so this skips loudly instead, and the test that always
+/// runs is {@link Pain001ModelTest}, which sends every element through a real
+/// parser.
+///
+/// The schema factory is configured to resolve nothing outside the directory
+/// it was given. A validator that fetched an import over the network would put
+/// a socket in the middle of a payment conversion.
 @Tag("xsd")
 class SchemaValidationTest {
 
@@ -155,13 +144,11 @@ class SchemaValidationTest {
                 .isEmpty();
     }
 
-    /**
-     * The pin is a claim about the schema, so the schema is what checks it.
-     *
-     * <p>If somebody supplies {@code pain.001.001.09} under the pinned name,
-     * the documents will not validate — and that failure is the point rather
-     * than a nuisance.
-     */
+    /// The pin is a claim about the schema, so the schema is what checks it.
+    ///
+    /// If somebody supplies `pain.001.001.09` under the pinned name,
+    /// the documents will not validate — and that failure is the point rather
+    /// than a nuisance.
     @Test
     void thePinnedNamespaceIsWhatTheDocumentDeclares() {
         assumeTrue(schemaDirectory() != null, "no schema directory");

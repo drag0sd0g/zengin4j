@@ -1,15 +1,13 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import io.zengin4j.core.model.SeparatorStyle;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
-/**
- * Issue 1.6: framing with optional separators (R-C6 to R-C10, §19.1).
- */
+/// Issue 1.6: framing with optional separators (R-C6 to R-C10, §19.1).
 class RecordFramerTest {
 
     private final RecordFramer framer = new RecordFramer(4);

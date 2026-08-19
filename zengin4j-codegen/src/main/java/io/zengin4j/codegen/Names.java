@@ -5,22 +5,20 @@ import io.zengin4j.core.format.FieldFormat;
 import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.format.RecordKind;
 
-/**
- * Naming rules shared by the source and documentation generators.
- *
- * <p>One rule underlies all of them: <strong>a record component is named after
- * its field id</strong>. That is what lets the role interfaces be satisfied
- * without the generator inferring anything — a descriptor whose header
- * declares {@code originatorCode} produces a record with
- * {@code originatorCode()}, which is exactly what {@code HeaderRecord}
- * promises.
- *
- * <p>The exception is a field carrying a declared interpretation whose typed
- * accessor would collide with the raw one. There the component takes a
- * {@code Raw} suffix and the plain name belongs to the typed accessor:
- * {@code valueDateRaw()} returns {@code "0930"}, {@code valueDate()} returns a
- * {@code MonthDay}.
- */
+/// Naming rules shared by the source and documentation generators.
+///
+/// One rule underlies all of them: **a record component is named after
+/// its field id**. That is what lets the role interfaces be satisfied
+/// without the generator inferring anything — a descriptor whose header
+/// declares `originatorCode` produces a record with
+/// `originatorCode()`, which is exactly what `HeaderRecord`
+/// promises.
+///
+/// The exception is a field carrying a declared interpretation whose typed
+/// accessor would collide with the raw one. There the component takes a
+/// `Raw` suffix and the plain name belongs to the typed accessor:
+/// `valueDateRaw()` returns `"0930"`, `valueDate()` returns a
+/// `MonthDay`.
 final class Names {
 
     private Names() {
@@ -48,14 +46,12 @@ final class Names {
         return "String";
     }
 
-    /**
-     * Reports whether the field's value survives as raw text.
-     *
-     * <p>{@code MMDD} and コード区分 keep their raw form because the typed
-     * value cannot round-trip: {@code "0000"} and {@code "1332"} both decode
-     * to no date at all. An amount does not need one — a {@code long} plus the
-     * field length reproduces the zero-padded digits exactly.
-     */
+    /// Reports whether the field's value survives as raw text.
+    ///
+    /// `MMDD` and コード区分 keep their raw form because the typed
+    /// value cannot round-trip: `"0000"` and `"1332"` both decode
+    /// to no date at all. An amount does not need one — a `long` plus the
+    /// field length reproduces the zero-padded digits exactly.
     static boolean keepsRawComponent(FieldDescriptor field) {
         return field.hasFormat(FieldFormat.MMDD) || field.hasFormat(FieldFormat.CODE_KUBUN);
     }

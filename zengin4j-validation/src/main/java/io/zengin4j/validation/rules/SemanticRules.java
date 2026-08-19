@@ -1,5 +1,6 @@
 package io.zengin4j.validation.rules;
 
+import module java.base;
 import io.zengin4j.core.charset.CharacterClass;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FieldFormat;
@@ -13,30 +14,24 @@ import io.zengin4j.validation.api.Rule;
 import io.zengin4j.validation.api.RuleScope;
 import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.engine.ValidationContext;
-import java.util.List;
-import java.util.function.Consumer;
 
-/**
- * Tier 6 — the file is valid, and something about it looks wrong anyway
- * (§14.3, {@code V-6xx}).
- *
- * <p>Every rule here is a warning, and every one describes something an
- * institution will accept. They exist because the expensive failures in
- * payments are rarely rejections — a rejected file gets fixed the same
- * afternoon. The expensive ones are files that are accepted and wrong.
- *
- * @since 0.2.0
- */
+/// Tier 6 — the file is valid, and something about it looks wrong anyway
+/// (§14.3, `V-6xx`).
+///
+/// Every rule here is a warning, and every one describes something an
+/// institution will accept. They exist because the expensive failures in
+/// payments are rarely rejections — a rejected file gets fixed the same
+/// afternoon. The expensive ones are files that are accepted and wrong.
+///
+/// @since 0.2.0
 public final class SemanticRules {
 
     private SemanticRules() {
     }
 
-    /**
-     * Every rule in this tier.
-     *
-     * @return the rules, never {@code null}
-     */
+    /// Every rule in this tier.
+    ///
+    /// @return the rules, never `null`
     public static List<Rule> all() {
         return List.of(
                 new TruncatedThroughVoicingMark(),
@@ -46,13 +41,11 @@ public final class SemanticRules {
                 new CustomerCodesUnpopulated());
     }
 
-    /**
-     * V-601. A name cut to fit a field can be cut between a kana and its
-     * voicing mark, which silently changes the character — ｶﾞ becomes ｶ, and
-     * ガクブチ becomes カクブチ. This looks for a name that fills its field
-     * exactly and ends on a kana that takes a mark, which is what truncation
-     * through a mark leaves behind.
-     */
+    /// V-601. A name cut to fit a field can be cut between a kana and its
+    /// voicing mark, which silently changes the character — ｶﾞ becomes ｶ, and
+    /// ガクブチ becomes カクブチ. This looks for a name that fills its field
+    /// exactly and ends on a kana that takes a mark, which is what truncation
+    /// through a mark leaves behind.
     static final class TruncatedThroughVoicingMark extends AbstractRule {
 
         TruncatedThroughVoicingMark() {
@@ -83,7 +76,7 @@ public final class SemanticRules {
             });
         }
 
-        /** ｶ-ｺ, ｻ-ｿ, ﾀ-ﾄ, ﾊ-ﾎ, ｳ — the kana a dakuten can follow (R-K7). */
+        /// ｶ-ｺ, ｻ-ｿ, ﾀ-ﾄ, ﾊ-ﾎ, ｳ — the kana a dakuten can follow (R-K7).
         private static boolean takesVoicingMark(int base) {
             return base == 0xB3
                     || (base >= 0xB6 && base <= 0xBA)
@@ -93,7 +86,7 @@ public final class SemanticRules {
         }
     }
 
-    /** V-602. */
+    /// V-602.
     static final class ZeroAmount extends AbstractRule {
 
         ZeroAmount() {
@@ -113,12 +106,10 @@ public final class SemanticRules {
         }
     }
 
-    /**
-     * V-603. An amount of exactly {@code 9,999,999,999} in an {@code N(10)}
-     * field is either a genuine ten-billion-yen payment or a number that
-     * overflowed on the way in. Both look identical in the file, which is why
-     * this is worth a line in a report.
-     */
+    /// V-603. An amount of exactly `9,999,999,999` in an `N(10)`
+    /// field is either a genuine ten-billion-yen payment or a number that
+    /// overflowed on the way in. Both look identical in the file, which is why
+    /// this is worth a line in a report.
     static final class AmountAtFieldMaximum extends AbstractRule {
 
         AmountAtFieldMaximum() {
@@ -156,7 +147,7 @@ public final class SemanticRules {
         }
     }
 
-    /** V-604. */
+    /// V-604.
     static final class NameEntirelyPadding extends AbstractRule {
 
         NameEntirelyPadding() {
@@ -180,11 +171,9 @@ public final class SemanticRules {
         }
     }
 
-    /**
-     * V-605. Reported once per file rather than once per record: a file that
-     * does not use customer codes does not use them anywhere, and one finding
-     * says that as well as five thousand would.
-     */
+    /// V-605. Reported once per file rather than once per record: a file that
+    /// does not use customer codes does not use them anywhere, and one finding
+    /// says that as well as five thousand would.
     static final class CustomerCodesUnpopulated extends AbstractRule {
 
         CustomerCodesUnpopulated() {
@@ -219,7 +208,7 @@ public final class SemanticRules {
         }
     }
 
-    /** A text field a human reads: a name, not filler and not a code. */
+    /// A text field a human reads: a name, not filler and not a code.
     private static boolean isName(FieldDescriptor field) {
         return field.type() == FieldType.C
                 && !field.filler()

@@ -1,14 +1,11 @@
 package io.zengin4j.core.time;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.LocalDate;
-import java.time.MonthDay;
 import org.junit.jupiter.api.Test;
 
-/**
- * §11.2 and §19.4: the year the file does not carry.
- */
+/// §11.2 and §19.4: the year the file does not carry.
 class MonthDayResolverTest {
 
     private static final LocalDate LATE_DECEMBER = LocalDate.of(2026, 12, 28);
@@ -43,13 +40,11 @@ class MonthDayResolverTest {
         assertThat(resolver.reference()).isEqualTo(LocalDate.of(2026, 6, 1));
     }
 
-    /**
-     * The December–January hazard of §19.4, in both directions. An instruction
-     * file written on 28 December for 5 January means next year, and a result
-     * file written on 5 January about 28 December means last year. No single
-     * strategy is right for both, which is why the API makes the choice
-     * unavoidable (R-D11).
-     */
+    /// The December–January hazard of §19.4, in both directions. An instruction
+    /// file written on 28 December for 5 January means next year, and a result
+    /// file written on 5 January about 28 December means last year. No single
+    /// strategy is right for both, which is why the API makes the choice
+    /// unavoidable (R-D11).
     @Test
     void theTwoStrategiesDisagreeAcrossTheYearBoundary() {
         assertThat(MonthDayResolver.forwardLooking(LATE_DECEMBER).resolve(MonthDay.of(1, 5)).date())
@@ -71,7 +66,7 @@ class MonthDayResolverTest {
         assertThat(resolver.resolve(MonthDay.of(7, 2)).date()).contains(LocalDate.of(2026, 7, 2));
     }
 
-    /** R-D12: 29 February is reported, never moved to the 28th or the 1st. */
+    /// R-D12: 29 February is reported, never moved to the 28th or the 1st.
     @Test
     void reportsALeapDayThatNoCandidateYearHas() {
         DateResolution resolution = MonthDayResolver.forwardLooking(LocalDate.of(2026, 1, 1))
@@ -95,7 +90,7 @@ class MonthDayResolverTest {
                 .contains(LocalDate.of(2024, 2, 29));
     }
 
-    /** A leap day in the past is not silently converted into a future date. */
+    /// A leap day in the past is not silently converted into a future date.
     @Test
     void doesNotResolveALeapDayBackwardsWhenLookingForward() {
         DateResolution resolution = MonthDayResolver.forwardLooking(LocalDate.of(2028, 6, 1))

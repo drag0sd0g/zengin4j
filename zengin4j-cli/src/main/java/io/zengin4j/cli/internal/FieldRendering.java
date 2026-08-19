@@ -1,5 +1,6 @@
 package io.zengin4j.cli.internal;
 
+import module java.base;
 import io.zengin4j.core.charset.CharacterSet;
 import io.zengin4j.core.charset.CharacterViolation;
 import io.zengin4j.core.charset.ZenginCharset;
@@ -8,68 +9,57 @@ import io.zengin4j.core.error.Diagnostics;
 import io.zengin4j.core.format.CodeList;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FieldType;
-import java.io.PrintWriter;
-import java.util.List;
-import java.util.Locale;
 
-/**
- * Renders one field as a line a human can act on (R-CLI5).
- *
- * <p>Per field: where it starts, its bytes, what they decode to, what it is
- * called in both languages, and whether the value is one the field may hold.
- * The last of those is the reason to run the tool — a file is usually rejected
- * for one field, and the fastest way to find it is a column of ticks with one
- * cross in it.
- *
- * @since 0.3.0
- */
+/// Renders one field as a line a human can act on (R-CLI5).
+///
+/// Per field: where it starts, its bytes, what they decode to, what it is
+/// called in both languages, and whether the value is one the field may hold.
+/// The last of those is the reason to run the tool — a file is usually rejected
+/// for one field, and the fastest way to find it is a column of ticks with one
+/// cross in it.
+///
+/// @since 0.3.0
 public final class FieldRendering {
 
-    /** Bytes of hex shown before the column is truncated. */
+    /// Bytes of hex shown before the column is truncated.
     private static final int HEX_BYTES = 6;
 
     private FieldRendering() {
     }
 
-    /**
-     * One field, ready to print.
-     *
-     * @param field   the descriptor
-     * @param hex     the bytes in hex, possibly abbreviated
-     * @param value   the decoded value, masked unless the caller opted out
-     * @param valid   whether the value is one the field may hold
-     * @param problem why not, when it is not; empty otherwise
-     */
+    /// One field, ready to print.
+    ///
+    /// @param field   the descriptor
+    /// @param hex     the bytes in hex, possibly abbreviated
+    /// @param value   the decoded value, masked unless the caller opted out
+    /// @param valid   whether the value is one the field may hold
+    /// @param problem why not, when it is not; empty otherwise
     public record Row(FieldDescriptor field, String hex, String value, boolean valid,
             String problem) {
 
-        /**
-         * The value with control characters made visible, for printing.
-         *
-         * <p>Separate from {@link #value()}, which stays as decoded. A record
-         * whose fields have slipped out of alignment — the case this whole
-         * command exists for — puts the file's own separator bytes inside a
-         * field, and printing a raw {@code 0x0D} tears the table in half at
-         * exactly the moment somebody needs to read it. JSON output uses the
-         * raw value instead, because JSON escapes control characters itself.
-         *
-         * @return the value, safe to put in a line of terminal output
-         */
+        /// The value with control characters made visible, for printing.
+        ///
+        /// Separate from [#value()], which stays as decoded. A record
+        /// whose fields have slipped out of alignment — the case this whole
+        /// command exists for — puts the file's own separator bytes inside a
+        /// field, and printing a raw `0x0D` tears the table in half at
+        /// exactly the moment somebody needs to read it. JSON output uses the
+        /// raw value instead, because JSON escapes control characters itself.
+        ///
+        /// @return the value, safe to put in a line of terminal output
         public String display() {
             return printable(value);
         }
     }
 
-    /**
-     * Replaces control characters with a visible placeholder.
-     *
-     * <p>{@code ␍} and {@code ␊} (the Unicode control pictures) name the byte
-     * rather than merely hiding it, which matters when the byte is the reason
-     * the field is wrong.
-     *
-     * @param value the text to make printable
-     * @return the text with no control characters in it
-     */
+    /// Replaces control characters with a visible placeholder.
+    ///
+    /// `␍` and `␊` (the Unicode control pictures) name the byte
+    /// rather than merely hiding it, which matters when the byte is the reason
+    /// the field is wrong.
+    ///
+    /// @param value the text to make printable
+    /// @return the text with no control characters in it
     public static String printable(String value) {
         boolean clean = true;
         for (int i = 0; i < value.length(); i++) {
@@ -101,15 +91,13 @@ public final class FieldRendering {
         return out.toString();
     }
 
-    /**
-     * Renders a field.
-     *
-     * @param field     the field to render
-     * @param record    the record's bytes
-     * @param charset   the encoding to decode text with
-     * @param unmask    whether to show sensitive values in full (R-CLI4)
-     * @return the row
-     */
+    /// Renders a field.
+    ///
+    /// @param field     the field to render
+    /// @param record    the record's bytes
+    /// @param charset   the encoding to decode text with
+    /// @param unmask    whether to show sensitive values in full (R-CLI4)
+    /// @return the row
     public static Row render(FieldDescriptor field, byte[] record, ZenginCharset charset,
             boolean unmask) {
         String raw = FieldCodec.decodeField(record, 0, field, charset);
@@ -124,26 +112,25 @@ public final class FieldRendering {
         return new Row(field, hex, value, problem.isEmpty(), problem);
     }
 
-    /**
-     * Why this value is not one the field may hold, or an empty string.
-     *
-     * <p>Checked against the descriptor rather than against a rule set: this
-     * command reports what the bytes are, and a field whose declared constant
-     * does not match is wrong regardless of anyone's validation policy.
-     */
+    /// Why this value is not one the field may hold, or an empty string.
+    ///
+    /// Checked against the descriptor rather than against a rule set: this
+    /// command reports what the bytes are, and a field whose declared constant
+    /// does not match is wrong regardless of anyone's validation policy.
     private static String problemWith(FieldDescriptor field, byte[] record, String raw) {
         if (field.type() == FieldType.N) {
             for (int i = field.offset(); i < field.endOffset(); i++) {
                 byte b = record[i];
                 if (b < '0' || b > '9') {
-                    return "byte " + i + " is 0x" + hexByte(b) + ", not a digit";
+                    return "byte " + i + " is 0x" + HEX.toHighHexDigit(b) + HEX.toLowHexDigit(b)
+                            + ", not a digit";
                 }
             }
         } else {
             List<CharacterViolation> violations =
                     CharacterSet.validate(record, field.offset(), field.length(), field.charClass());
             if (!violations.isEmpty()) {
-                CharacterViolation first = violations.get(0);
+                CharacterViolation first = violations.getFirst();
                 return first.describeEn()
                         + (violations.size() > 1 ? " (+" + (violations.size() - 1) + " more)" : "");
             }
@@ -169,49 +156,37 @@ public final class FieldRendering {
         return "";
     }
 
+    /// Space-delimited upper-case hex, truncated with an ellipsis.
+    private static final HexFormat HEX = HexFormat.ofDelimiter(" ").withUpperCase();
+
     private static String hex(byte[] bytes, int offset, int length) {
         int shown = Math.min(length, HEX_BYTES);
-        StringBuilder text = new StringBuilder(shown * 3);
-        for (int i = 0; i < shown; i++) {
-            if (i > 0) {
-                text.append(' ');
-            }
-            text.append(hexByte(bytes[offset + i]));
-        }
-        if (length > shown) {
-            text.append(" …");
-        }
-        return text.toString();
+        String text = HEX.formatHex(bytes, offset, offset + shown);
+        return length > shown ? text + " …" : text;
     }
 
-    private static String hexByte(byte b) {
-        return String.format(Locale.ROOT, "%02X", b);
-    }
-
-    /**
-     * Prints the rows as a table.
-     *
-     * <p>Columns are measured in <em>display</em> width, not character count.
-     * 項目名 are full-width: 種別コード is five characters and ten columns, and a
-     * table padded by {@code String.length} puts every Japanese row out of
-     * alignment — which in a tool whose whole job is showing where bytes sit is
-     * a poor first impression.
-     *
-     * <p><strong>Both names are carried, as R-CLI5 requires</strong>, and the
-     * field id as well. The id is not a substitute for the English name: it
-     * diverges for eight of the fifty-two bundled fields — {@code dataKubun} is
-     * "Record Type", {@code dummy} is "Filler", {@code amount} is "Transfer
-     * Amount" — so a reader who cannot read 項目名 would be guessing. The id
-     * stays because it is what {@code explain --field=} and the JSON output key
-     * on.
-     *
-     * <p>The sequence number was dropped to pay for the extra column. In a
-     * byte-oriented tool the offset is the better key anyway, and it is the one
-     * every diagnostic elsewhere in this library quotes.
-     *
-     * @param out  where to print
-     * @param rows the rows, in field order
-     */
+    /// Prints the rows as a table.
+    ///
+    /// Columns are measured in *display* width, not character count.
+    /// 項目名 are full-width: 種別コード is five characters and ten columns, and a
+    /// table padded by `String.length` puts every Japanese row out of
+    /// alignment — which in a tool whose whole job is showing where bytes sit is
+    /// a poor first impression.
+    ///
+    /// **Both names are carried, as R-CLI5 requires**, and the
+    /// field id as well. The id is not a substitute for the English name: it
+    /// diverges for eight of the fifty-two bundled fields — `dataKubun` is
+    /// "Record Type", `dummy` is "Filler", `amount` is "Transfer
+    /// Amount" — so a reader who cannot read 項目名 would be guessing. The id
+    /// stays because it is what `explain --field=` and the JSON output key
+    /// on.
+    ///
+    /// The sequence number was dropped to pay for the extra column. In a
+    /// byte-oriented tool the offset is the better key anyway, and it is the one
+    /// every diagnostic elsewhere in this library quotes.
+    ///
+    /// @param out  where to print
+    /// @param rows the rows, in field order
     public static void table(PrintWriter out, List<Row> rows) {
         int idWidth = width(rows, row -> row.field().id(), 5, 24);
         int jaWidth = width(rows, row -> row.field().nameJa(), 6, 20);
@@ -249,13 +224,11 @@ public final class FieldRendering {
         return Math.min(widest, maximum);
     }
 
-    /**
-     * Pads or truncates to an exact display width.
-     *
-     * <p>Truncation appends {@code …} so a shortened value never looks like a
-     * complete one — in this tool, a silently shortened account number would be
-     * actively misleading.
-     */
+    /// Pads or truncates to an exact display width.
+    ///
+    /// Truncation appends `…` so a shortened value never looks like a
+    /// complete one — in this tool, a silently shortened account number would be
+    /// actively misleading.
     private static String pad(String value, int width) {
         int actual = displayWidth(value);
         if (actual > width) {
@@ -275,16 +248,14 @@ public final class FieldRendering {
         return value + " ".repeat(width - actual);
     }
 
-    /**
-     * How many terminal columns a string occupies.
-     *
-     * <p>Half-width katakana — what these files are full of — are one column
-     * each despite being outside ASCII, which is exactly the case a naive
-     * "non-ASCII is wide" rule gets backwards.
-     *
-     * @param value the text
-     * @return its display width
-     */
+    /// How many terminal columns a string occupies.
+    ///
+    /// Half-width katakana — what these files are full of — are one column
+    /// each despite being outside ASCII, which is exactly the case a naive
+    /// "non-ASCII is wide" rule gets backwards.
+    ///
+    /// @param value the text
+    /// @return its display width
     public static int displayWidth(String value) {
         int total = 0;
         for (int i = 0; i < value.length(); i++) {

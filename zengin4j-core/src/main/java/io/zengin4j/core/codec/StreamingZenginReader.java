@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import io.zengin4j.core.charset.CodeKubun;
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.error.AmbiguousFormatException;
@@ -19,41 +20,28 @@ import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.core.model.FileFraming;
 import io.zengin4j.core.model.SeparatorStyle;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
 
-/**
- * The streaming reader: a lazy view over a recycled buffer (§10).
- *
- * <p>Memory is constant regardless of file size (R-MEM6). Nothing is decoded
- * until a caller asks for it, and nothing is copied until a caller asks to
- * keep it.
- */
+/// The streaming reader: a lazy view over a recycled buffer (§10).
+///
+/// Memory is constant regardless of file size (R-MEM6). Nothing is decoded
+/// until a caller asks for it, and nothing is copied until a caller asks to
+/// keep it.
 final class StreamingZenginReader implements ZenginReader {
 
-    /**
-     * Format detection reads the first three bytes: データ区分 then 種別コード.
-     *
-     * <p>This is the one place the reader assumes a layout before it knows
-     * which layout applies — it has to, because the file identifies itself in
-     * those bytes. The assumption holds for every 120-byte format defined
-     * here; see docs/OPEN_QUESTIONS.md before extending it to the 200-byte
-     * formats.
-     */
+    /// Format detection reads the first three bytes: データ区分 then 種別コード.
+    ///
+    /// This is the one place the reader assumes a layout before it knows
+    /// which layout applies — it has to, because the file identifies itself in
+    /// those bytes. The assumption holds for every 120-byte format defined
+    /// here; see docs/OPEN_QUESTIONS.md before extending it to the 200-byte
+    /// formats.
     private static final byte HEADER_DISCRIMINATOR = '1';
 
     private static final int TYPE_CODE_OFFSET = 1;
     private static final int TYPE_CODE_LENGTH = 2;
     private static final int DETECTION_BYTES = TYPE_CODE_OFFSET + TYPE_CODE_LENGTH;
 
-    /** Enough to identify the format and hold a first record of any plausible length. */
+    /// Enough to identify the format and hold a first record of any plausible length.
     private static final int BOOTSTRAP_BUFFER_BYTES = 8192;
 
     private final InputStream stream;
@@ -78,10 +66,8 @@ final class StreamingZenginReader implements ZenginReader {
     private SeparatorStyle separatorStyle;
     private boolean separatorsMixed;
 
-    /**
-     * Whether a separator has been consumed since the last record was handed
-     * out. At end of input this answers OQ-4: did the file end with one?
-     */
+    /// Whether a separator has been consumed since the last record was handed
+    /// out. At end of input this answers OQ-4: did the file end with one?
     private boolean separatorSinceLastRecord;
     private final CharacterPolicy characterPolicy;
 
@@ -167,14 +153,12 @@ final class StreamingZenginReader implements ZenginReader {
                 recordNumber, generation);
     }
 
-    /**
-     * R-C13. Only well-formed records are checked: a malformed one has no
-     * reliable field boundaries, so reporting a character offset within it
-     * would point at a field the record may not actually have.
-     *
-     * <p>The record is copied only when a violation is found, and only under
-     * REJECT — the exception outlives the buffer, which is recycled.
-     */
+    /// R-C13. Only well-formed records are checked: a malformed one has no
+    /// reliable field boundaries, so reporting a character offset within it
+    /// would point at a field the record may not actually have.
+    ///
+    /// The record is copied only when a violation is found, and only under
+    /// REJECT — the exception outlives the buffer, which is recycled.
     private void checkCharacters(RecordDescriptor matched, int start, long offset) {
         if (characterPolicy == CharacterPolicy.IGNORE) {
             return;
@@ -208,7 +192,7 @@ final class StreamingZenginReader implements ZenginReader {
 
     @Override
     public List<ZenginWarning> warnings() {
-        return Collections.unmodifiableList(new ArrayList<>(warnings));
+        return List.copyOf(warnings);
     }
 
     @Override
@@ -296,14 +280,12 @@ final class StreamingZenginReader implements ZenginReader {
             throw new AmbiguousFormatException(typeCode,
                     matches.stream().map(candidate -> candidate.id().value()).toList());
         }
-        return matches.get(0);
+        return matches.getFirst();
     }
 
-    /**
-     * R-C14: a file declaring EBCDIC is rejected by name. Decoding it as JIS
-     * would fill every text field with plausible but wrong characters, and
-     * nothing downstream would show a problem.
-     */
+    /// R-C14: a file declaring EBCDIC is rejected by name. Decoding it as JIS
+    /// would fill every text field with plausible but wrong characters, and
+    /// nothing downstream would show a problem.
     private void rejectUnsupportedEncodingVariant() {
         if (available() == 0 || buffer[position] != HEADER_DISCRIMINATOR) {
             return;

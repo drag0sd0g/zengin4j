@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -17,13 +18,9 @@ import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.generated.SougouFurikomiData;
 import io.zengin4j.core.model.generated.SougouFurikomiHeader;
 import io.zengin4j.core.testing.Fixtures;
-import java.time.MonthDay;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/**
- * Issue 2.1: building files with computed trailers.
- */
+/// Issue 2.1: building files with computed trailers.
 class ZenginFileBuilderTest {
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
@@ -52,7 +49,7 @@ class ZenginFileBuilderTest {
         assertThat(file.totalRecords()).isEqualTo(5);
     }
 
-    /** The built records are the generated, format-shaped types — not a parallel model. */
+    /// The built records are the generated, format-shaped types — not a parallel model.
     @Test
     void buildsTheGeneratedRecordTypes() {
         ZenginFile file = simpleFile();
@@ -71,7 +68,7 @@ class ZenginFileBuilderTest {
         assertThat(data.dataKubun()).isEqualTo("2");
     }
 
-    /** Record numbers are assigned in order, which is what lets the writer restore it. */
+    /// Record numbers are assigned in order, which is what lets the writer restore it.
     @Test
     void numbersRecordsInFileOrder() {
         ZenginFile file = simpleFile();
@@ -82,11 +79,9 @@ class ZenginFileBuilderTest {
         assertThat(file.endRecord().orElseThrow().recordNumber()).isEqualTo(4);
     }
 
-    /**
-     * Built records carry the byte offset they would occupy, separators
-     * included — so a finding reported against a built file points at the same
-     * place it would in the file once written.
-     */
+    /// Built records carry the byte offset they would occupy, separators
+    /// included — so a finding reported against a built file points at the same
+    /// place it would in the file once written.
     @Test
     void assignsByteOffsetsThatMatchWhereTheRecordsAreWritten() {
         ZenginFile withSeparators = simpleFile();
@@ -104,7 +99,7 @@ class ZenginFileBuilderTest {
         assertThat((char) bytes[244]).isEqualTo('8');
     }
 
-    /** Zero is a legitimate amount; only a negative one is a programming error. */
+    /// Zero is a legitimate amount; only a negative one is a programming error.
     @Test
     void acceptsAZeroAmount() {
         ZenginFile file = Fixtures.builder(descriptor)
@@ -117,7 +112,7 @@ class ZenginFileBuilderTest {
         assertThat(file.batches().get(0).trailer().orElseThrow().totalAmount()).isZero();
     }
 
-    /** Every setter returns the collector, so any of them can be chained from. */
+    /// Every setter returns the collector, so any of them can be chained from.
     @Test
     void everySetterIsChainable() {
         ZenginFile file = Fixtures.builder(descriptor)
@@ -153,11 +148,9 @@ class ZenginFileBuilderTest {
         assertThat(file.totalRecords()).isEqualTo(8);
     }
 
-    /**
-     * Overriding the computed trailer is how you build a fixture for the
-     * validation rule that has to catch a trailer disagreeing with its
-     * contents (V-301, V-302).
-     */
+    /// Overriding the computed trailer is how you build a fixture for the
+    /// validation rule that has to catch a trailer disagreeing with its
+    /// contents (V-301, V-302).
     @Test
     void anExplicitTrailerOverridesTheComputedOne() {
         ZenginFile file = Fixtures.builder(descriptor)
@@ -199,19 +192,17 @@ class ZenginFileBuilderTest {
                 .hasSize(3 * Fixtures.RECORD_LENGTH + 2 + 1);
     }
 
-    /** Defaults to the framing the published record-length statements describe (OQ-4). */
+    /// Defaults to the framing the published record-length statements describe (OQ-4).
     @Test
     void defaultsToConventionalFraming() {
         assertThat(simpleFile().framing()).isEqualTo(FileFraming.conventional());
     }
 
-    /**
-     * OQ-10: building on a provisional layout requires saying so.
-     *
-     * <p>Every other test here goes through {@code Fixtures.builder}, which
-     * opts in. This is the one place the raw entry point is used, because this
-     * is the behaviour being asserted.
-     */
+    /// OQ-10: building on a provisional layout requires saying so.
+    ///
+    /// Every other test here goes through `Fixtures.builder`, which
+    /// opts in. This is the one place the raw entry point is used, because this
+    /// is the behaviour being asserted.
     @Test
     void refusesToBuildOnAnUnverifiedFormatWithoutAnExplicitOptIn() {
         assertThat(descriptor.verified()).isFalse();
@@ -239,7 +230,7 @@ class ZenginFileBuilderTest {
                 .totalRecords()).isEqualTo(3);
     }
 
-    /** Reading and building name different remedies, because they need different ones. */
+    /// Reading and building name different remedies, because they need different ones.
     @Test
     void theReadingRemedyIsStillNamedWhenReadingIsWhatFailed() {
         UnverifiedFormatException reading = new UnverifiedFormatException("sougou-furikomi");

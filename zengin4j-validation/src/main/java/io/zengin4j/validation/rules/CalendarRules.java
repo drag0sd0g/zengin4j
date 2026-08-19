@@ -1,5 +1,6 @@
 package io.zengin4j.validation.rules;
 
+import module java.base;
 import io.zengin4j.core.model.Batch;
 import io.zengin4j.core.model.HeaderRecord;
 import io.zengin4j.core.time.DateResolution;
@@ -12,53 +13,39 @@ import io.zengin4j.validation.calendar.BeyondCalendarHorizonException;
 import io.zengin4j.validation.calendar.BusinessCalendar;
 import io.zengin4j.validation.calendar.NonBusinessDay;
 import io.zengin4j.validation.engine.ValidationContext;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
 
-/**
- * Tier 5 — will funds actually move on the date the file asks for? (§14.3,
- * {@code V-5xx})
- *
- * <p>Every rule here is skipped when no calendar is supplied. That is R-V6's
- * design: a caller without one gets no calendar findings rather than findings
- * computed from a guess.
- *
- * <p>The dates in these files carry no year — they are four digits, {@code MMDD}
- * — so every rule here rests on the year the resolver attached, and a value
- * date near the December boundary is exactly where the two reasonable
- * strategies disagree. The finding says which date it judged.
- *
- * @since 0.2.0
- */
+/// Tier 5 — will funds actually move on the date the file asks for? (§14.3,
+/// `V-5xx`)
+///
+/// Every rule here is skipped when no calendar is supplied. That is R-V6's
+/// design: a caller without one gets no calendar findings rather than findings
+/// computed from a guess.
+///
+/// The dates in these files carry no year — they are four digits, `MMDD`
+/// — so every rule here rests on the year the resolver attached, and a value
+/// date near the December boundary is exactly where the two reasonable
+/// strategies disagree. The finding says which date it judged.
+///
+/// @since 0.2.0
 public final class CalendarRules {
 
-    /**
-     * How far ahead institutions typically accept an instruction. A month is
-     * the common ceiling; this is a warning either way, because the real limit
-     * is contractual and varies.
-     */
+    /// How far ahead institutions typically accept an instruction. A month is
+    /// the common ceiling; this is a warning either way, because the real limit
+    /// is contractual and varies.
     static final int FORWARD_WINDOW_DAYS = 30;
 
     private CalendarRules() {
     }
 
-    /**
-     * Every rule in this tier.
-     *
-     * @return the rules, never {@code null}
-     */
+    /// Every rule in this tier.
+    ///
+    /// @return the rules, never `null`
     public static List<Rule> all() {
         return List.of(new ValueDateIsABusinessDay(), new ValueDateWithinForwardWindow());
     }
 
-    /**
-     * Resolves a header's yearless date, or empty when there is none to
-     * resolve.
-     */
+    /// Resolves a header's yearless date, or empty when there is none to
+    /// resolve.
     private static Optional<LocalDate> valueDateOf(ValidationContext context, HeaderRecord header) {
         return header.effectiveDate().flatMap(monthDay -> {
             DateResolution resolution = context.dateResolver().resolve(monthDay);
@@ -66,11 +53,9 @@ public final class CalendarRules {
         });
     }
 
-    /**
-     * V-501, V-502, V-503 and V-505 — one classification, four ways of
-     * reporting it. Asking the calendar once and switching on the answer keeps
-     * the rules from disagreeing with each other about the same date.
-     */
+    /// V-501, V-502, V-503 and V-505 — one classification, four ways of
+    /// reporting it. Asking the calendar once and switching on the answer keeps
+    /// the rules from disagreeing with each other about the same date.
     static final class ValueDateIsABusinessDay extends AbstractRule {
 
         ValueDateIsABusinessDay() {
@@ -147,7 +132,7 @@ public final class CalendarRules {
         }
     }
 
-    /** V-504. */
+    /// V-504.
     static final class ValueDateWithinForwardWindow extends AbstractRule {
 
         ValueDateWithinForwardWindow() {

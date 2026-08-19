@@ -1,5 +1,6 @@
 package io.zengin4j.codegen;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -9,25 +10,20 @@ import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/**
- * Descriptor validation, which since ADR-0016 happens at build time.
- *
- * <p>Nearly every case here is a rejection. A descriptor is a transcription of
- * a byte layout, and the cheapest place to catch a transcription error is the
- * build that compiles it into the library.
- */
+/// Descriptor validation, which since ADR-0016 happens at build time.
+///
+/// Nearly every case here is a rejection. A descriptor is a transcription of
+/// a byte layout, and the cheapest place to catch a transcription error is the
+/// build that compiles it into the library.
 class YamlDescriptorReaderTest {
 
     private static final Map<String, CodeList> CODE_LISTS = Map.of(
             "accountType", new CodeList("accountType", "預金種目", "Account Type", false, true,
                     List.of(), List.of(), Optional.empty()));
 
-    /** R-F2: offsets are computed from cumulative lengths, never transcribed. */
+    /// R-F2: offsets are computed from cumulative lengths, never transcribed.
     @Test
     void computesOffsetsFromCumulativeLengths() {
         FormatDescriptor descriptor = load(descriptorYaml("""
@@ -42,7 +38,7 @@ class YamlDescriptorReaderTest {
         assertThat(header.discriminator()).isEqualTo((byte) '1');
     }
 
-    /** R-F1: the single check that catches most transcription errors. */
+    /// R-F1: the single check that catches most transcription errors.
     @Test
     void rejectsFieldLengthsThatDoNotSumToTheRecordLength() {
         assertThatFails(descriptorYaml("""
@@ -109,7 +105,7 @@ class YamlDescriptorReaderTest {
                 .get().extracting(CodeList::id).isEqualTo("accountType");
     }
 
-    /** R-0.1: verification is a claim about evidence, and the evidence must be there. */
+    /// R-0.1: verification is a claim about evidence, and the evidence must be there.
     @Test
     void rejectsVerifiedTrueWithoutTwoSources() {
         assertThatFails("""
@@ -219,7 +215,7 @@ class YamlDescriptorReaderTest {
                 .withMessageContaining("requires length 4");
     }
 
-    /** A repeated key is a mistake, not a last-one-wins override. */
+    /// A repeated key is a mistake, not a last-one-wins override.
     @Test
     void rejectsDuplicateYamlKeys() {
         assertThatFails("""
@@ -253,7 +249,7 @@ class YamlDescriptorReaderTest {
         assertThat(list.accepts("9")).isTrue();
     }
 
-    /** R-0.1 applies to code lists too. */
+    /// R-0.1 applies to code lists too.
     @Test
     void rejectsAVerifiedCodeListWithoutTwoSources() {
         assertThatExceptionOfType(CodegenException.class)

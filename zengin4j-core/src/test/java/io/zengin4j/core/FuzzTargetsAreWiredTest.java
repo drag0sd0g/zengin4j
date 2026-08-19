@@ -1,28 +1,24 @@
 package io.zengin4j.core;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * Every {@code @FuzzTest} has a Gradle task that fuzzes it.
- *
- * <p>When mutating, libFuzzer terminates the JVM as each target's time budget
- * expires, so the targets cannot share one — the build gives each its own task.
- * That list is written by hand, which means it can fall behind the annotations,
- * and the failure would be silent: the new target still passes in corpus-replay
- * mode and simply never gets fuzzed. Nothing would look wrong.
- *
- * <p>So the list is compared against the annotations here. Adding a fuzz target
- * without wiring it fails the build with a message saying what to add.
- */
+/// Every `@FuzzTest` has a Gradle task that fuzzes it.
+///
+/// When mutating, libFuzzer terminates the JVM as each target's time budget
+/// expires, so the targets cannot share one — the build gives each its own task.
+/// That list is written by hand, which means it can fall behind the annotations,
+/// and the failure would be silent: the new target still passes in corpus-replay
+/// mode and simply never gets fuzzed. Nothing would look wrong.
+///
+/// So the list is compared against the annotations here. Adding a fuzz target
+/// without wiring it fails the build with a message saying what to add.
 class FuzzTargetsAreWiredTest {
 
-    /** Classes carrying {@code @FuzzTest} methods. Add new ones here. */
+    /// Classes carrying `@FuzzTest` methods. Add new ones here.
     private static final List<Class<?>> FUZZ_CLASSES = List.of(ReaderFuzzTest.class);
 
     @Test
@@ -47,13 +43,11 @@ class FuzzTargetsAreWiredTest {
         return method.getDeclaringClass().getName() + "." + method.getName();
     }
 
-    /**
-     * The wiring, as the build reports it.
-     *
-     * <p>Read from a system property the {@code test} task sets. Running this
-     * test outside Gradle leaves it unset, and the assertion below says so
-     * rather than passing on an empty list.
-     */
+    /// The wiring, as the build reports it.
+    ///
+    /// Read from a system property the `test` task sets. Running this
+    /// test outside Gradle leaves it unset, and the assertion below says so
+    /// rather than passing on an empty list.
     private static List<String> wired() {
         String property = System.getProperty("zengin4j.fuzz.targets");
         assertThat(property)

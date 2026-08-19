@@ -1,5 +1,6 @@
 package io.zengin4j.validation.rules;
 
+import module java.base;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.model.ZenginRecord;
@@ -10,27 +11,22 @@ import io.zengin4j.validation.api.RuleScope;
 import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.engine.ValidationContext;
 import io.zengin4j.validation.refdata.ReferenceDataProvider;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
 
-/**
- * Tier 4 — do the institutions in this file exist? (§14.3, {@code V-4xx})
- *
- * <p>Skipped entirely when no provider is supplied, which is the default
- * (R-V5). A bank code this library has never heard of is not a finding; a bank
- * code the <em>caller's own reference data</em> has never heard of is.
- *
- * <p>Every finding names the data it was checked against, because reference
- * data goes stale and a report that says "bank 1234 does not exist" without
- * saying "according to what, captured when" invites the reader to trust it
- * further than they should.
- *
- * @since 0.2.0
- */
+/// Tier 4 — do the institutions in this file exist? (§14.3, `V-4xx`)
+///
+/// Skipped entirely when no provider is supplied, which is the default
+/// (R-V5). A bank code this library has never heard of is not a finding; a bank
+/// code the *caller's own reference data* has never heard of is.
+///
+/// Every finding names the data it was checked against, because reference
+/// data goes stale and a report that says "bank 1234 does not exist" without
+/// saying "according to what, captured when" invites the reader to trust it
+/// further than they should.
+///
+/// @since 0.2.0
 public final class ReferenceDataRules {
 
-    /** Field-id pairs of (bank, branch), across the formats this library ships. */
+    /// Field-id pairs of (bank, branch), across the formats this library ships.
     private static final List<String[]> BANK_BRANCH_PAIRS = List.of(
             new String[] {"beneficiaryBankCode", "beneficiaryBranchCode"},
             new String[] {"payerBankCode", "payerBranchCode"},
@@ -40,16 +36,14 @@ public final class ReferenceDataRules {
     private ReferenceDataRules() {
     }
 
-    /**
-     * Every rule in this tier.
-     *
-     * @return the rules, never {@code null}
-     */
+    /// Every rule in this tier.
+    ///
+    /// @return the rules, never `null`
     public static List<Rule> all() {
         return List.of(new BankExists(), new BranchExists(), new NamesMatchReferenceData());
     }
 
-    /** Walks every (bank, branch) code pair present in any record. */
+    /// Walks every (bank, branch) code pair present in any record.
     private static void forEachInstitution(ValidationContext context, InstitutionVisitor visitor) {
         for (ZenginRecord record : StructuralRules.inOrder(context.file())) {
             RecordDescriptor layout = SyntaxRules.layoutOf(context, record);
@@ -71,15 +65,13 @@ public final class ReferenceDataRules {
         void visit(ZenginRecord record, FieldDescriptor bank, FieldDescriptor branch, byte[] bytes);
     }
 
-    /**
-     * V-403 — the name in the file disagrees with the reference data.
-     *
-     * <p>A warning, not an error. Institutions abbreviate, and a file saying
-     * {@code ﾃｽﾄｷﾞﾝｺｳ} where the dataset says {@code ﾃｽﾄｷﾞﾝｺｳ(ｶ} is usually
-     * fine. It is worth a line because a name that disagrees with its code is
-     * also what a transposed code looks like — and the code is what the money
-     * follows.
-     */
+    /// V-403 — the name in the file disagrees with the reference data.
+    ///
+    /// A warning, not an error. Institutions abbreviate, and a file saying
+    /// `ﾃｽﾄｷﾞﾝｺｳ` where the dataset says `ﾃｽﾄｷﾞﾝｺｳ(ｶ` is usually
+    /// fine. It is worth a line because a name that disagrees with its code is
+    /// also what a transposed code looks like — and the code is what the money
+    /// follows.
     static final class NamesMatchReferenceData extends AbstractRule {
 
         NamesMatchReferenceData() {
@@ -132,7 +124,7 @@ public final class ReferenceDataRules {
         }
     }
 
-    /** V-401. */
+    /// V-401.
     static final class BankExists extends AbstractRule {
 
         BankExists() {
@@ -162,11 +154,9 @@ public final class ReferenceDataRules {
         }
     }
 
-    /**
-     * V-402. Only reported when the bank itself is known — a branch check
-     * against an unknown bank would report the same problem twice, and the
-     * second report would be less useful than the first.
-     */
+    /// V-402. Only reported when the bank itself is known — a branch check
+    /// against an unknown bank would report the same problem twice, and the
+    /// second report would be less useful than the first.
     static final class BranchExists extends AbstractRule {
 
         BranchExists() {

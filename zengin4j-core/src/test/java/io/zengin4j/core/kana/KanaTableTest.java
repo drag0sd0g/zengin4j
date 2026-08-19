@@ -1,5 +1,6 @@
 package io.zengin4j.core.kana;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -8,41 +9,33 @@ import io.zengin4j.core.charset.CharacterSet;
 import io.zengin4j.core.charset.VoicingMarks;
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.kana.generated.KanaTables;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * The transliteration tables, checked exhaustively (R-T10).
- *
- * <p><strong>Anchored to the byte values, not to the generator.</strong> The
- * table is derived from Unicode at build time, so a test that re-derived it
- * would agree with itself and prove nothing. §16.1 of the build specification
- * gives the JIS X 0201 layout instead — {@code ｱ} at {@code 0xB1} through
- * {@code ﾝ} at {@code 0xDD}, in gojūon order — and that is an independent fact
- * this test holds the table to.
- *
- * <p>The gojūon string below is transcribed by hand, which is the one place
- * transcription belongs: a slip in it fails against the derived table
- * immediately, whereas a slip in the table itself would ship a plausible-looking
- * wrong name.
- */
+/// The transliteration tables, checked exhaustively (R-T10).
+///
+/// **Anchored to the byte values, not to the generator.** The
+/// table is derived from Unicode at build time, so a test that re-derived it
+/// would agree with itself and prove nothing. §16.1 of the build specification
+/// gives the JIS X 0201 layout instead — `ｱ` at `0xB1` through
+/// `ﾝ` at `0xDD`, in gojūon order — and that is an independent fact
+/// this test holds the table to.
+///
+/// The gojūon string below is transcribed by hand, which is the one place
+/// transcription belongs: a slip in it fails against the derived table
+/// immediately, whereas a slip in the table itself would ship a plausible-looking
+/// wrong name.
 class KanaTableTest {
 
-    /**
-     * The 45 katakana of the gojūon, in the order JIS X 0201 encodes them.
-     *
-     * <p>Deliberately written out rather than generated. This is the assertion.
-     */
+    /// The 45 katakana of the gojūon, in the order JIS X 0201 encodes them.
+    ///
+    /// Deliberately written out rather than generated. This is the assertion.
     private static final String GOJUON =
             "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン";
 
-    /** {@code ｱ} sits here, and the rest follow in order (§16.1). */
+    /// `ｱ` sits here, and the rest follow in order (§16.1).
     private static final int FIRST_KANA_BYTE = 0xB1;
 
     private static final int DAKUTEN_BYTE = 0xDE;
@@ -72,7 +65,7 @@ class KanaTableTest {
         }
     }
 
-    /** ｦ sits below the run, at its own byte (§16.1). */
+    /// ｦ sits below the run, at its own byte (§16.1).
     @Test
     void woSitsAtItsOwnByte() {
         assertThat(narrowedBytes("ヲ")[0] & 0xFF).isEqualTo(0xA6);
@@ -80,12 +73,10 @@ class KanaTableTest {
 
     // ------------------------------------------------------------- voicing
 
-    /**
-     * Every voiced kana decomposes to its base plus {@code 0xDE} (R-K1).
-     *
-     * <p>The expected base is stated per entry rather than computed, so this
-     * checks the decomposition rather than restating it.
-     */
+    /// Every voiced kana decomposes to its base plus `0xDE` (R-K1).
+    ///
+    /// The expected base is stated per entry rather than computed, so this
+    /// checks the decomposition rather than restating it.
     static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> voicedPairs() {
         return voiced().entrySet().stream()
                 .map(e -> org.junit.jupiter.params.provider.Arguments.of(e.getKey(), e.getValue()));
@@ -153,23 +144,21 @@ class KanaTableTest {
         assertThat(bytes[1] & 0xFF).isEqualTo(HANDAKUTEN_BYTE);
     }
 
-    /**
-     * The table's illegal decompositions are known, named, and refused.
-     *
-     * <p>Four entries decompose to a stranded mark. ヷ and ヺ are the archaic
-     * VA and VO: Unicode splits them into ワ/ヲ plus a voicing mark, and neither
-     * kana has a voiced form the standard recognises. ゙ and ゚ are the bare
-     * combining marks, which narrow to bare ﾞ and ﾟ and strand by definition.
-     *
-     * <p>So the derived table faithfully contains mappings that must never be
-     * written, and the engine refuses them at the voicing-mark pass rather than
-     * the table pretending they do not exist. This test names them; a fifth
-     * would appear here rather than in somebody's rejected file.
-     *
-     * <p>ヸ and ヹ are absent for a different reason — ヰ and ヱ have no
-     * half-width form at all, so those two never reach the narrowing table and
-     * are refused by the character-class pass instead.
-     */
+    /// The table's illegal decompositions are known, named, and refused.
+    ///
+    /// Four entries decompose to a stranded mark. ヷ and ヺ are the archaic
+    /// VA and VO: Unicode splits them into ワ/ヲ plus a voicing mark, and neither
+    /// kana has a voiced form the standard recognises. ゙ and ゚ are the bare
+    /// combining marks, which narrow to bare ﾞ and ﾟ and strand by definition.
+    ///
+    /// So the derived table faithfully contains mappings that must never be
+    /// written, and the engine refuses them at the voicing-mark pass rather than
+    /// the table pretending they do not exist. This test names them; a fifth
+    /// would appear here rather than in somebody's rejected file.
+    ///
+    /// ヸ and ヹ are absent for a different reason — ヰ and ヱ have no
+    /// half-width form at all, so those two never reach the narrowing table and
+    /// are refused by the character-class pass instead.
     @Test
     void theOnlyDecompositionsThatStrandAMarkAreTheFourArchaicOnes() {
         List<String> stranding = new ArrayList<>();
@@ -193,14 +182,12 @@ class KanaTableTest {
                 .containsExactlyInAnyOrder("\u30F7", "\u30FA", "\u3099", "\u309A");
     }
 
-    /**
-     * None of the archaic V-kana or bare marks is ever written.
-     *
-     * <p>Refused by two different routes — ヷ and ヺ at the voicing-mark pass,
-     * ヸ and ヹ at the character-class pass because they have no half-width form
-     * — and the route does not matter. What matters is that none of them
-     * reaches a file.
-     */
+    /// None of the archaic V-kana or bare marks is ever written.
+    ///
+    /// Refused by two different routes — ヷ and ヺ at the voicing-mark pass,
+    /// ヸ and ヹ at the character-class pass because they have no half-width form
+    /// — and the route does not matter. What matters is that none of them
+    /// reaches a file.
     @ParameterizedTest
     @ValueSource(strings = {"\u30F7", "\u30F8", "\u30F9", "\u30FA", "\u3099", "\u309A"})
     void aCharacterThatCannotBeWrittenIsRefused(String archaic) {
@@ -209,7 +196,7 @@ class KanaTableTest {
                 .isThrownBy(() -> KanaTransliterator.toHalfWidth(archaic));
     }
 
-    /** ヷ and ヺ specifically fail as stranded marks, and say so. */
+    /// ヷ and ヺ specifically fail as stranded marks, and say so.
     @ParameterizedTest
     @ValueSource(strings = {"\u30F7", "\u30FA"})
     void theArchaicVKanaAreRefusedAsStrandedMarks(String archaic) {
@@ -218,12 +205,10 @@ class KanaTableTest {
                 .withMessageContaining("voicing mark");
     }
 
-    /**
-     * Every legal decomposition puts its mark after a kana that can take one.
-     *
-     * <p>The complement of the test above: once the four known offenders are
-     * set aside, nothing else in the table strands a mark.
-     */
+    /// Every legal decomposition puts its mark after a kana that can take one.
+    ///
+    /// The complement of the test above: once the four known offenders are
+    /// set aside, nothing else in the table strands a mark.
     @Test
     void everyOtherDecompositionPutsItsMarkOnALegalBase() {
         List<String> known = List.of("\u30F7", "\u30FA", "\u3099", "\u309A");
@@ -248,12 +233,10 @@ class KanaTableTest {
 
     // ------------------------------------------------------- shape invariants
 
-    /**
-     * Every narrowed form is one byte per character in JIS X 0201.
-     *
-     * <p>A fixed-length field counts bytes. A mapping producing a two-byte
-     * character would silently consume twice the room the caller budgeted.
-     */
+    /// Every narrowed form is one byte per character in JIS X 0201.
+    ///
+    /// A fixed-length field counts bytes. A mapping producing a two-byte
+    /// character would silently consume twice the room the caller budgeted.
     @Test
     void everyNarrowedFormIsSingleByte() {
         assertThat(KanaTables.narrowings()).isNotEmpty();
@@ -264,7 +247,7 @@ class KanaTableTest {
                         .hasSize(half.length()));
     }
 
-    /** Nothing narrows to a character no field class admits. */
+    /// Nothing narrows to a character no field class admits.
     @Test
     void narrowedFormsAreCharactersTheFormatCanCarry() {
         KanaTables.narrowings().forEach((full, half) -> {
@@ -276,17 +259,15 @@ class KanaTableTest {
         });
     }
 
-    /**
-     * The substituted characters are exactly the ones no class admits.
-     *
-     * <p>This is the check that ties the table to the reason it exists. If a
-     * future character class started permitting small kana, this test would
-     * fail and the substitution would be revisited rather than left in place
-     * out of habit.
-     *
-     * <p>R-K9: the substitutions are data, and this holds the data to its
-     * reason.
-     */
+    /// The substituted characters are exactly the ones no class admits.
+    ///
+    /// This is the check that ties the table to the reason it exists. If a
+    /// future character class started permitting small kana, this test would
+    /// fail and the substitution would be revisited rather than left in place
+    /// out of habit.
+    ///
+    /// R-K9: the substitutions are data, and this holds the data to its
+    /// reason.
     @Test
     void everySubstitutedCharacterIsOneNoFieldClassPermits() {
         KanaTables.substitutions().forEach((character, substitution) -> {
@@ -311,7 +292,7 @@ class KanaTableTest {
         });
     }
 
-    /** And every replacement is one that at least one class does admit. */
+    /// And every replacement is one that at least one class does admit.
     @Test
     void everyReplacementIsPermittedSomewhere() {
         KanaTables.substitutions().forEach((character, substitution) -> {
@@ -350,13 +331,11 @@ class KanaTableTest {
 
     // ------------------------------------------------------------- widening
 
-    /**
-     * Widening inverts narrowing for every kana.
-     *
-     * <p>Only claimed for kana. Several full-width characters narrow to the
-     * same half-width sequence, so widening is one reading of the bytes rather
-     * than the only one (R-K8) — which is why it is informational.
-     */
+    /// Widening inverts narrowing for every kana.
+    ///
+    /// Only claimed for kana. Several full-width characters narrow to the
+    /// same half-width sequence, so widening is one reading of the bytes rather
+    /// than the only one (R-K8) — which is why it is informational.
     @Test
     void everyKanaWidensBackToWhatItNarrowedFrom() {
         for (int i = 0; i < GOJUON.length(); i++) {

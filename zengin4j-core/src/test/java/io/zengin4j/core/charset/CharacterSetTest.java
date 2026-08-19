@@ -1,20 +1,17 @@
 package io.zengin4j.core.charset;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * Issue 3.2: the permitted character set is per field class (R-C16, R-C17).
- *
- * <p>The sets are asserted against what the sources say, byte by byte, rather
- * than against the implementation's own idea of them. A test that reads the
- * table it is testing proves nothing.
- */
+/// Issue 3.2: the permitted character set is per field class (R-C16, R-C17).
+///
+/// The sets are asserted against what the sources say, byte by byte, rather
+/// than against the implementation's own idea of them. A test that reads the
+/// table it is testing proves nothing.
 class CharacterSetTest {
 
     private static byte[] ms932(String text) {
@@ -34,14 +31,12 @@ class CharacterSetTest {
         }
     }
 
-    /**
-     * The finding that matters most, because the file looks correct.
-     *
-     * <p>{@code ｰ} (0xB0) and {@code -} (0x2D) are near-identical glyphs. The
-     * standard permits only the hyphen; three sources say so, one of them
-     * warning about the confusion explicitly. A name carrying {@code ｰ} reads
-     * perfectly to a human and is rejected by the bank.
-     */
+    /// The finding that matters most, because the file looks correct.
+    ///
+    /// `ｰ` (0xB0) and `-` (0x2D) are near-identical glyphs. The
+    /// standard permits only the hyphen; three sources say so, one of them
+    /// warning about the confusion explicitly. A name carrying `ｰ` reads
+    /// perfectly to a human and is rejected by the bank.
     @Test
     void rejectsTheLongVowelMarkAndNamesTheFix() {
         byte[] wrong = ms932("ﾃｽﾄｰ");
@@ -87,7 +82,7 @@ class CharacterSetTest {
 
     // ------------------------------------------------- the per-class narrowing
 
-    /** 注1: a branch name permits exactly one symbol. */
+    /// 注1: a branch name permits exactly one symbol.
     @Test
     void aBankNamePermitsOnlyTheHyphen() {
         assertThat(CharacterSet.validate(ms932("ﾃｽﾄ-ｼﾃﾝ"), CharacterClass.BANK_NAME)).isEmpty();
@@ -99,7 +94,7 @@ class CharacterSetTest {
         }
     }
 
-    /** 注2: a party name permits four. */
+    /// 注2: a party name permits four.
     @Test
     void aPartyNamePermitsFourSymbols() {
         assertThat(CharacterSet.validate(ms932("ﾔﾏﾀﾞ(ｶ)-."), CharacterClass.PARTY_NAME)).isEmpty();
@@ -112,7 +107,7 @@ class CharacterSetTest {
         }
     }
 
-    /** 給与振込 forbids Latin letters entirely — a rule 総合振込 would never surface. */
+    /// 給与振込 forbids Latin letters entirely — a rule 総合振込 would never surface.
     @Test
     void aPayrollNamePermitsNoLatinLetters() {
         assertThat(CharacterSet.validate(ms932("ﾔﾏﾀﾞ ﾀﾛｳ"), CharacterClass.PAYROLL_NAME)).isEmpty();
@@ -123,7 +118,7 @@ class CharacterSetTest {
         assertThat(CharacterSet.validate(ms932("ABC"), CharacterClass.PARTY_NAME)).isEmpty();
     }
 
-    /** EDI is the only class admitting ｦ, and the only one admitting ｢ ｣ / and the yen sign. */
+    /// EDI is the only class admitting ｦ, and the only one admitting ｢ ｣ / and the yen sign.
     @Test
     void ediInformationIsTheWidestClass() {
         assertThat(CharacterSet.validate(ms932("ｦ"), CharacterClass.EDI_INFORMATION)).isEmpty();
@@ -145,7 +140,7 @@ class CharacterSetTest {
         assertThat(CharacterSet.validate(ms932("ｱ"), CharacterClass.NUMERIC)).hasSize(1);
     }
 
-    /** Filler is not this library's business to police (R-D5). */
+    /// Filler is not this library's business to police (R-D5).
     @Test
     void unrestrictedPermitsEveryByte() {
         byte[] everything = new byte[256];
@@ -157,7 +152,7 @@ class CharacterSetTest {
 
     // ---------------------------------------------------------- the API itself
 
-    /** R-C17: offsets, not a verdict. */
+    /// R-C17: offsets, not a verdict.
     @Test
     void reportsEveryViolationInOrderWithItsOffset() {
         byte[] name = ms932("ｱaｲbｳ");
@@ -171,7 +166,7 @@ class CharacterSetTest {
                 assertThat(violation.permitted()).isEqualTo(CharacterClass.PARTY_NAME));
     }
 
-    /** Offsets are relative to the record, so they compose with the record's own position. */
+    /// Offsets are relative to the record, so they compose with the record's own position.
     @Test
     void validatesAFieldWithinARecordUsingRecordRelativeOffsets() {
         byte[] record = new byte[120];
@@ -195,11 +190,9 @@ class CharacterSetTest {
         assertThat(CharacterSet.validate(bad, CharacterClass.PARTY_NAME)).isNotEmpty();
     }
 
-    /**
-     * A UTF-8 file is not conformant, and validation says so rather than
-     * pretending: every katakana character becomes three bytes, none of which
-     * is a permitted single-byte kana.
-     */
+    /// A UTF-8 file is not conformant, and validation says so rather than
+    /// pretending: every katakana character becomes three bytes, none of which
+    /// is a permitted single-byte kana.
     @Test
     void aUtf8EncodedNameViolatesThroughout() {
         byte[] utf8 = "ﾔﾏﾀﾞ".getBytes(StandardCharsets.UTF_8);
@@ -241,7 +234,7 @@ class CharacterSetTest {
         assertThat(CharacterClass.PARTY_NAME.permits(0x100)).isFalse();
     }
 
-    /** ｱ (0xB1) through ﾝ (0xDD), which is the whole permitted kana run. */
+    /// ｱ (0xB1) through ﾝ (0xDD), which is the whole permitted kana run.
     private static byte[] kanaRun() {
         byte[] kana = new byte[0xDD - 0xB1 + 1];
         for (int i = 0; i < kana.length; i++) {

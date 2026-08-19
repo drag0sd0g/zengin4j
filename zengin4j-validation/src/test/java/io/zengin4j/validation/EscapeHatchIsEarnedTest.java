@@ -1,40 +1,30 @@
 package io.zengin4j.validation;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.zengin4j.testkit.FormatFixtures;
 import io.zengin4j.testkit.SougouFurikomiFixtures;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * Every use of {@code dataUnchecked} is one that could not be written otherwise.
- *
- * <p>{@code FormatFixtures.dataUnchecked} exists so a validator's test suite can
- * build the records the validator exists to complain about — the ordinary
- * encoder refuses them, correctly. That makes it the one call in the testkit
- * that deliberately produces an invalid file, and the obvious failure mode is
- * habit: somebody hits a refusal, reaches for the unchecked path because it
- * makes the red go away, and quietly stops testing what they meant to.
- *
- * <p>So each call site has to earn it. This finds them by reading the sources
- * and asserts that the <em>checked</em> path really would refuse the same value.
- * A call that did not need the escape hatch fails here.
- */
+/// Every use of `dataUnchecked` is one that could not be written otherwise.
+///
+/// `FormatFixtures.dataUnchecked` exists so a validator's test suite can
+/// build the records the validator exists to complain about — the ordinary
+/// encoder refuses them, correctly. That makes it the one call in the testkit
+/// that deliberately produces an invalid file, and the obvious failure mode is
+/// habit: somebody hits a refusal, reaches for the unchecked path because it
+/// makes the red go away, and quietly stops testing what they meant to.
+///
+/// So each call site has to earn it. This finds them by reading the sources
+/// and asserts that the *checked* path really would refuse the same value.
+/// A call that did not need the escape hatch fails here.
 class EscapeHatchIsEarnedTest {
 
-    /** Directories a call site may legitimately live in. */
+    /// Directories a call site may legitimately live in.
     private static final List<Path> SEARCHED = List.of(
             Path.of("..", "zengin4j-validation", "src", "test", "java"),
             Path.of("..", "zengin4j-core", "src", "test", "java"),
@@ -42,11 +32,11 @@ class EscapeHatchIsEarnedTest {
             Path.of("..", "zengin4j-testkit", "src", "test", "java"),
             Path.of("..", "examples"));
 
-    /** {@code dataUnchecked("…", …)} — the first argument is the value under test. */
+    /// `dataUnchecked("…", …)` — the first argument is the value under test.
     private static final Pattern CALL =
             Pattern.compile("dataUnchecked\\(\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
 
-    /** A call site: where it is, and the name it writes. */
+    /// A call site: where it is, and the name it writes.
     private record CallSite(String file, int line, String name) {
         @Override
         public String toString() {
@@ -92,13 +82,11 @@ class EscapeHatchIsEarnedTest {
                 .isNotEmpty();
     }
 
-    /**
-     * The checked path refuses what each unchecked call writes.
-     *
-     * <p>If it does not, the call site should be using {@code data(...)} — the
-     * value is conformant and the escape hatch is buying nothing but a hole in
-     * the coverage of the encoder's own rules.
-     */
+    /// The checked path refuses what each unchecked call writes.
+    ///
+    /// If it does not, the call site should be using `data(...)` — the
+    /// value is conformant and the escape hatch is buying nothing but a hole in
+    /// the coverage of the encoder's own rules.
     @ParameterizedTest
     @MethodSource("callSites")
     void everyUncheckedCallWritesSomethingTheCheckedPathWouldRefuse(CallSite site) {
@@ -115,12 +103,10 @@ class EscapeHatchIsEarnedTest {
                 .isNotNull();
     }
 
-    /**
-     * And the unchecked path really does write it.
-     *
-     * <p>The other half: an escape hatch that also refused would leave these
-     * tests silently untested.
-     */
+    /// And the unchecked path really does write it.
+    ///
+    /// The other half: an escape hatch that also refused would leave these
+    /// tests silently untested.
     @ParameterizedTest
     @MethodSource("callSites")
     void everyUncheckedCallActuallyProducesARecord(CallSite site) {

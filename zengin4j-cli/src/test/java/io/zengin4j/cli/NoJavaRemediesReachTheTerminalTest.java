@@ -1,35 +1,29 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.cli.internal.CliMessages;
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.testkit.SougouFurikomiFixtures;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * No diagnostic tells a shell user to call a Java method.
- *
- * <p>R-E3 requires every diagnostic to say how to fix the problem, and the
- * library says it correctly for <em>its</em> audience: set
- * {@code ReaderOptions.builder().allowUnverifiedFormats(true)}. At a prompt that
- * is not a fix, it is a puzzle — and it reached the terminal for three different
- * failures before this test existed.
- *
- * <p>{@link CliMessages} translates the known remedies, which is string
- * replacement and therefore fragile: reword a library message and the
- * replacement silently stops matching. This test is what contains that. It
- * provokes every failure it can and asserts that none of the output names a
- * Java API, so a reworded message breaks the build rather than the user's
- * afternoon.
- */
+/// No diagnostic tells a shell user to call a Java method.
+///
+/// R-E3 requires every diagnostic to say how to fix the problem, and the
+/// library says it correctly for *its* audience: set
+/// `ReaderOptions.builder().allowUnverifiedFormats(true)`. At a prompt that
+/// is not a fix, it is a puzzle — and it reached the terminal for three different
+/// failures before this test existed.
+///
+/// [CliMessages] translates the known remedies, which is string
+/// replacement and therefore fragile: reword a library message and the
+/// replacement silently stops matching. This test is what contains that. It
+/// provokes every failure it can and asserts that none of the output names a
+/// Java API, so a reworded message breaks the build rather than the user's
+/// afternoon.
 class NoJavaRemediesReachTheTerminalTest {
 
     @TempDir
@@ -52,7 +46,7 @@ class NoJavaRemediesReachTheTerminalTest {
         Files.write(truncated, java.util.Arrays.copyOf(bytes, bytes.length - 47));
     }
 
-    /** Every way of failing this test can construct. */
+    /// Every way of failing this test can construct.
     private List<String[]> failingInvocations() {
         List<String[]> invocations = new ArrayList<>();
         // R-CLI6: an unverified layout, without the flag.
@@ -110,7 +104,7 @@ class NoJavaRemediesReachTheTerminalTest {
         }
     }
 
-    /** Every one of these really does fail — otherwise the test above proves nothing. */
+    /// Every one of these really does fail — otherwise the test above proves nothing.
     @Test
     void everyInvocationInThisTestActuallyFails() {
         for (String[] arguments : failingInvocations()) {
@@ -120,7 +114,7 @@ class NoJavaRemediesReachTheTerminalTest {
         }
     }
 
-    /** The unverified-format remedy names the flag, since that is the common case. */
+    /// The unverified-format remedy names the flag, since that is the common case.
     @Test
     void theUnverifiedRemedyNamesTheFlagAndTheNextStep() {
         Cli result = Cli.run("inspect", valid.toString());
@@ -129,7 +123,7 @@ class NoJavaRemediesReachTheTerminalTest {
         assertThat(result.err()).contains("zengin explain --format=sougou-furikomi");
     }
 
-    /** A path that does not exist says so, rather than printing the path alone. */
+    /// A path that does not exist says so, rather than printing the path alone.
     @Test
     void anUnwritablePathSaysWhatWentWrong() {
         Path target = directory.resolve("no").resolve("such").resolve("dir.txt");
@@ -142,13 +136,11 @@ class NoJavaRemediesReachTheTerminalTest {
                 .contains("no such file or directory");
     }
 
-    /**
-     * Every flag this class suggests is a flag that exists.
-     *
-     * <p>The table once mapped a remedy to {@code --record-length}, which no
-     * command accepts. Suggesting a flag that does not exist is worse than
-     * suggesting a Java method: at least the Java method is real.
-     */
+    /// Every flag this class suggests is a flag that exists.
+    ///
+    /// The table once mapped a remedy to `--record-length`, which no
+    /// command accepts. Suggesting a flag that does not exist is worse than
+    /// suggesting a Java method: at least the Java method is real.
     @Test
     void everySuggestedRemedyNamesAnOptionThatExists() {
         java.util.Set<String> real = new java.util.TreeSet<>();

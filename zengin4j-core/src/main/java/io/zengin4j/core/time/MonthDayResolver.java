@@ -1,26 +1,17 @@
 package io.zengin4j.core.time;
 
-import java.time.LocalDate;
-import java.time.MonthDay;
-import java.time.Year;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import module java.base;
 
-/**
- * Attaches a year to the yearless {@code MMDD} dates the formats carry.
- *
- * <p>振込指定日 and 引落日 are {@code N(4)} — month and day, no year. This
- * library never invents one silently (R-D9): the parsed type is
- * {@link MonthDay}, and turning it into a {@link LocalDate} means naming a
- * strategy and a reference date, here, in the caller's own code.
- *
- * <p>Immutable and thread-safe.
- *
- * @since 0.1.0
- */
+/// Attaches a year to the yearless `MMDD` dates the formats carry.
+///
+/// 振込指定日 and 引落日 are `N(4)` — month and day, no year. This
+/// library never invents one silently (R-D9): the parsed type is
+/// [MonthDay], and turning it into a [LocalDate] means naming a
+/// strategy and a reference date, here, in the caller's own code.
+///
+/// Immutable and thread-safe.
+///
+/// @since 0.1.0
 public final class MonthDayResolver {
 
     private static final MonthDay LEAP_DAY = MonthDay.of(2, 29);
@@ -33,64 +24,52 @@ public final class MonthDayResolver {
         this.reference = Objects.requireNonNull(reference, "reference");
     }
 
-    /**
-     * Creates a resolver choosing the next occurrence at or after the
-     * reference date.
-     *
-     * @param reference the reference date, typically the file's creation date
-     * @return the resolver
-     */
+    /// Creates a resolver choosing the next occurrence at or after the
+    /// reference date.
+    ///
+    /// @param reference the reference date, typically the file's creation date
+    /// @return the resolver
     public static MonthDayResolver forwardLooking(LocalDate reference) {
         return new MonthDayResolver(ResolutionStrategy.FORWARD_LOOKING, reference);
     }
 
-    /**
-     * Creates a resolver choosing the occurrence closest to the reference
-     * date.
-     *
-     * @param reference the reference date, typically the file's creation date
-     * @return the resolver
-     */
+    /// Creates a resolver choosing the occurrence closest to the reference
+    /// date.
+    ///
+    /// @param reference the reference date, typically the file's creation date
+    /// @return the resolver
     public static MonthDayResolver nearest(LocalDate reference) {
         return new MonthDayResolver(ResolutionStrategy.NEAREST, reference);
     }
 
-    /**
-     * Creates a resolver.
-     *
-     * @param strategy  the strategy to apply
-     * @param reference the reference date
-     * @return the resolver
-     */
+    /// Creates a resolver.
+    ///
+    /// @param strategy  the strategy to apply
+    /// @param reference the reference date
+    /// @return the resolver
     public static MonthDayResolver of(ResolutionStrategy strategy, LocalDate reference) {
         return new MonthDayResolver(strategy, reference);
     }
 
-    /**
-     * Returns the strategy this resolver applies.
-     *
-     * @return the strategy
-     */
+    /// Returns the strategy this resolver applies.
+    ///
+    /// @return the strategy
     public ResolutionStrategy strategy() {
         return strategy;
     }
 
-    /**
-     * Returns the reference date.
-     *
-     * @return the reference date
-     */
+    /// Returns the reference date.
+    ///
+    /// @return the reference date
     public LocalDate reference() {
         return reference;
     }
 
-    /**
-     * Resolves a month and day to a date.
-     *
-     * @param monthDay the month and day to resolve
-     * @return the outcome, resolved or explicitly unresolved; never throws for
-     *         29 February in a non-leap candidate year (R-D12)
-     */
+    /// Resolves a month and day to a date.
+    ///
+    /// @param monthDay the month and day to resolve
+    /// @return the outcome, resolved or explicitly unresolved; never throws for
+    ///   29 February in a non-leap candidate year (R-D12)
     public DateResolution resolve(MonthDay monthDay) {
         Objects.requireNonNull(monthDay, "monthDay");
         List<Integer> candidates = candidateYears();
@@ -131,12 +110,10 @@ public final class MonthDayResolver {
         return Optional.empty();
     }
 
-    /**
-     * Chooses the candidate closest to the reference date. Ties resolve to the
-     * earlier year, because candidates are considered oldest first and
-     * {@code min} keeps the first of equal elements — the choice must be
-     * deterministic (INV-7), and this documents which way.
-     */
+    /// Chooses the candidate closest to the reference date. Ties resolve to the
+    /// earlier year, because candidates are considered oldest first and
+    /// `min` keeps the first of equal elements — the choice must be
+    /// deterministic (INV-7), and this documents which way.
     private Optional<LocalDate> resolveNearest(MonthDay monthDay, List<Integer> candidates) {
         List<LocalDate> existing = new ArrayList<>(candidates.size());
         for (int year : candidates) {

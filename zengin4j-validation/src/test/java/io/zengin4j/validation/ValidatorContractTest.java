@@ -1,5 +1,6 @@
 package io.zengin4j.validation;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -11,19 +12,13 @@ import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.api.ValidationReport;
 import io.zengin4j.validation.engine.Rules;
 import io.zengin4j.validation.engine.ValidationContext;
-import java.util.List;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
-/**
- * The contracts that hold whatever the file contains: R-V1, R-V3 and INV-7.
- */
+/// The contracts that hold whatever the file contains: R-V1, R-V3 and INV-7.
 class ValidatorContractTest {
 
-    /**
-     * R-V1. The one behaviour a validator cannot have is failing on bad input,
-     * because bad input is the only reason anyone runs one.
-     */
+    /// R-V1. The one behaviour a validator cannot have is failing on bad input,
+    /// because bad input is the only reason anyone runs one.
     @Test
     void neverThrowsWhateverTheFileContains() {
         for (byte[] input : Fixtures.hostileInputs()) {
@@ -35,7 +30,7 @@ class ValidatorContractTest {
         }
     }
 
-    /** R-V1, again: a rule with a bug in it must not become the caller's exception. */
+    /// R-V1, again: a rule with a bug in it must not become the caller's exception.
     @Test
     void aRuleThatThrowsBecomesAFindingRatherThanAnException() {
         ZenginValidator validator = ZenginValidator.builder()
@@ -51,7 +46,7 @@ class ValidatorContractTest {
         });
     }
 
-    /** And the other rules still run when one of them is broken. */
+    /// And the other rules still run when one of them is broken.
     @Test
     void aBrokenRuleDoesNotSuppressTheOthers() {
         ZenginValidator validator = ZenginValidator.builder()
@@ -64,14 +59,12 @@ class ValidatorContractTest {
         assertThat(report.findingsOf("V-301")).as("the real finding survives").hasSize(1);
     }
 
-    /**
-     * R-V1 at the outermost edge: a file that cannot even be <em>read</em>
-     * still produces a report.
-     *
-     * <p>"This is not a file I can parse" is exactly the answer the caller
-     * asked for, and an exception would make them write the try/catch that
-     * validation exists to save them.
-     */
+    /// R-V1 at the outermost edge: a file that cannot even be *read*
+    /// still produces a report.
+    ///
+    /// "This is not a file I can parse" is exactly the answer the caller
+    /// asked for, and an exception would make them write the try/catch that
+    /// validation exists to save them.
     @Test
     void afileThatCannotBeReadProducesAReportRatherThanAnException(@org.junit.jupiter.api.io.TempDir
             java.nio.file.Path directory) throws java.io.IOException {
@@ -91,7 +84,7 @@ class ValidatorContractTest {
         assertThat(report.isSubmittable()).isFalse();
     }
 
-    /** R-V3: every rule is addressable and suppressible by id. */
+    /// R-V3: every rule is addressable and suppressible by id.
     @Test
     void anyRuleCanBeSuppressedById() {
         ZenginValidator defaults = ZenginValidator.defaults();
@@ -106,7 +99,7 @@ class ValidatorContractTest {
         assertThat(after.findingsOf("V-301")).isEmpty();
     }
 
-    /** R-V3, the other half: a severity a consumer disagrees with can be re-ranked. */
+    /// R-V3, the other half: a severity a consumer disagrees with can be re-ranked.
     @Test
     void aRulesSeverityCanBeOverridden() {
         ValidationReport report = ZenginValidator.builder()
@@ -122,12 +115,10 @@ class ValidatorContractTest {
                 .isTrue();
     }
 
-    /**
-     * INV-7. Asserted by shuffling the rule order, which is the thing most
-     * likely to leak into the output: a report that depended on it would look
-     * perfectly stable in a single-threaded test that always registered rules
-     * the same way.
-     */
+    /// INV-7. Asserted by shuffling the rule order, which is the thing most
+    /// likely to leak into the output: a report that depended on it would look
+    /// perfectly stable in a single-threaded test that always registered rules
+    /// the same way.
     @Test
     void theSameFileAlwaysProducesTheSameReport() {
         List<Rule> rules = new java.util.ArrayList<>(Rules.bundled());
@@ -147,7 +138,7 @@ class ValidatorContractTest {
         }
     }
 
-    /** Findings sort by position, so a report reads down the file. */
+    /// Findings sort by position, so a report reads down the file.
     @Test
     void findingsAreOrderedByPositionThenByRule() {
         ValidationReport report = ZenginValidator.defaults().validate(Fixtures.fileWithManyProblems());
@@ -161,7 +152,7 @@ class ValidatorContractTest {
         }
     }
 
-    /** R-V2: every finding carries both languages, and neither is blank. */
+    /// R-V2: every finding carries both languages, and neither is blank.
     @Test
     void everyFindingCarriesBothLanguages() {
         ValidationReport report = ZenginValidator.defaults().validate(Fixtures.fileWithManyProblems());
@@ -175,7 +166,7 @@ class ValidatorContractTest {
         });
     }
 
-    /** R-E4: every bundled rule has text in both bundles, and a description. */
+    /// R-E4: every bundled rule has text in both bundles, and a description.
     @Test
     void everyBundledRuleHasMessagesInBothLanguages() {
         for (Rule rule : Rules.bundled()) {
@@ -189,16 +180,14 @@ class ValidatorContractTest {
         }
     }
 
-    /**
-     * Apostrophe quoting differs between the two kinds of entry, and getting it
-     * backwards is invisible until somebody reads a report.
-     *
-     * <p>A {@code .message} goes through {@link java.text.MessageFormat}, where a
-     * lone apostrophe is a quoting character and must be doubled. A
-     * {@code .description} is returned verbatim, so a doubled one appears
-     * literally — which is how {@code "the format''s record length"} reached a
-     * SARIF document.
-     */
+    /// Apostrophe quoting differs between the two kinds of entry, and getting it
+    /// backwards is invisible until somebody reads a report.
+    ///
+    /// A `.message` goes through [java.text.MessageFormat], where a
+    /// lone apostrophe is a quoting character and must be doubled. A
+    /// `.description` is returned verbatim, so a doubled one appears
+    /// literally — which is how `"the format''s record length"` reached a
+    /// SARIF document.
     @Test
     void apostrophesAreQuotedForMessagesAndNotForDescriptions() {
         for (Rule rule : Rules.bundled()) {
@@ -213,16 +202,14 @@ class ValidatorContractTest {
                 .contains("batch's").contains("1").doesNotContain("{0}");
     }
 
-    /**
-     * R-V3 in full: every id a rule can <em>emit</em> is suppressible, not just
-     * the id the rule is registered under.
-     *
-     * <p>The composite rules answer several questions from one walk of the file
-     * — the value date is classified once and yields V-501 through V-505. If
-     * suppression only matched the registered id, a consumer could not turn off
-     * "value date is a public holiday" while keeping "value date is a weekend",
-     * and the requirement would hold in the letter and not the substance.
-     */
+    /// R-V3 in full: every id a rule can *emit* is suppressible, not just
+    /// the id the rule is registered under.
+    ///
+    /// The composite rules answer several questions from one walk of the file
+    /// — the value date is classified once and yields V-501 through V-505. If
+    /// suppression only matched the registered id, a consumer could not turn off
+    /// "value date is a public holiday" while keeping "value date is a weekend",
+    /// and the requirement would hold in the letter and not the substance.
     @Test
     void everyEmittedIdIsIndividuallySuppressible() {
         for (Rule rule : Rules.bundled()) {
@@ -245,7 +232,7 @@ class ValidatorContractTest {
                 .isNotEmpty();
     }
 
-    /** Rule ids are unique: two rules sharing one would make suppression ambiguous. */
+    /// Rule ids are unique: two rules sharing one would make suppression ambiguous.
     @Test
     void ruleIdsAreUnique() {
         List<String> ids = Rules.bundled().stream().map(Rule::id).toList();
@@ -254,7 +241,7 @@ class ValidatorContractTest {
         assertThat(ids).allSatisfy(id -> assertThat(id).matches("V-\\d{3}"));
     }
 
-    /** A rule that always fails, for testing that the engine contains it. */
+    /// A rule that always fails, for testing that the engine contains it.
     private static final class ExplodingRule implements Rule {
 
         @Override

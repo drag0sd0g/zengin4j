@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -16,19 +17,14 @@ import io.zengin4j.core.kana.UntransliterableCharacterException;
 import io.zengin4j.core.loss.LossCollector;
 import io.zengin4j.core.loss.LossKind;
 import io.zengin4j.core.loss.LossSeverity;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/**
- * The write-side character policies (R-C18).
- *
- * <p>Deferred from Epic 3, because {@code TRANSLITERATE} needed an engine that
- * did not exist yet. The default has always been to refuse — writing a
- * character the standard forbids means producing a file this library's own
- * validator rejects.
- */
+/// The write-side character policies (R-C18).
+///
+/// Deferred from Epic 3, because `TRANSLITERATE` needed an engine that
+/// did not exist yet. The default has always been to refuse — writing a
+/// character the standard forbids means producing a file this library's own
+/// validator rejects.
 class WritePolicyTest {
 
     private static final RecordDescriptor DATA = FormatRegistry.defaults()
@@ -104,7 +100,7 @@ class WritePolicyTest {
                 .allSatisfy(entry -> assertThat(entry.targetField()).contains("beneficiaryName"));
     }
 
-    /** The engine still refuses what it cannot convert, whatever the policy. */
+    /// The engine still refuses what it cannot convert, whatever the policy.
     @Test
     void transliterateStillRefusesKanji() {
         EncodingOptions options = EncodingOptions.builder()
@@ -115,13 +111,11 @@ class WritePolicyTest {
                         withName("山田太郎"), options, new LossCollector()));
     }
 
-    /**
-     * And the field's own class decides, not the format's.
-     *
-     * <p>ヨーコ becomes ﾖ-ｺ, which a party name permits and a payroll name does
-     * not. Same policy, same input, different answer — which is the whole
-     * reason the transliterator takes a character class.
-     */
+    /// And the field's own class decides, not the format's.
+    ///
+    /// ヨーコ becomes ﾖ-ｺ, which a party name permits and a payroll name does
+    /// not. Same policy, same input, different answer — which is the whole
+    /// reason the transliterator takes a character class.
     @Test
     void transliterateAppliesTheFieldsOwnCharacterClass() {
         EncodingOptions options = EncodingOptions.builder()
@@ -170,13 +164,11 @@ class WritePolicyTest {
                 .anySatisfy(entry -> assertThat(entry.kind()).isEqualTo(LossKind.COERCED));
     }
 
-    /**
-     * A replacement the field would refuse is refused.
-     *
-     * <p>{@code '?'} is the obvious choice and is permitted by no name class,
-     * so {@code REPLACE} — a policy for salvaging a value — used to produce a
-     * field {@code V-202} then rejected.
-     */
+    /// A replacement the field would refuse is refused.
+    ///
+    /// `'?'` is the obvious choice and is permitted by no name class,
+    /// so `REPLACE` — a policy for salvaging a value — used to produce a
+    /// field `V-202` then rejected.
     @Test
     void aReplacementTheFieldWouldRefuseIsRefused() {
         EncodingOptions options = EncodingOptions.builder()
@@ -190,7 +182,7 @@ class WritePolicyTest {
                 .withMessageContaining("not permitted");
     }
 
-    /** And a voicing mark as a replacement would strand itself. */
+    /// And a voicing mark as a replacement would strand itself.
     @Test
     void aVoicingMarkCannotBeUsedAsAReplacement() {
         EncodingOptions options = EncodingOptions.builder()
@@ -204,15 +196,13 @@ class WritePolicyTest {
                 .withMessageContaining("voicing mark");
     }
 
-    /**
-     * <strong>Whatever the policy, what gets written is writable.</strong>
-     *
-     * <p>The property all three of this epic's late bugs violated: a truncation
-     * marker no class permits, a replacement byte no class permits, and a
-     * replacement that stranded a voicing mark. Each produced a field the
-     * library's own rules reject, and each was found only by looking. Stated
-     * once, here, so the next one fails a test instead.
-     */
+    /// **Whatever the policy, what gets written is writable.**
+    ///
+    /// The property all three of this epic's late bugs violated: a truncation
+    /// marker no class permits, a replacement byte no class permits, and a
+    /// replacement that stranded a voicing mark. Each produced a field the
+    /// library's own rules reject, and each was found only by looking. Stated
+    /// once, here, so the next one fails a test instead.
     @Test
     void nothingAnyPolicyWritesIsEverInvalid() {
         List<String> inputs = List.of("ﾔﾏﾀﾞ ﾀﾛｳ", "ガクブチ ジロウ", "キャノン", "ヨーコ",
@@ -262,13 +252,11 @@ class WritePolicyTest {
         }
     }
 
-    /**
-     * Replacement is byte for byte, so nothing after it shifts.
-     *
-     * <p>A voiced kana is two bytes. Replacing it with one would move every
-     * later character left, which is a different failure from the one being
-     * fixed — and a silent one.
-     */
+    /// Replacement is byte for byte, so nothing after it shifts.
+    ///
+    /// A voiced kana is two bytes. Replacing it with one would move every
+    /// later character left, which is a different failure from the one being
+    /// fixed — and a silent one.
     @Test
     void replaceKeepsTheFieldTheSameLength() {
         EncodingOptions options = EncodingOptions.builder()
@@ -299,14 +287,12 @@ class WritePolicyTest {
 
     // ---------------------------------------------------------------- shape
 
-    /**
-     * Truncation is measured in the encoding the record is written in.
-     *
-     * <p>{@code transliterate} used to build its options without the encoder's
-     * charset, so it measured MS932 while the caller wrote UTF-8 — calling a
-     * 45-byte value a 15-byte one and letting it overflow the field. Fifteen
-     * kana is 15 bytes in MS932 and 45 in UTF-8; the field is 30.
-     */
+    /// Truncation is measured in the encoding the record is written in.
+    ///
+    /// `transliterate` used to build its options without the encoder's
+    /// charset, so it measured MS932 while the caller wrote UTF-8 — calling a
+    /// 45-byte value a 15-byte one and letting it overflow the field. Fifteen
+    /// kana is 15 bytes in MS932 and 45 in UTF-8; the field is 30.
     @Test
     void transliterateMeasuresLengthInTheEncoderSCharset() {
         Map<String, String> values = new LinkedHashMap<>();

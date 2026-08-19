@@ -1,23 +1,16 @@
 package io.zengin4j.iso20022.xml;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import module java.base;
 
-/**
- * An immutable XML element: the whole document model this module needs.
- *
- * <p>ISO 20022 messages are element trees of a narrow shape — every element
- * either carries text or carries children, never both, and attributes appear
- * on a handful of amount elements. That is small enough to model directly, and
- * modelling it directly is what lets the mapper be driven by declared paths
- * rather than by generated bindings.
- *
- * @since 0.5.0
- */
+/// An immutable XML element: the whole document model this module needs.
+///
+/// ISO 20022 messages are element trees of a narrow shape — every element
+/// either carries text or carries children, never both, and attributes appear
+/// on a handful of amount elements. That is small enough to model directly, and
+/// modelling it directly is what lets the mapper be driven by declared paths
+/// rather than by generated bindings.
+///
+/// @since 0.5.0
 public final class XmlElement {
 
     private final String name;
@@ -35,68 +28,60 @@ public final class XmlElement {
         this.children = List.copyOf(children);
     }
 
-    /**
-     * Starts building an element.
-     *
-     * @param name the local name
-     * @return a builder
-     */
+    /// Starts building an element.
+    ///
+    /// @param name the local name
+    /// @return a builder
     public static Builder element(String name) {
         return new Builder(name);
     }
 
-    /**
-     * An element with text content and nothing else.
-     *
-     * @param name  the local name
-     * @param value the text content
-     * @return the element
-     */
+    /// An element with text content and nothing else.
+    ///
+    /// @param name  the local name
+    /// @param value the text content
+    /// @return the element
     public static XmlElement text(String name, String value) {
         return new Builder(name).text(value).build();
     }
 
-    /** @return the local name */
+    /// @return the local name
     public String name() {
         return name;
     }
 
-    /** @return the namespace URI, or an empty string when the element has none */
+    /// @return the namespace URI, or an empty string when the element has none
     public String namespace() {
         return namespace;
     }
 
-    /** @return the character content, or an empty string when the element has children */
+    /// @return the character content, or an empty string when the element has children
     public String text() {
         return text;
     }
 
-    /** @return the attributes, in document order */
+    /// @return the attributes, in document order
     public Map<String, String> attributes() {
         return attributes;
     }
 
-    /** @return the child elements, in document order */
+    /// @return the child elements, in document order
     public List<XmlElement> children() {
         return children;
     }
 
-    /**
-     * Looks up an attribute.
-     *
-     * @param attributeName the attribute's name
-     * @return its value, or empty
-     */
+    /// Looks up an attribute.
+    ///
+    /// @param attributeName the attribute's name
+    /// @return its value, or empty
     public Optional<String> attribute(String attributeName) {
         return Optional.ofNullable(attributes.get(attributeName));
     }
 
-    /**
-     * Looks up the first child with a name.
-     *
-     * @param childName the child's local name
-     * @return the child, or empty
-     */
+    /// Looks up the first child with a name.
+    ///
+    /// @param childName the child's local name
+    /// @return the child, or empty
     public Optional<XmlElement> child(String childName) {
         for (XmlElement child : children) {
             if (child.name.equals(childName)) {
@@ -106,12 +91,10 @@ public final class XmlElement {
         return Optional.empty();
     }
 
-    /**
-     * Every child with a name, in document order.
-     *
-     * @param childName the children's local name
-     * @return the children, possibly empty
-     */
+    /// Every child with a name, in document order.
+    ///
+    /// @param childName the children's local name
+    /// @return the children, possibly empty
     public List<XmlElement> childrenNamed(String childName) {
         List<XmlElement> found = new ArrayList<>();
         for (XmlElement child : children) {
@@ -122,16 +105,14 @@ public final class XmlElement {
         return List.copyOf(found);
     }
 
-    /**
-     * Resolves a slash-separated path relative to this element.
-     *
-     * <p>The path addresses the <em>first</em> match at each step, which is what
-     * a mapping row means by a path: the declaration says where a value lives,
-     * and repetition is handled by the caller iterating a level explicitly.
-     *
-     * @param path e.g. {@code GrpHdr/InitgPty/Nm}
-     * @return the element, or empty if any step is missing
-     */
+    /// Resolves a slash-separated path relative to this element.
+    ///
+    /// The path addresses the *first* match at each step, which is what
+    /// a mapping row means by a path: the declaration says where a value lives,
+    /// and repetition is handled by the caller iterating a level explicitly.
+    ///
+    /// @param path e.g. `GrpHdr/InitgPty/Nm`
+    /// @return the element, or empty if any step is missing
     public Optional<XmlElement> at(String path) {
         XmlElement current = this;
         for (String step : path.split("/")) {
@@ -147,12 +128,10 @@ public final class XmlElement {
         return Optional.of(current);
     }
 
-    /**
-     * The text at a path.
-     *
-     * @param path e.g. {@code GrpHdr/InitgPty/Nm}
-     * @return the text, or empty if the path is missing
-     */
+    /// The text at a path.
+    ///
+    /// @param path e.g. `GrpHdr/InitgPty/Nm`
+    /// @return the text, or empty if the path is missing
     public Optional<String> textAt(String path) {
         return at(path).map(XmlElement::text).filter(value -> !value.isEmpty());
     }
@@ -182,7 +161,7 @@ public final class XmlElement {
                 : "<" + name + "> (" + children.size() + " children)";
     }
 
-    /** Assembles an element. */
+    /// Assembles an element.
     public static final class Builder {
         private final String name;
         private String namespace = "";
@@ -194,73 +173,61 @@ public final class XmlElement {
             this.name = Objects.requireNonNull(name, "name");
         }
 
-        /**
-         * Declares the element's namespace.
-         *
-         * @param uri the namespace URI
-         * @return this builder
-         */
+        /// Declares the element's namespace.
+        ///
+        /// @param uri the namespace URI
+        /// @return this builder
         public Builder namespace(String uri) {
             this.namespace = Objects.requireNonNull(uri, "uri");
             return this;
         }
 
-        /**
-         * Sets an attribute.
-         *
-         * @param attributeName the name
-         * @param value         the value
-         * @return this builder
-         */
+        /// Sets an attribute.
+        ///
+        /// @param attributeName the name
+        /// @param value         the value
+        /// @return this builder
         public Builder attribute(String attributeName, String value) {
             attributes.put(Objects.requireNonNull(attributeName, "attributeName"),
                     Objects.requireNonNull(value, "value"));
             return this;
         }
 
-        /**
-         * Sets the character content.
-         *
-         * @param value the text
-         * @return this builder
-         */
+        /// Sets the character content.
+        ///
+        /// @param value the text
+        /// @return this builder
         public Builder text(String value) {
             this.text = Objects.requireNonNull(value, "value");
             return this;
         }
 
-        /**
-         * Appends a child.
-         *
-         * @param child the child
-         * @return this builder
-         */
+        /// Appends a child.
+        ///
+        /// @param child the child
+        /// @return this builder
         public Builder child(XmlElement child) {
             children.add(Objects.requireNonNull(child, "child"));
             return this;
         }
 
-        /**
-         * Appends a child.
-         *
-         * @param child the child's builder
-         * @return this builder
-         */
+        /// Appends a child.
+        ///
+        /// @param child the child's builder
+        /// @return this builder
         public Builder child(Builder child) {
             return child(child.build());
         }
 
-        /**
-         * Appends a text child when there is a value to write.
-         *
-         * <p>An ISO 20022 element that would be empty must be absent instead —
-         * the schema's minimum occurrence is what makes {@code <Nm></Nm>} invalid
-         * rather than merely unhelpful.
-         *
-         * @param childName the child's local name
-         * @param value     the text, or null or blank to write nothing
-         * @return this builder
-         */
+        /// Appends a text child when there is a value to write.
+        ///
+        /// An ISO 20022 element that would be empty must be absent instead —
+        /// the schema's minimum occurrence is what makes `<Nm></Nm>` invalid
+        /// rather than merely unhelpful.
+        ///
+        /// @param childName the child's local name
+        /// @param value     the text, or null or blank to write nothing
+        /// @return this builder
         public Builder textChild(String childName, String value) {
             if (value != null && !value.isBlank()) {
                 children.add(XmlElement.text(childName, value));
@@ -268,43 +235,37 @@ public final class XmlElement {
             return this;
         }
 
-        /**
-         * Appends a child when it is present.
-         *
-         * @param child the child, or empty to write nothing
-         * @return this builder
-         */
+        /// Appends a child when it is present.
+        ///
+        /// @param child the child, or empty to write nothing
+        /// @return this builder
         public Builder childIfPresent(Optional<XmlElement> child) {
             child.ifPresent(children::add);
             return this;
         }
 
-        /** @return true if nothing has been added */
+        /// @return true if nothing has been added
         public boolean isEmpty() {
             return text.isEmpty() && children.isEmpty() && attributes.isEmpty();
         }
 
-        /**
-         * Whether a child has been appended.
-         *
-         * <p>The parser asks, so that mixed content in <em>input</em> becomes a
-         * {@link MalformedXmlException} rather than the
-         * {@link IllegalStateException} {@link #build()} raises. Both refuse the
-         * same shape, and they are refusing different things: one is a document
-         * this library cannot represent, the other is a mapping mistake.
-         *
-         * @return true if this element has children
-         */
+        /// Whether a child has been appended.
+        ///
+        /// The parser asks, so that mixed content in *input* becomes a
+        /// [MalformedXmlException] rather than the
+        /// [IllegalStateException] [#build()] raises. Both refuse the
+        /// same shape, and they are refusing different things: one is a document
+        /// this library cannot represent, the other is a mapping mistake.
+        ///
+        /// @return true if this element has children
         boolean hasChildren() {
             return !children.isEmpty();
         }
 
-        /**
-         * Builds the element.
-         *
-         * @return the element
-         * @throws IllegalStateException if it carries both text and children
-         */
+        /// Builds the element.
+        ///
+        /// @return the element
+        /// @throws IllegalStateException if it carries both text and children
         public XmlElement build() {
             if (!text.isEmpty() && !children.isEmpty()) {
                 throw new IllegalStateException(name + " has both text and child elements. "
@@ -318,14 +279,12 @@ public final class XmlElement {
         }
     }
 
-    /**
-     * This element and its descendants, in a namespace they did not declare.
-     *
-     * <p>A default namespace applies to every element below it, so a child that
-     * declares none is genuinely <em>in</em> its parent's namespace — that is
-     * what a parser reports, and a tree built by hand has to agree or the two
-     * will not compare equal despite serialising to the same bytes.
-     */
+    /// This element and its descendants, in a namespace they did not declare.
+    ///
+    /// A default namespace applies to every element below it, so a child that
+    /// declares none is genuinely *in* its parent's namespace — that is
+    /// what a parser reports, and a tree built by hand has to agree or the two
+    /// will not compare equal despite serialising to the same bytes.
     private XmlElement inNamespace(String uri) {
         if (!namespace.isEmpty()) {
             return this;

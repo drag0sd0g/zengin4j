@@ -1,5 +1,6 @@
 package io.zengin4j.core.model;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.charset.CodeKubun;
@@ -14,14 +15,9 @@ import io.zengin4j.core.model.generated.SougouFurikomiEnd;
 import io.zengin4j.core.model.generated.SougouFurikomiHeader;
 import io.zengin4j.core.model.generated.SougouFurikomiTrailer;
 import io.zengin4j.core.testing.Fixtures;
-import java.io.ByteArrayInputStream;
-import java.time.MonthDay;
-import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
-/**
- * R-F3, R-M8, R-D1: the committed, format-shaped record types.
- */
+/// R-F3, R-M8, R-D1: the committed, format-shaped record types.
 class GeneratedRecordsTest {
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
@@ -37,7 +33,7 @@ class GeneratedRecordsTest {
         assertThat(file.endRecord()).get().isInstanceOf(SougouFurikomiEnd.class);
     }
 
-    /** R-D1: the record carries exactly its own fields, in its own order. */
+    /// R-D1: the record carries exactly its own fields, in its own order.
     @Test
     void exposesTheFieldsTheRecordActuallyHas() {
         SougouFurikomiData data = (SougouFurikomiData) read(Fixtures.file(descriptor))
@@ -63,7 +59,7 @@ class GeneratedRecordsTest {
         assertThat(data.formatId()).isEqualTo(SougouFurikomiData.FORMAT_ID);
     }
 
-    /** The generated offset constants must agree with the descriptor they came from. */
+    /// The generated offset constants must agree with the descriptor they came from.
     @Test
     void publishesOffsetsThatMatchTheDescriptor() {
         var data = descriptor.record(io.zengin4j.core.format.RecordKind.DATA);
@@ -105,7 +101,7 @@ class GeneratedRecordsTest {
         assertThat(new String(end.filler(), java.nio.charset.StandardCharsets.US_ASCII)).isBlank();
     }
 
-    /** R-D5: the raw bytes survive, filler included. */
+    /// R-D5: the raw bytes survive, filler included.
     @Test
     void retainsTheRawBytes() {
         byte[] expected = Fixtures.data(descriptor);
@@ -136,7 +132,7 @@ class GeneratedRecordsTest {
         assertThat(first).isNotEqualTo("not a record");
     }
 
-    /** R-E6: an account number does not appear in full in a log line. */
+    /// R-E6: an account number does not appear in full in a log line.
     @Test
     void masksAccountNumbersInToString() {
         SougouFurikomiData data = (SougouFurikomiData) read(Fixtures.file(descriptor)).allData().get(0);
@@ -158,7 +154,7 @@ class GeneratedRecordsTest {
         assertThat(GeneratedRecords.forFormat(FormatId.of("not-generated"))).isEmpty();
     }
 
-    /** A descriptor registered at runtime has no generated code and falls back. */
+    /// A descriptor registered at runtime has no generated code and falls back.
     @Test
     void fallsBackToDescriptorDrivenRecordsForRuntimeFormats() {
         FormatDescriptor variant = Fixtures.renamed(descriptor, "runtime-variant");

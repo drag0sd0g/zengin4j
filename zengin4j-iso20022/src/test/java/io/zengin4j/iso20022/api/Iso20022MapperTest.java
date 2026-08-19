@@ -1,5 +1,6 @@
 package io.zengin4j.iso20022.api;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
@@ -33,24 +34,14 @@ import io.zengin4j.iso20022.pain001.RemittanceInformation;
 import io.zengin4j.iso20022.xml.XmlElement;
 import io.zengin4j.testkit.FormatFixtures;
 import io.zengin4j.testkit.SyntheticRecords;
-import java.io.ByteArrayInputStream;
-import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * What the conversion does, and what it refuses to do quietly.
- *
- * <p>Organised around the requirements rather than the code, because the
- * requirements are the interesting part: the loss report is inescapable
- * (R-I14), a critical loss stops the conversion, the context is mandatory on
- * the way down (R-I20), and the version is pinned (R-I3).
- */
+/// What the conversion does, and what it refuses to do quietly.
+///
+/// Organised around the requirements rather than the code, because the
+/// requirements are the interesting part: the loss report is inescapable
+/// (R-I14), a critical loss stops the conversion, the context is mandatory on
+/// the way down (R-I20), and the version is pinned (R-I3).
 class Iso20022MapperTest {
 
     private static final FormatId FORMAT = FormatId.of("sougou-furikomi");
@@ -98,7 +89,7 @@ class Iso20022MapperTest {
                 document.toXml()));
     }
 
-    /** The first payment, as the format-shaped record it is. */
+    /// The first payment, as the format-shaped record it is.
     private static SougouFurikomiData onlyPayment(ZenginFile file) {
         return (SougouFurikomiData) file.allData().get(0);
     }
@@ -111,14 +102,12 @@ class Iso20022MapperTest {
 
     // ------------------------------------------------------------------ R-I14
 
-    /**
-     * There is no way to get converted output without its loss report.
-     *
-     * <p>Checked structurally rather than by reading the code: a method added
-     * later that returns a {@code ZediFile} or a {@code ZenginFile} on its own
-     * would defeat the requirement, and it is exactly the sort of convenience
-     * somebody adds in good faith.
-     */
+    /// There is no way to get converted output without its loss report.
+    ///
+    /// Checked structurally rather than by reading the code: a method added
+    /// later that returns a `ZediFile` or a `ZenginFile` on its own
+    /// would defeat the requirement, and it is exactly the sort of convenience
+    /// somebody adds in good faith.
     @Test
     void noPublicMethodHandsBackOutputWithoutItsLossReport() {
         List<String> offenders = Arrays.stream(Iso20022Mapper.class.getMethods())
@@ -153,13 +142,11 @@ class Iso20022MapperTest {
 
     // ------------------------------------------------- refusing on real damage
 
-    /**
-     * A critical loss stops the conversion by default.
-     *
-     * <p>The trailer here says one payment and the batch holds two, which means
-     * neither number can be trusted. Returning that quietly and hoping somebody
-     * reads the report is not good enough for a file that moves money.
-     */
+    /// A critical loss stops the conversion by default.
+    ///
+    /// The trailer here says one payment and the batch holds two, which means
+    /// neither number can be trusted. Returning that quietly and hoping somebody
+    /// reads the report is not good enough for a file that moves money.
     @Test
     void aTrailerThatDisagreesWithItsOwnPaymentsStopsTheConversion() {
         FormatFixtures fixtures = fixtures();
@@ -243,10 +230,8 @@ class Iso20022MapperTest {
                 });
     }
 
-    /**
-     * A name in kanji has no automatic reading, so it is refused rather than
-     * guessed.
-     */
+    /// A name in kanji has no automatic reading, so it is refused rather than
+    /// guessed.
     @Test
     void aKanjiNameIsRefusedRatherThanGuessedAt() {
         MappingResult<ZenginFile> result = Iso20022Mapper.create().toZengin(
@@ -345,10 +330,8 @@ class Iso20022MapperTest {
         assertThat(onlyPayment(result.output()).customerCode2().trim()).isEmpty();
     }
 
-    /**
-     * 識別表示 = Y means the two customer codes are one C(20) 金融EDI情報 field
-     * rather than two codes (OQ-8).
-     */
+    /// 識別表示 = Y means the two customer codes are one C(20) 金融EDI情報 field
+    /// rather than two codes (OQ-8).
     @Test
     void anEdiOverlayIsReadAsOneFieldRatherThanTwoCustomerCodes() {
         FormatFixtures fixtures = fixtures();
@@ -387,7 +370,7 @@ class Iso20022MapperTest {
         assertThat(report.toText()).contains("TRANSLITERATED");
     }
 
-    /** A dry run shows the loss even when the loss would stop a conversion. */
+    /// A dry run shows the loss even when the loss would stop a conversion.
     @Test
     void aDryRunDoesNotRefuse() {
         FormatFixtures fixtures = fixtures();
@@ -417,13 +400,11 @@ class Iso20022MapperTest {
         assertThat(round.isLossless()).isFalse();
     }
 
-    /**
-     * And it is not bijective, which is the point.
-     *
-     * <p>The fixture carries a branch name and a 振込指定区分 that the mapping
-     * declares dropped, so the file that comes back is not the file that went
-     * out — and every difference has a line in the report.
-     */
+    /// And it is not bijective, which is the point.
+    ///
+    /// The fixture carries a branch name and a 振込指定区分 that the mapping
+    /// declares dropped, so the file that comes back is not the file that went
+    /// out — and every difference has a line in the report.
     @Test
     void aRoundTripIsNotByteIdenticalAndSaysWhy() {
         RoundTripResult round =
@@ -527,14 +508,12 @@ class Iso20022MapperTest {
 
     // ----------------------------------------------------------- determinism
 
-    /**
-     * The same file converts to the same bytes, twice.
-     *
-     * <p>Only true because {@code CreDtTm} and {@code MsgId} default to
-     * something derived from the reference date rather than from the clock. A
-     * conversion that embedded {@code Instant.now()} would make golden files
-     * impossible and diffs useless.
-     */
+    /// The same file converts to the same bytes, twice.
+    ///
+    /// Only true because `CreDtTm` and `MsgId` default to
+    /// something derived from the reference date rather than from the clock. A
+    /// conversion that embedded `Instant.now()` would make golden files
+    /// impossible and diffs useless.
     @Test
     void convertingTheSameFileTwiceProducesTheSameBytes() {
         ZenginFile file = fileWith(fixtures().data());

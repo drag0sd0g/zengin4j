@@ -1,5 +1,6 @@
 package io.zengin4j.core.kana;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.charset.CharacterClass;
@@ -7,26 +8,22 @@ import io.zengin4j.core.charset.CharacterSet;
 import io.zengin4j.core.charset.VoicingMarks;
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.testing.Seeded;
-import java.util.List;
-import java.util.Random;
 import org.junit.jupiter.api.Test;
 
-/**
- * INV-4, over generated names rather than chosen ones.
- *
- * <p>{@code TruncationTest} walks a hand-built corpus at every length, which
- * covers the cases somebody thought of. This covers the ones nobody did: names
- * assembled at random from voiced, semi-voiced and plain kana, truncated to
- * random widths, thousands of times.
- *
- * <p>The seed is fixed. A property test that flakes on a schedule teaches the
- * team to re-run CI, which is worse than not having it.
- */
+/// INV-4, over generated names rather than chosen ones.
+///
+/// `TruncationTest` walks a hand-built corpus at every length, which
+/// covers the cases somebody thought of. This covers the ones nobody did: names
+/// assembled at random from voiced, semi-voiced and plain kana, truncated to
+/// random widths, thousands of times.
+///
+/// The seed is fixed. A property test that flakes on a schedule teaches the
+/// team to re-run CI, which is worse than not having it.
 class KanaProperties {
 
     private static final long SEED = 0x4E4A_2026L;
 
-    /** Kana chosen so roughly half of any generated name carries a voicing mark. */
+    /// Kana chosen so roughly half of any generated name carries a voicing mark.
     private static final List<String> SYLLABLES = List.of(
             "ガ", "ギ", "グ", "ゲ", "ゴ", "ザ", "ジ", "ズ", "ダ", "ヂ", "バ", "ビ", "ブ",
             "パ", "ピ", "プ", "ペ", "ポ", "ヴ",
@@ -49,10 +46,8 @@ class KanaProperties {
         return new Case(text, bytes, 1 + random.nextInt(bytes.length + 2));
     }
 
-    /**
-     * INV-4 — {@code truncateSafe(toHalfWidth(s), n)} never ends with an
-     * orphaned voicing mark and never begins with one.
-     */
+    /// INV-4 — `truncateSafe(toHalfWidth(s), n)` never ends with an
+    /// orphaned voicing mark and never begins with one.
     @Test
     void inv4_truncationNeverStrandsAVoicingMark() {
         Seeded.property("INV-4: no stranded voicing mark", 2000, SEED,
@@ -80,7 +75,7 @@ class KanaProperties {
                 });
     }
 
-    /** Truncation removes from the end and never rewrites what it keeps. */
+    /// Truncation removes from the end and never rewrites what it keeps.
     @Test
     void truncationOnlyEverShortens() {
         Seeded.property("truncation is a prefix", 2000, SEED,
@@ -103,13 +98,11 @@ class KanaProperties {
                 });
     }
 
-    /**
-     * Whatever comes out is writable into the field it was converted for.
-     *
-     * <p>The claim that makes the engine useful: a caller who transliterates for
-     * a field and then writes the result should never be told by this library's
-     * own validator that the result is invalid.
-     */
+    /// Whatever comes out is writable into the field it was converted for.
+    ///
+    /// The claim that makes the engine useful: a caller who transliterates for
+    /// a field and then writes the result should never be told by this library's
+    /// own validator that the result is invalid.
     @Test
     void everythingProducedIsWritableIntoTheFieldItWasMadeFor() {
         for (CharacterClass characterClass : List.of(CharacterClass.PARTY_NAME,
@@ -135,7 +128,7 @@ class KanaProperties {
         }
     }
 
-    /** And it stays writable after being cut to length. */
+    /// And it stays writable after being cut to length.
     @Test
     void truncatedOutputIsStillWritable() {
         TransliterationOptions options = TransliterationOptions.builder()
@@ -167,14 +160,12 @@ class KanaProperties {
                 });
     }
 
-    /**
-     * Narrowing then widening returns the name it started from.
-     *
-     * <p>Only claimed for kana, and only in that direction: several full-width
-     * characters narrow to the same half-width sequence, so the other way round
-     * is informational (R-K8). For the kana in these names it is exact, and that
-     * is worth pinning — a decomposition that lost a mark would show up here.
-     */
+    /// Narrowing then widening returns the name it started from.
+    ///
+    /// Only claimed for kana, and only in that direction: several full-width
+    /// characters narrow to the same half-width sequence, so the other way round
+    /// is informational (R-K8). For the kana in these names it is exact, and that
+    /// is worth pinning — a decomposition that lost a mark would show up here.
     @Test
     void kanaSurviveNarrowingAndWideningUnchanged() {
         Seeded.property("kana round trip", 2000, SEED,
@@ -190,7 +181,7 @@ class KanaProperties {
                 });
     }
 
-    /** Transliteration is deterministic: the same input always gives the same bytes. */
+    /// Transliteration is deterministic: the same input always gives the same bytes.
     @Test
     void transliterationIsDeterministic() {
         Seeded.property("determinism", 1000, SEED,

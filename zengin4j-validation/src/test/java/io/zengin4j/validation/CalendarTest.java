@@ -1,5 +1,6 @@
 package io.zengin4j.validation;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -12,28 +13,22 @@ import io.zengin4j.validation.api.ValidationReport;
 import io.zengin4j.validation.calendar.BeyondCalendarHorizonException;
 import io.zengin4j.validation.calendar.JapaneseBankCalendar;
 import io.zengin4j.validation.calendar.NonBusinessDay;
-import java.time.LocalDate;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * The business calendar (R-V6, R-V7) and the {@code V-5xx} rules.
- *
- * <p>The dates asserted here are the ones a formula gets wrong. The equinoxes
- * move, the substitute holidays depend on which weekday a fixed holiday fell
- * on, and 2 January is closed without being a holiday at all.
- */
+/// The business calendar (R-V6, R-V7) and the `V-5xx` rules.
+///
+/// The dates asserted here are the ones a formula gets wrong. The equinoxes
+/// move, the substitute holidays depend on which weekday a fixed holiday fell
+/// on, and 2 January is closed without being a holiday at all.
 class CalendarTest {
 
     private final JapaneseBankCalendar calendar = JapaneseBankCalendar.bundled();
 
     // ------------------------------------------------------------ the data
 
-    /**
-     * The two holidays no algorithm should be trusted with. Their dates come
-     * from an astronomical determination the Cabinet Office publishes in
-     * February of the preceding year.
-     */
+    /// The two holidays no algorithm should be trusted with. Their dates come
+    /// from an astronomical determination the Cabinet Office publishes in
+    /// February of the preceding year.
     @Test
     void knowsTheMovingEquinoxHolidays() {
         assertThat(calendar.holidayName(LocalDate.of(2026, 3, 20))).contains("春分の日");
@@ -46,7 +41,7 @@ class CalendarTest {
                 .isNotEqualTo(LocalDate.of(2027, 3, 21).getDayOfMonth());
     }
 
-    /** 振替休日: 2027-03-21 is a Sunday, so the Monday after is closed too. */
+    /// 振替休日: 2027-03-21 is a Sunday, so the Monday after is closed too.
     @Test
     void knowsSubstituteHolidays() {
         assertThat(LocalDate.of(2027, 3, 21).getDayOfWeek())
@@ -57,7 +52,7 @@ class CalendarTest {
         assertThat(calendar.isBankBusinessDay(LocalDate.of(2027, 3, 22))).isFalse();
     }
 
-    /** 国民の休日: the weekday caught between two holidays. */
+    /// 国民の休日: the weekday caught between two holidays.
     @Test
     void knowsBridgeHolidays() {
         // 2026-09-21 敬老の日, 2026-09-23 秋分の日, so the 22nd is closed.
@@ -65,11 +60,9 @@ class CalendarTest {
                 .isEqualTo(NonBusinessDay.Kind.PUBLIC_HOLIDAY);
     }
 
-    /**
-     * The year-end closure. 2 and 3 January are not public holidays and
-     * financial institutions are shut anyway — which is the part a
-     * holidays-only calendar gets wrong.
-     */
+    /// The year-end closure. 2 and 3 January are not public holidays and
+    /// financial institutions are shut anyway — which is the part a
+    /// holidays-only calendar gets wrong.
     @Test
     void knowsTheYearEndClosureIsNotAHoliday() {
         assertThat(calendar.holidayName(LocalDate.of(2026, 1, 2)))
@@ -132,7 +125,7 @@ class CalendarTest {
                 .validate(Fixtures.read(file));
     }
 
-    /** A header whose 振込指定日 is the given month and day. */
+    /// A header whose 振込指定日 is the given month and day.
     private static byte[] KIT_HEADER(int month, int day) {
         byte[] header = Fixtures.TESTKIT.header();
         String mmdd = String.format("%02d%02d", month, day);
@@ -160,12 +153,10 @@ class CalendarTest {
                 assertThat(finding.messageEn()).contains("文化の日"));
     }
 
-    /**
-     * 2 January 2026 is a Friday — a working day by every ordinary measure, and
-     * closed. A calendar that only knew about weekends and public holidays
-     * would pass this date, which is the whole reason the closure is modelled
-     * separately.
-     */
+    /// 2 January 2026 is a Friday — a working day by every ordinary measure, and
+    /// closed. A calendar that only knew about weekends and public holidays
+    /// would pass this date, which is the whole reason the closure is modelled
+    /// separately.
     @Test
     void v503_reportsAValueDateInTheYearEndClosure() {
         assertThat(LocalDate.of(2026, 1, 2).getDayOfWeek())
@@ -194,7 +185,7 @@ class CalendarTest {
                 assertThat(finding.severity()).isEqualTo(Severity.WARNING));
     }
 
-    /** R-V1: past the horizon the rule reports, and validation still returns. */
+    /// R-V1: past the horizon the rule reports, and validation still returns.
     @Test
     void v505_reportsRatherThanThrowsPastTheHorizon() {
         LocalDate afterHorizon = calendar.validUntil().plusYears(1);
@@ -207,10 +198,8 @@ class CalendarTest {
         assertThat(report.findingsOf("V-501")).isEmpty();
     }
 
-    /**
-     * R-V3, on a composite rule. V-501 and V-502 come from one classification;
-     * suppressing the holiday finding must leave the weekend one working.
-     */
+    /// R-V3, on a composite rule. V-501 and V-502 come from one classification;
+    /// suppressing the holiday finding must leave the weekend one working.
     @Test
     void oneOfTheCalendarFindingsCanBeSuppressedWithoutTheOthers() {
         byte[] holiday = SyntheticRecords.file(
@@ -245,7 +234,7 @@ class CalendarTest {
                 .isNotEmpty();
     }
 
-    /** R-V6: with no calendar, no calendar findings — not unreliable ones. */
+    /// R-V6: with no calendar, no calendar findings — not unreliable ones.
     @Test
     void withoutACalendarNoCalendarRulesRun() {
         byte[] file = SyntheticRecords.file(

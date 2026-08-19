@@ -1,5 +1,6 @@
 package io.zengin4j.cli.command;
 
+import module java.base;
 import io.zengin4j.cli.ExitCode;
 import io.zengin4j.cli.internal.FieldRendering;
 import io.zengin4j.cli.internal.Json;
@@ -9,28 +10,20 @@ import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.ZenginRecord;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-/**
- * {@code zengin inspect} — shows what is actually in the bytes.
- *
- * <p>The tool to reach for when a file is rejected and the rejection notice
- * says something unhelpful. {@code --annotate} prints, for every field, where it
- * starts, what its bytes are, what they decode to, what the field is called in
- * both languages, and whether the value is one the field may hold (R-CLI5).
- *
- * <p><strong>Account numbers are masked unless {@code --unsafe-print} is
- * given</strong> (R-CLI4) — and so is their hex, because hex of an account
- * number is an account number to anyone who can read it.
- *
- * @since 0.3.0
- */
+/// `zengin inspect` — shows what is actually in the bytes.
+///
+/// The tool to reach for when a file is rejected and the rejection notice
+/// says something unhelpful. `--annotate` prints, for every field, where it
+/// starts, what its bytes are, what they decode to, what the field is called in
+/// both languages, and whether the value is one the field may hold (R-CLI5).
+///
+/// **Account numbers are masked unless `--unsafe-print` is
+/// given** (R-CLI4) — and so is their hex, because hex of an account
+/// number is an account number to anyone who can read it.
+///
+/// @since 0.3.0
 @CommandLine.Command(
         name = "inspect",
         mixinStandardHelpOptions = true,
@@ -102,7 +95,7 @@ public final class InspectCommand implements Callable<Integer> {
         return ExitCode.OK.value();
     }
 
-    /** Records in file order, narrowed to {@code --record} when given. */
+    /// Records in file order, narrowed to `--record` when given.
     private List<ZenginRecord> selected(ZenginFile parsed, PrintWriter err) {
         List<ZenginRecord> all = inOrder(parsed);
         if (record == null) {
@@ -169,13 +162,11 @@ public final class InspectCommand implements Callable<Integer> {
                 record.recordNumber(), record.kind(), record.byteOffset());
     }
 
-    /**
-     * The field table (R-CLI5).
-     *
-     * <p>Columns are sized to the widest value actually present rather than to
-     * a guess, because a table whose columns do not line up is harder to read
-     * than no table.
-     */
+    /// The field table (R-CLI5).
+    ///
+    /// Columns are sized to the widest value actually present rather than to
+    /// a guess, because a table whose columns do not line up is harder to read
+    /// than no table.
     private void annotate(PrintWriter out, ZenginFile parsed, ZenginRecord record) {
         byte[] bytes = record.rawBytes();
         RecordDescriptor layout = parsed.descriptor().forDiscriminator(bytes[0]).orElse(null);

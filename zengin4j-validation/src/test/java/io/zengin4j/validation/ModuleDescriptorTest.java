@@ -1,41 +1,28 @@
 package io.zengin4j.validation;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
-/**
- * {@code module-info.java} exports what consumers need.
- *
- * <p>A package left out of the descriptor is invisible on the module path and
- * perfectly visible on the class path, so nothing in an ordinary build notices:
- * the compiler is content, the tests pass, and the failure surfaces in a
- * modular consumer who cannot import the entry point. This module shipped
- * exactly that defect — every package exported but
- * {@code io.zengin4j.validation}, the one holding {@link ZenginValidator}.
- */
+/// `module-info.java` exports what consumers need.
+///
+/// A package left out of the descriptor is invisible on the module path and
+/// perfectly visible on the class path, so nothing in an ordinary build notices:
+/// the compiler is content, the tests pass, and the failure surfaces in a
+/// modular consumer who cannot import the entry point. This module shipped
+/// exactly that defect — every package exported but
+/// `io.zengin4j.validation`, the one holding [ZenginValidator].
 class ModuleDescriptorTest {
 
     private static final Pattern EXPORTS = Pattern.compile("^\\s*exports\\s+([\\w.]+)\\s*;",
             Pattern.MULTILINE);
 
-    /**
-     * Every module that publishes a descriptor.
-     *
-     * <p>Checked from here rather than from each module because the failure is
-     * the same everywhere and the check is worth having in one place. The build
-     * declares the sources as inputs so that editing one of them re-runs this.
-     */
+    /// Every module that publishes a descriptor.
+    ///
+    /// Checked from here rather than from each module because the failure is
+    /// the same everywhere and the check is worth having in one place. The build
+    /// declares the sources as inputs so that editing one of them re-runs this.
     private static final List<String> MODULES = List.of(
             "zengin4j-core", "zengin4j-validation", "zengin4j-testkit", "zengin4j-iso20022");
 
@@ -43,7 +30,7 @@ class ModuleDescriptorTest {
         return Path.of("..", module, "src", "main", "java");
     }
 
-    /** Packages declared in the module descriptor. */
+    /// Packages declared in the module descriptor.
     private static Set<String> exported(String module) throws IOException {
         String text = Files.readString(sourceRoot(module).resolve("module-info.java"),
                 StandardCharsets.UTF_8);
@@ -55,7 +42,7 @@ class ModuleDescriptorTest {
         return packages;
     }
 
-    /** Packages holding at least one public type, which is what a consumer can use. */
+    /// Packages holding at least one public type, which is what a consumer can use.
     private static Set<String> packagesWithPublicTypes(String module) throws IOException {
         Path root = sourceRoot(module);
         try (Stream<Path> files = Files.walk(root)) {

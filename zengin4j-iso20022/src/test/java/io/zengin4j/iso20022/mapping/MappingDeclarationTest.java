@@ -1,5 +1,6 @@
 package io.zengin4j.iso20022.mapping;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -15,28 +16,19 @@ import io.zengin4j.iso20022.api.MappingResult;
 import io.zengin4j.iso20022.envelope.MessageId;
 import io.zengin4j.iso20022.xml.XmlElement;
 import io.zengin4j.testkit.FormatFixtures;
-import java.io.ByteArrayInputStream;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/**
- * The declaration and the mapper say the same thing.
- *
- * <p>{@code mappings/*.yaml} is generated into {@code docs/mapping.md} and into
- * a constant table, and the whole point of declaring the mapping rather than
- * only implementing it is that R-I19 needs each row's verification status to be
- * <em>about something</em>. A row that documents an element the mapper never
- * writes is worse than no row: it is a claim in the reference page that a
- * reader has no way to check.
- *
- * <p>So this converts a real file and compares what came out against what was
- * declared, both ways. Neither side can drift without the build failing.
- */
+/// The declaration and the mapper say the same thing.
+///
+/// `mappings/*.yaml` is generated into `docs/mapping.md` and into
+/// a constant table, and the whole point of declaring the mapping rather than
+/// only implementing it is that R-I19 needs each row's verification status to be
+/// *about something*. A row that documents an element the mapper never
+/// writes is worse than no row: it is a claim in the reference page that a
+/// reader has no way to check.
+///
+/// So this converts a real file and compares what came out against what was
+/// declared, both ways. Neither side can drift without the build failing.
 class MappingDeclarationTest {
 
     private static final FormatId FORMAT = FormatId.of("sougou-furikomi");
@@ -58,7 +50,7 @@ class MappingDeclarationTest {
                 .onlyMessage().body();
     }
 
-    /** Every path in the emitted document, relative to {@code Document}. */
+    /// Every path in the emitted document, relative to `Document`.
     private static Set<String> emittedPaths() {
         Set<String> paths = new LinkedHashSet<>();
         collect(convert(), "", paths);
@@ -78,13 +70,11 @@ class MappingDeclarationTest {
 
     // ------------------------------------------------------- declaration side
 
-    /**
-     * Every declared element is actually written.
-     *
-     * <p>The fixture exercises every row, which is why it can be asserted
-     * exhaustively: a row that only fires for some inputs would need its own
-     * case rather than a weaker assertion here.
-     */
+    /// Every declared element is actually written.
+    ///
+    /// The fixture exercises every row, which is why it can be asserted
+    /// exhaustively: a row that only fires for some inputs would need its own
+    /// case rather than a weaker assertion here.
     @Test
     void everyDeclaredIsoElementIsEmitted() {
         Set<String> emitted = emittedPaths();
@@ -103,7 +93,7 @@ class MappingDeclarationTest {
                 .isEmpty();
     }
 
-    /** And nothing is written that was never declared. */
+    /// And nothing is written that was never declared.
     @Test
     void everyEmittedElementIsDeclared() {
         Set<String> declared = new LinkedHashSet<>(rows().stream()
@@ -122,21 +112,19 @@ class MappingDeclarationTest {
                 .isEmpty();
     }
 
-    /**
-     * Nothing in an inbound document disappears without a word.
-     *
-     * <p>The two tests above cover the upward leg: what the mapper writes is
-     * declared, and what is declared is written. The downward leg needs the
-     * mirror property, and it is the one that actually went wrong — an element
-     * can be read into the model, never used, and never reported, and no test
-     * of the outbound direction would notice. {@code PmtId/InstrId} was exactly
-     * that until this was written.
-     *
-     * <p>So: convert a document downward, and require every element in it to be
-     * accounted for one of three ways — carried into a Zengin field, declared
-     * as message metadata that only exists going the other way, or named in the
-     * loss report.
-     */
+    /// Nothing in an inbound document disappears without a word.
+    ///
+    /// The two tests above cover the upward leg: what the mapper writes is
+    /// declared, and what is declared is written. The downward leg needs the
+    /// mirror property, and it is the one that actually went wrong — an element
+    /// can be read into the model, never used, and never reported, and no test
+    /// of the outbound direction would notice. `PmtId/InstrId` was exactly
+    /// that until this was written.
+    ///
+    /// So: convert a document downward, and require every element in it to be
+    /// accounted for one of three ways — carried into a Zengin field, declared
+    /// as message metadata that only exists going the other way, or named in the
+    /// loss report.
     @Test
     void everyElementOfAnInboundDocumentIsCarriedOrReported() {
         FormatFixtures fixtures = FormatFixtures.forFormat(FORMAT);
@@ -187,7 +175,7 @@ class MappingDeclarationTest {
                 .isEmpty();
     }
 
-    /** A document carrying a value at every path the mapping declares. */
+    /// A document carrying a value at every path the mapping declares.
     private static XmlElement fullyPopulated() {
         FormatFixtures fixtures = FormatFixtures.forFormat(FORMAT);
         io.zengin4j.core.model.ZenginFile file = ZenginReaders.readFile(
@@ -213,18 +201,16 @@ class MappingDeclarationTest {
                 java.time.OffsetDateTime.parse("2026-09-01T00:00:00Z"));
     }
 
-    /**
-     * Every location a loss entry names can be looked up in the reference page.
-     *
-     * <p>A report saying {@code [CdtTrfTxInf/Cdtr/Nm]} is useless if
-     * {@code docs/mapping.md} calls the same element
-     * {@code CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/Nm} — a reader searching
-     * for one finds nothing, and concludes the mapping does not cover it. Both
-     * legs used the short form until this test was written.
-     *
-     * <p>Zengin-side references ({@code header.valueDate}) are checked the same
-     * way, against the declared field names.
-     */
+    /// Every location a loss entry names can be looked up in the reference page.
+    ///
+    /// A report saying `[CdtTrfTxInf/Cdtr/Nm]` is useless if
+    /// `docs/mapping.md` calls the same element
+    /// `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/Nm` — a reader searching
+    /// for one finds nothing, and concludes the mapping does not cover it. Both
+    /// legs used the short form until this test was written.
+    ///
+    /// Zengin-side references (`header.valueDate`) are checked the same
+    /// way, against the declared field names.
     @Test
     void everyLocationALossEntryNamesIsOneTheDeclarationUses() {
         FormatFixtures fixtures = FormatFixtures.forFormat(FORMAT);
@@ -257,7 +243,7 @@ class MappingDeclarationTest {
                 .isEmpty();
     }
 
-    /** Every source and target a conversion in either direction produces. */
+    /// Every source and target a conversion in either direction produces.
     private static Set<String> everyLocationReported(MappingContext context) {
         FormatFixtures fixtures = FormatFixtures.forFormat(FORMAT);
         io.zengin4j.core.model.ZenginFile file = ZenginReaders.readFile(
@@ -282,13 +268,11 @@ class MappingDeclarationTest {
 
     // ------------------------------------------------------------ Zengin side
 
-    /**
-     * Every declared field exists.
-     *
-     * <p>The codegen reader checks this at build time, which is where a typo
-     * should be caught. This checks it again against the compiled descriptor,
-     * because the two could in principle be built from different revisions.
-     */
+    /// Every declared field exists.
+    ///
+    /// The codegen reader checks this at build time, which is where a typo
+    /// should be caught. This checks it again against the compiled descriptor,
+    /// because the two could in principle be built from different revisions.
     @Test
     void everyDeclaredZenginFieldExists() {
         FormatDescriptor descriptor = FormatFixtures.forFormat(FORMAT).descriptor();
@@ -311,15 +295,13 @@ class MappingDeclarationTest {
         assertThat(missing).as("declared fields that the descriptor does not have").isEmpty();
     }
 
-    /**
-     * Every non-filler field is accounted for.
-     *
-     * <p>A field that is neither mapped nor explicitly dropped is a field
-     * nobody decided about — and the whole file gets converted regardless, so
-     * the decision was made by omission. Fillers and the record discriminators
-     * are excluded: they carry no payment information and mapping them would be
-     * noise.
-     */
+    /// Every non-filler field is accounted for.
+    ///
+    /// A field that is neither mapped nor explicitly dropped is a field
+    /// nobody decided about — and the whole file gets converted regardless, so
+    /// the decision was made by omission. Fillers and the record discriminators
+    /// are excluded: they carry no payment information and mapping them would be
+    /// noise.
     @Test
     void everyDataAndHeaderFieldIsEitherMappedOrExplicitlyDropped() {
         FormatDescriptor descriptor = FormatFixtures.forFormat(FORMAT).descriptor();
@@ -350,14 +332,12 @@ class MappingDeclarationTest {
 
     // ---------------------------------------------------------- R-I19 itself
 
-    /**
-     * No row claims to be verified.
-     *
-     * <p>Not a permanent property — the point of the flag is that it can change
-     * — but a row cannot become verified without somebody citing a source in
-     * {@code docs/SOURCES.md}, and this test failing is the prompt to do that
-     * rather than an obstacle to it.
-     */
+    /// No row claims to be verified.
+    ///
+    /// Not a permanent property — the point of the flag is that it can change
+    /// — but a row cannot become verified without somebody citing a source in
+    /// `docs/SOURCES.md`, and this test failing is the prompt to do that
+    /// rather than an obstacle to it.
     @Test
     void noRowClaimsVerificationItHasNotEarned() {
         List<String> claimed = rows().stream()
@@ -403,14 +383,12 @@ class MappingDeclarationTest {
                 .withMessageContaining("sougou-furikomi");
     }
 
-    /**
-     * R-X4 — the registry accepts overrides, and {@code Iso20022Mapper.using}
-     * has something to be given.
-     *
-     * <p>Until this existed, {@code using(MappingRegistry)} was a public method
-     * no caller outside this package could reach: the only obtainable instance
-     * was {@code defaults()}, which {@code create()} already returns.
-     */
+    /// R-X4 — the registry accepts overrides, and `Iso20022Mapper.using`
+    /// has something to be given.
+    ///
+    /// Until this existed, `using(MappingRegistry)` was a public method
+    /// no caller outside this package could reach: the only obtainable instance
+    /// was `defaults()`, which `create()` already returns.
     @Test
     void aRegistryAcceptsAMappingForAFormatOfYourOwn() {
         FormatId variant = FormatId.of("sougou-furikomi-house");
@@ -454,7 +432,7 @@ class MappingDeclarationTest {
                 .withMessageContaining("declares nothing");
     }
 
-    /** And the mapper actually uses the registry it was given. */
+    /// And the mapper actually uses the registry it was given.
     @Test
     void aMapperUsesTheRegistryItWasGiven() {
         FormatId variant = FormatId.of("sougou-furikomi-house");

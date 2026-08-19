@@ -1,41 +1,30 @@
 package io.zengin4j.codegen;
 
+import module java.base;
 import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.format.RecordKind;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.yaml.snakeyaml.Yaml;
 
-/**
- * Reads a declared Zengin ↔ ISO 20022 mapping.
- *
- * <p>Build-time only, like every reader here. The rows are compiled into
- * {@code zengin4j-iso20022} as Java, so nothing parses YAML at runtime
- * (ADR-0016), and {@code docs/mapping.md} comes from the same source rather
- * than being maintained beside it.
- *
- * <p>Every field name is checked against the descriptor it claims to come from.
- * A mapping row naming a field that does not exist is the failure this catches
- * — it would otherwise read perfectly and silently map nothing.
- */
+/// Reads a declared Zengin ↔ ISO 20022 mapping.
+///
+/// Build-time only, like every reader here. The rows are compiled into
+/// `zengin4j-iso20022` as Java, so nothing parses YAML at runtime
+/// (ADR-0016), and `docs/mapping.md` comes from the same source rather
+/// than being maintained beside it.
+///
+/// Every field name is checked against the descriptor it claims to come from.
+/// A mapping row naming a field that does not exist is the failure this catches
+/// — it would otherwise read perfectly and silently map nothing.
 final class MappingReader {
 
-    /** The whole declaration. */
+    /// The whole declaration.
     record Mapping(String id, String format, String message, boolean verified, String note,
             List<Row> rows) {
     }
 
-    /** One declared correspondence. */
+    /// One declared correspondence.
     record Row(String zenginField, String isoPath, String direction, boolean verified,
             String lossKind, String lossSeverity, String whyEn, String whyJa,
             List<String> sources) {
@@ -51,29 +40,25 @@ final class MappingReader {
 
     private static final String NONE = "-";
 
-    /**
-     * The same bar R-0.1 sets for a format descriptor, applied to a mapping row.
-     *
-     * <p>R-I19 says a row may be marked conformant only once it has been checked
-     * against published profile documentation. Without this, "checked" is a
-     * boolean somebody can flip, and the README's claim that the two-source bar
-     * is enforced rather than conventional would be true of descriptors and
-     * false here.
-     */
+    /// The same bar R-0.1 sets for a format descriptor, applied to a mapping row.
+    ///
+    /// R-I19 says a row may be marked conformant only once it has been checked
+    /// against published profile documentation. Without this, "checked" is a
+    /// boolean somebody can flip, and the README's claim that the two-source bar
+    /// is enforced rather than conventional would be true of descriptors and
+    /// false here.
     private static final int REQUIRED_SOURCES_FOR_VERIFICATION = 2;
 
     private MappingReader() {
     }
 
-    /**
-     * Reads a mapping declaration.
-     *
-     * @param file        the YAML file
-     * @param descriptors the descriptors a row's {@code zengin} field may name
-     * @return the mapping
-     * @throws CodegenException if the file is malformed, or a row names a field
-     *                          or record the descriptor does not have
-     */
+    /// Reads a mapping declaration.
+    ///
+    /// @param file        the YAML file
+    /// @param descriptors the descriptors a row's `zengin` field may name
+    /// @return the mapping
+    /// @throws CodegenException if the file is malformed, or a row names a field
+    ///   or record the descriptor does not have
     @SuppressWarnings("unchecked")
     static Mapping read(Path file, List<FormatDescriptor> descriptors) {
         String text;
@@ -176,16 +161,14 @@ final class MappingReader {
         return list.stream().map(Object::toString).map(String::trim).toList();
     }
 
-    /** The declarations write {@code "-"} where this model writes an empty string. */
+    /// The declarations write `"-"` where this model writes an empty string.
     private static String side(String declared) {
         return NONE.equals(declared) ? "" : declared;
     }
 
-    /**
-     * A row naming a field the descriptor does not have is the one mistake this
-     * file format makes easy: it is a typo that changes nothing visible, and the
-     * mapping quietly stops carrying a value.
-     */
+    /// A row naming a field the descriptor does not have is the one mistake this
+    /// file format makes easy: it is a typo that changes nothing visible, and the
+    /// mapping quietly stops carrying a value.
     private static void checkField(Path file, FormatDescriptor descriptor, String reference) {
         int dot = reference.indexOf('.');
         if (dot < 0) {

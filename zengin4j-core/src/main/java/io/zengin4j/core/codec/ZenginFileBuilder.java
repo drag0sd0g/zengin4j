@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import io.zengin4j.core.charset.ZenginCharset;
 import io.zengin4j.core.error.AmountOverflowException;
 import io.zengin4j.core.error.FormatDescriptorException;
@@ -18,50 +19,40 @@ import io.zengin4j.core.model.TrailerRecord;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.ZenginRecord;
 import io.zengin4j.core.time.MonthDays;
-import java.time.MonthDay;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Consumer;
 
-/**
- * Builds a {@link ZenginFile} from field values, computing the trailers.
- *
- * <pre>{@code
- * ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
- *         .header(h -> h.set("originatorCode", "9900000001")
- *                       .set("originatorName", "ﾃｽﾄｼﾖｳｼﾞ")
- *                       .set("valueDate", MonthDay.of(9, 30)))
- *         .payment(p -> p.set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ")
- *                        .set("amount", 150_000L))
- *         .build();
- * }</pre>
- *
- * <p>Each record is encoded to bytes as it is added, then materialised through
- * the same path a reader uses — so a built file is indistinguishable from a
- * read one, and carries the format-shaped generated types rather than a
- * parallel representation. That is what makes INV-2 mean something.
- *
- * <p><strong>Trailers are computed, not supplied.</strong> The record count and
- * total come from the data records actually added, so a file cannot be built
- * whose trailer disagrees with its contents by accident. It can be built that
- * way on purpose — {@link #trailer(Consumer)} overrides the computed values,
- * which is how you produce a fixture for a validation rule that has to catch
- * exactly that.
- *
- * <p>Fields are addressed by descriptor id rather than by typed setter. Typed,
- * generated builders would be a better public API and are not in this epic's
- * scope; the descriptor is the source of truth either way, and an unknown id
- * is rejected rather than ignored.
- *
- * <p><strong>Stateful and not thread-safe</strong> (R-T2). One builder per
- * thread, and one file per builder.
- *
- * @since 0.1.0
- */
+/// Builds a [ZenginFile] from field values, computing the trailers.
+///
+/// ```java
+/// ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+///         .header(h -> h.set("originatorCode", "9900000001")
+///                       .set("originatorName", "ﾃｽﾄｼﾖｳｼﾞ")
+///                       .set("valueDate", MonthDay.of(9, 30)))
+///         .payment(p -> p.set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ")
+///                        .set("amount", 150_000L))
+///         .build();
+/// ```
+///
+/// Each record is encoded to bytes as it is added, then materialised through
+/// the same path a reader uses — so a built file is indistinguishable from a
+/// read one, and carries the format-shaped generated types rather than a
+/// parallel representation. That is what makes INV-2 mean something.
+///
+/// **Trailers are computed, not supplied.** The record count and
+/// total come from the data records actually added, so a file cannot be built
+/// whose trailer disagrees with its contents by accident. It can be built that
+/// way on purpose — [#trailer(Consumer)] overrides the computed values,
+/// which is how you produce a fixture for a validation rule that has to catch
+/// exactly that.
+///
+/// Fields are addressed by descriptor id rather than by typed setter. Typed,
+/// generated builders would be a better public API and are not in this epic's
+/// scope; the descriptor is the source of truth either way, and an unknown id
+/// is rejected rather than ignored.
+///
+/// **Stateful and not thread-safe** (R-T2). One builder per
+/// thread, and one file per builder.
+///
+/// @since 0.1.0
 public final class ZenginFileBuilder {
 
     private final FormatDescriptor descriptor;
@@ -83,108 +74,96 @@ public final class ZenginFileBuilder {
         this.descriptor = Objects.requireNonNull(descriptor, "descriptor");
     }
 
-    /**
-     * Starts a builder for a format.
-     *
-     * @param descriptor the format to build
-     * @return a new builder
-     */
+    /// Starts a builder for a format.
+    ///
+    /// @param descriptor the format to build
+    /// @return a new builder
     public static ZenginFileBuilder forFormat(FormatDescriptor descriptor) {
         return new ZenginFileBuilder(descriptor);
     }
 
-    /**
-     * Permits building on a format whose byte layout is not verified.
-     *
-     * <p>Off by default, mirroring
-     * {@link ReaderOptions#allowUnverifiedFormats()} — and it matters more here
-     * than it does there. A wrong offset when reading puts wrong data in the
-     * caller's own system, where their reconciliation may catch it. A wrong
-     * offset when writing puts a wrong payment instruction in front of a bank,
-     * where nothing will.
-     *
-     * <p>The opt-in exists so that the decision to place real values at
-     * provisional offsets is written down in the caller's own code, where a
-     * reviewer sees it, rather than taken on their behalf.
-     *
-     * @param value whether to allow an unverified descriptor
-     * @return this builder
-     * @since 0.1.0
-     */
+    /// Permits building on a format whose byte layout is not verified.
+    ///
+    /// Off by default, mirroring
+    /// [ReaderOptions#allowUnverifiedFormats()] — and it matters more here
+    /// than it does there. A wrong offset when reading puts wrong data in the
+    /// caller's own system, where their reconciliation may catch it. A wrong
+    /// offset when writing puts a wrong payment instruction in front of a bank,
+    /// where nothing will.
+    ///
+    /// The opt-in exists so that the decision to place real values at
+    /// provisional offsets is written down in the caller's own code, where a
+    /// reviewer sees it, rather than taken on their behalf.
+    ///
+    /// @param value whether to allow an unverified descriptor
+    /// @return this builder
+    /// @since 0.1.0
     public ZenginFileBuilder allowUnverifiedFormats(boolean value) {
         this.allowUnverifiedFormats = value;
         return this;
     }
 
-    /**
-     * Sets the encoding text fields are written in.
-     *
-     * @param value the charset
-     * @return this builder
-     */
+    /// Sets the encoding text fields are written in.
+    ///
+    /// @param value the charset
+    /// @return this builder
     public ZenginFileBuilder charset(ZenginCharset value) {
         this.charset = Objects.requireNonNull(value, "charset");
         return this;
     }
 
-    /**
-     * Sets what to do with values a field cannot hold (R-C18).
-     *
-     * <p>Without this the builder refuses them, which is the right default and
-     * was for a while the only behaviour available: the policies existed on
-     * {@link RecordEncoder} and nothing reached them from here, so a caller who
-     * wanted transliteration had to assemble records by hand and give up the
-     * trailer arithmetic this class exists for.
-     *
-     * <p><strong>The collector is required, not optional.</strong> Every policy
-     * other than {@code REJECT} changes somebody's name to make it fit, and a
-     * caller who has chosen that should have to hold the account of what
-     * changed (P5). Passing one is the smallest way to make that deliberate.
-     *
-     * <pre>{@code
-     * LossCollector loss = new LossCollector();
-     * ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
-     *         .encoding(EncodingOptions.builder()
-     *                 .characters(CharacterWritePolicy.TRANSLITERATE)
-     *                 .build(), loss)
-     *         .payment(p -> p.set("beneficiaryName", "ガクブチ ジロウ"))
-     *         .build();
-     *
-     * loss.build().atLeast(LossSeverity.MATERIAL);   // whose name changed
-     * }</pre>
-     *
-     * @param options how to treat values the field cannot hold
-     * @param loss    collects everything the policy changes
-     * @return this builder
-     * @since 0.4.0
-     */
+    /// Sets what to do with values a field cannot hold (R-C18).
+    ///
+    /// Without this the builder refuses them, which is the right default and
+    /// was for a while the only behaviour available: the policies existed on
+    /// [RecordEncoder] and nothing reached them from here, so a caller who
+    /// wanted transliteration had to assemble records by hand and give up the
+    /// trailer arithmetic this class exists for.
+    ///
+    /// **The collector is required, not optional.** Every policy
+    /// other than `REJECT` changes somebody's name to make it fit, and a
+    /// caller who has chosen that should have to hold the account of what
+    /// changed (P5). Passing one is the smallest way to make that deliberate.
+    ///
+    /// ```java
+    /// LossCollector loss = new LossCollector();
+    /// ZenginFile file = ZenginFileBuilder.forFormat(descriptor)
+    ///         .encoding(EncodingOptions.builder()
+    ///                 .characters(CharacterWritePolicy.TRANSLITERATE)
+    ///                 .build(), loss)
+    ///         .payment(p -> p.set("beneficiaryName", "ガクブチ ジロウ"))
+    ///         .build();
+    ///
+    /// loss.build().atLeast(LossSeverity.MATERIAL);   // whose name changed
+    /// ```
+    ///
+    /// @param options how to treat values the field cannot hold
+    /// @param loss    collects everything the policy changes
+    /// @return this builder
+    /// @since 0.4.0
     public ZenginFileBuilder encoding(EncodingOptions options, LossCollector loss) {
         this.encodingOptions = Objects.requireNonNull(options, "options");
         this.loss = Objects.requireNonNull(loss, "loss");
         return this;
     }
 
-    /**
-     * Sets the framing the file records, which the writer reproduces.
-     *
-     * @param value the framing; {@link FileFraming#conventional()} by default
-     * @return this builder
-     */
+    /// Sets the framing the file records, which the writer reproduces.
+    ///
+    /// @param value the framing; [FileFraming#conventional()] by default
+    /// @return this builder
     public ZenginFileBuilder framing(FileFraming value) {
         this.framing = Objects.requireNonNull(value, "framing");
         return this;
     }
 
-    /**
-     * Opens a batch with a header record.
-     *
-     * <p>Calling this again closes the current batch and starts another, which
-     * the parser accepts even where a particular institution forbids it
-     * (R-C1).
-     *
-     * @param values sets the header's fields
-     * @return this builder
-     */
+    /// Opens a batch with a header record.
+    ///
+    /// Calling this again closes the current batch and starts another, which
+    /// the parser accepts even where a particular institution forbids it
+    /// (R-C1).
+    ///
+    /// @param values sets the header's fields
+    /// @return this builder
     public ZenginFileBuilder header(Consumer<FieldValues> values) {
         RecordDescriptor header = descriptor.record(RecordKind.HEADER);
         FieldValues collected = new FieldValues(header);
@@ -194,13 +173,11 @@ public final class ZenginFileBuilder {
         return this;
     }
 
-    /**
-     * Adds a data record to the current batch.
-     *
-     * @param values sets the record's fields
-     * @return this builder
-     * @throws IllegalStateException if no header has been added yet
-     */
+    /// Adds a data record to the current batch.
+    ///
+    /// @param values sets the record's fields
+    /// @return this builder
+    /// @throws IllegalStateException if no header has been added yet
     public ZenginFileBuilder payment(Consumer<FieldValues> values) {
         if (current == null) {
             throw new IllegalStateException("a data record must follow a header; call header(...) first");
@@ -211,17 +188,15 @@ public final class ZenginFileBuilder {
         return this;
     }
 
-    /**
-     * Overrides fields of the current batch's trailer.
-     *
-     * <p>The record count and total are computed from the data records; values
-     * set here replace them. Use it to build a file whose trailer deliberately
-     * disagrees with its contents.
-     *
-     * @param values sets the trailer's fields
-     * @return this builder
-     * @throws IllegalStateException if no header has been added yet
-     */
+    /// Overrides fields of the current batch's trailer.
+    ///
+    /// The record count and total are computed from the data records; values
+    /// set here replace them. Use it to build a file whose trailer deliberately
+    /// disagrees with its contents.
+    ///
+    /// @param values sets the trailer's fields
+    /// @return this builder
+    /// @throws IllegalStateException if no header has been added yet
     public ZenginFileBuilder trailer(Consumer<FieldValues> values) {
         if (current == null) {
             throw new IllegalStateException("a trailer must follow a header; call header(...) first");
@@ -232,12 +207,10 @@ public final class ZenginFileBuilder {
         return this;
     }
 
-    /**
-     * Overrides fields of the end record.
-     *
-     * @param values sets the end record's fields
-     * @return this builder
-     */
+    /// Overrides fields of the end record.
+    ///
+    /// @param values sets the end record's fields
+    /// @return this builder
     public ZenginFileBuilder endRecord(Consumer<FieldValues> values) {
         FieldValues collected = new FieldValues(descriptor.record(RecordKind.END));
         values.accept(collected);
@@ -245,21 +218,19 @@ public final class ZenginFileBuilder {
         return this;
     }
 
-    /**
-     * Builds the file.
-     *
-     * @return the materialised file, with computed trailers and an end record
-     *         if the format declares one
-     * @throws IllegalStateException      if no header was added
-     * @throws UnverifiedFormatException  if the format's byte layout is not
-     *                                    verified and
-     *                                    {@link #allowUnverifiedFormats(boolean)}
-     *                                    was not set
-     * @throws AmountOverflowException    if a batch's amounts do not fit a
-     *                                    {@code long} (R-D7)
-     * @throws FormatDescriptorException  if the format lacks a record kind the
-     *                                    build needs
-     */
+    /// Builds the file.
+    ///
+    /// @return the materialised file, with computed trailers and an end record
+    ///   if the format declares one
+    /// @throws IllegalStateException      if no header was added
+    /// @throws UnverifiedFormatException  if the format's byte layout is not
+    ///   verified and
+    ///   [#allowUnverifiedFormats(boolean)]
+    ///   was not set
+    /// @throws AmountOverflowException    if a batch's amounts do not fit a
+    ///   `long` (R-D7)
+    /// @throws FormatDescriptorException  if the format lacks a record kind the
+    ///   build needs
     public ZenginFile build() {
         if (batches.isEmpty()) {
             throw new IllegalStateException("a file needs at least one header record");
@@ -302,10 +273,8 @@ public final class ZenginFileBuilder {
         return new ZenginFile(descriptor, built, end, List.of(), framing);
     }
 
-    /**
-     * Computes 合計件数 and 合計金額 from the records actually present, then
-     * applies any explicit overrides.
-     */
+    /// Computes 合計件数 and 合計金額 from the records actually present, then
+    /// applies any explicit overrides.
     private Map<String, String> trailerValues(
             RecordDescriptor trailer, List<DataRecord> data, Map<String, String> overrides) {
 
@@ -339,7 +308,7 @@ public final class ZenginFileBuilder {
         return view.materialize();
     }
 
-    /** Assigns record numbers and the byte offsets the configured framing implies. */
+    /// Assigns record numbers and the byte offsets the configured framing implies.
     private static final class Cursor {
 
         private int number;
@@ -367,12 +336,10 @@ public final class ZenginFileBuilder {
         }
     }
 
-    /**
-     * Collects field values for one record, checking each id against the
-     * record's layout as it is set.
-     *
-     * @since 0.1.0
-     */
+    /// Collects field values for one record, checking each id against the
+    /// record's layout as it is set.
+    ///
+    /// @since 0.1.0
     public static final class FieldValues {
 
         private final RecordDescriptor descriptor;
@@ -382,28 +349,24 @@ public final class ZenginFileBuilder {
             this.descriptor = descriptor;
         }
 
-        /**
-         * Sets a field to text.
-         *
-         * @param fieldId the field id
-         * @param value   the value; padded to the field width on encoding
-         * @return this collector
-         * @throws FormatDescriptorException if the record has no such field
-         */
+        /// Sets a field to text.
+        ///
+        /// @param fieldId the field id
+        /// @param value   the value; padded to the field width on encoding
+        /// @return this collector
+        /// @throws FormatDescriptorException if the record has no such field
         public FieldValues set(String fieldId, String value) {
             requireField(fieldId);
             values.put(fieldId, Objects.requireNonNull(value, "value"));
             return this;
         }
 
-        /**
-         * Sets a numeric field, zero padded on the left to the field width.
-         *
-         * @param fieldId the field id
-         * @param value   the value; must not be negative
-         * @return this collector
-         * @throws IllegalArgumentException if the value is negative
-         */
+        /// Sets a numeric field, zero padded on the left to the field width.
+        ///
+        /// @param fieldId the field id
+        /// @param value   the value; must not be negative
+        /// @return this collector
+        /// @throws IllegalArgumentException if the value is negative
         public FieldValues set(String fieldId, long value) {
             if (value < 0) {
                 throw new IllegalArgumentException(
@@ -414,20 +377,18 @@ public final class ZenginFileBuilder {
             return this;
         }
 
-        /**
-         * Sets an {@code MMDD} field.
-         *
-         * @param fieldId the field id
-         * @param value   the month and day
-         * @return this collector
-         */
+        /// Sets an `MMDD` field.
+        ///
+        /// @param fieldId the field id
+        /// @param value   the month and day
+        /// @return this collector
         public FieldValues set(String fieldId, MonthDay value) {
             requireField(fieldId);
             values.put(fieldId, MonthDays.format(Objects.requireNonNull(value, "value")));
             return this;
         }
 
-        /** Exists to throw: a field id that is not in the layout is a mistake, not a new field. */
+        /// Exists to throw: a field id that is not in the layout is a mistake, not a new field.
         private void requireField(String fieldId) {
             descriptor.field(fieldId);
         }

@@ -1,5 +1,6 @@
 package io.zengin4j.iso20022.pain001;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -9,22 +10,14 @@ import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import io.zengin4j.iso20022.xml.XmlElement;
 import io.zengin4j.iso20022.xml.XmlParser;
 import io.zengin4j.iso20022.xml.XmlSerializer;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.Base64;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * The {@code pain.001} subset: what it writes, and that it reads back what it
- * wrote.
- *
- * <p>A hand-written message model earns its keep only if something checks it.
- * Two things do — this, which sends every element through a real parser and
- * back, and the opt-in XSD task for anyone who has the schemas.
- */
+/// The `pain.001` subset: what it writes, and that it reads back what it
+/// wrote.
+///
+/// A hand-written message model earns its keep only if something checks it.
+/// Two things do — this, which sends every element through a real parser and
+/// back, and the opt-in XSD task for anyone who has the schemas.
 class Pain001ModelTest {
 
     private static Pain001Document document() {
@@ -62,12 +55,10 @@ class Pain001ModelTest {
                 .isEqualTo("urn:iso:std:iso:20022:tech:xsd:pain.001.001.03");
     }
 
-    /**
-     * The counts are computed, never carried.
-     *
-     * <p>Same reasoning as the Zengin trailer: a header that can disagree with
-     * its own contents is a header somebody has to reconcile.
-     */
+    /// The counts are computed, never carried.
+    ///
+    /// Same reasoning as the Zengin trailer: a header that can disagree with
+    /// its own contents is a header somebody has to reconcile.
     @Test
     void countsAndSumsComeFromThePaymentsRatherThanFromTheHeader() {
         Pain001Document document = document();
@@ -139,10 +130,8 @@ class Pain001ModelTest {
         assertThat(RemittanceInformation.NONE.toXml()).isEmpty();
     }
 
-    /**
-     * Within 全銀システム a participant is an office, so the member id is 銀行番号
-     * followed by 支店番号 — seven digits, not four.
-     */
+    /// Within 全銀システム a participant is an office, so the member id is 銀行番号
+    /// followed by 支店番号 — seven digits, not four.
     @Test
     void anAgentNamesTheClearingSystemItsMemberIdBelongsTo() {
         XmlElement agent = new Agent("9999", "998", "").toXml("DbtrAgt").orElseThrow();
@@ -164,10 +153,8 @@ class Pain001ModelTest {
         assertThat(read.splitsCleanly()).isTrue();
     }
 
-    /**
-     * A member id of another shape is kept whole rather than cut somewhere
-     * arbitrary. The mapper reports it; the model only declines to guess.
-     */
+    /// A member id of another shape is kept whole rather than cut somewhere
+    /// arbitrary. The mapper reports it; the model only declines to guess.
     @Test
     void aMemberIdOfAnotherShapeIsKeptWholeRatherThanCutArbitrarily() {
         Agent read = Agent.from(XmlElement.element("CdtrAgt")
@@ -181,13 +168,11 @@ class Pain001ModelTest {
         assertThat(read.splitsCleanly()).isFalse();
     }
 
-    /**
-     * An absent agent is not a malformed one.
-     *
-     * <p>Reporting "this is not four digits plus three" for an element that was
-     * never there sends a reader looking for a defect in a value that does not
-     * exist.
-     */
+    /// An absent agent is not a malformed one.
+    ///
+    /// Reporting "this is not four digits plus three" for an element that was
+    /// never there sends a reader looking for a defect in a value that does not
+    /// exist.
     @Test
     void anAbsentAgentSplitsCleanlyByVacuity() {
         assertThat(new Agent("", "", "").splitsCleanly()).isTrue();
@@ -221,15 +206,13 @@ class Pain001ModelTest {
         assertThat(Money.from(broken)).isEmpty();
     }
 
-    /**
-     * Thirteen bytes of input, one {@code OutOfMemoryError}.
-     *
-     * <p>{@code xs:decimal} admits {@code 1e2000000000}. It parses in
-     * microseconds — {@code BigDecimal} keeps an unscaled value and a scale —
-     * and exhausts the heap the instant anything renders it in plain notation.
-     * That is a denial of service on a file somebody else wrote, in a module
-     * whose documentation says the input is assumed hostile.
-     */
+    /// Thirteen bytes of input, one `OutOfMemoryError`.
+    ///
+    /// `xs:decimal` admits `1e2000000000`. It parses in
+    /// microseconds — `BigDecimal` keeps an unscaled value and a scale —
+    /// and exhausts the heap the instant anything renders it in plain notation.
+    /// That is a denial of service on a file somebody else wrote, in a module
+    /// whose documentation says the input is assumed hostile.
     @Test
     void anAmountTooLargeToRenderIsRefusedBeforeAnythingRendersIt() {
         XmlElement enormous = XmlElement.element("Amt")
@@ -258,14 +241,12 @@ class Pain001ModelTest {
                 new Money(new BigDecimal("1".repeat(Money.MAX_INTEGER_DIGITS + 1)), "JPY"));
     }
 
-    /**
-     * An unreadable amount is not an amount of zero.
-     *
-     * <p>ISO 4217 defines {@code XXX} as "no currency involved", which is
-     * exactly what a figure nobody could read is. Using it means the case
-     * travels the path a foreign currency already travels, and is reported
-     * rather than silently becoming a payment for nothing.
-     */
+    /// An unreadable amount is not an amount of zero.
+    ///
+    /// ISO 4217 defines `XXX` as "no currency involved", which is
+    /// exactly what a figure nobody could read is. Using it means the case
+    /// travels the path a foreign currency already travels, and is reported
+    /// rather than silently becoming a payment for nothing.
     @Test
     void anUnreadableAmountIsMarkedRatherThanZeroed() {
         XmlElement transaction = XmlElement.element(CreditTransferTransaction.ELEMENT)
@@ -311,13 +292,11 @@ class Pain001ModelTest {
 
     // ------------------------------------------------------------ attachment
 
-    /**
-     * R-I12 — the exact encoding survives.
-     *
-     * <p>Two base64 encodings of the same bytes can differ in where the lines
-     * split and in padding, so re-encoding a decoded payload produces different
-     * XML for identical content. The lines are therefore stored verbatim.
-     */
+    /// R-I12 — the exact encoding survives.
+    ///
+    /// Two base64 encodings of the same bytes can differ in where the lines
+    /// split and in padding, so re-encoding a decoded payload produces different
+    /// XML for identical content. The lines are therefore stored verbatim.
     @Test
     void anAttachmentIsWrittenBackExactlyAsItArrived() {
         List<String> arrived = List.of(
@@ -361,7 +340,7 @@ class Pain001ModelTest {
         assertThat(attachment.decodedBytes()).isEqualTo(payload);
     }
 
-    /** Recognised by the transfer-encoding header, not by position. */
+    /// Recognised by the transfer-encoding header, not by position.
     @Test
     void anAttachmentIsRecognisedEvenWithUnusualHeaders() {
         EdiAttachment attachment = EdiAttachment.parse(List.of(

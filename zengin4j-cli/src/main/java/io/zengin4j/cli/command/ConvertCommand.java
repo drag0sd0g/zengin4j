@@ -1,5 +1,6 @@
 package io.zengin4j.cli.command;
 
+import module java.base;
 import io.zengin4j.cli.ExitCode;
 import io.zengin4j.core.codec.WriterOptions;
 import io.zengin4j.core.codec.ZenginReaders;
@@ -15,36 +16,27 @@ import io.zengin4j.iso20022.envelope.ZediEnvelopeReader;
 import io.zengin4j.iso20022.envelope.ZediEnvelopeWriter;
 import io.zengin4j.iso20022.envelope.ZediFile;
 import io.zengin4j.iso20022.loss.MappingLossReport;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Locale;
-import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-/**
- * {@code zengin convert} — a Zengin file becomes a {@code pain.001}, or back.
- *
- * <p>The loss report is always produced, whatever else happens. That is not a
- * stylistic choice: R-I14 makes the report inescapable in the library, and a
- * command that printed the converted file and swallowed the report would undo
- * that at the last step. There is no flag that turns it off — only
- * {@code --loss-out}, which says where it goes.
- *
- * <p>By default it goes to stderr, so
- * {@code zengin convert x.txt --to=pain.001 > out.xml} produces a usable file
- * and still tells you what it cost. The reader's own warnings go to stderr too,
- * which is fine for reading and no good for parsing — hence
- * {@code --loss-out=report.json}.
- *
- * <p>Exit status follows the same shape as {@code validate} (R-CLI1): 0 when
- * nothing was lost, 1 when something was, 2 when the conversion refused because
- * the loss could misroute money.
- *
- * @since 0.5.0
- */
+/// `zengin convert` — a Zengin file becomes a `pain.001`, or back.
+///
+/// The loss report is always produced, whatever else happens. That is not a
+/// stylistic choice: R-I14 makes the report inescapable in the library, and a
+/// command that printed the converted file and swallowed the report would undo
+/// that at the last step. There is no flag that turns it off — only
+/// `--loss-out`, which says where it goes.
+///
+/// By default it goes to stderr, so
+/// `zengin convert x.txt --to=pain.001 > out.xml` produces a usable file
+/// and still tells you what it cost. The reader's own warnings go to stderr too,
+/// which is fine for reading and no good for parsing — hence
+/// `--loss-out=report.json`.
+///
+/// Exit status follows the same shape as `validate` (R-CLI1): 0 when
+/// nothing was lost, 1 when something was, 2 when the conversion refused because
+/// the loss could misroute money.
+///
+/// @since 0.5.0
 @CommandLine.Command(
         name = "convert",
         mixinStandardHelpOptions = true,
@@ -52,7 +44,7 @@ import picocli.CommandLine;
                 + "the conversion loses.")
 public final class ConvertCommand implements Callable<Integer> {
 
-    /** What shell completion should offer for {@code --to}. */
+    /// What shell completion should offer for `--to`.
     static final class TargetCandidates extends java.util.ArrayList<String> {
         private static final long serialVersionUID = 1L;
 
@@ -61,18 +53,16 @@ public final class ConvertCommand implements Callable<Integer> {
         }
     }
 
-    /**
-     * Which direction to convert in.
-     *
-     * <p>Spelled as §27 spells it — {@code --to=pain.001}, not
-     * {@code --to=PAIN_001}. A message identifier has dots in it and an enum
-     * constant cannot, so the two are kept apart rather than the user being
-     * asked to learn a Java naming convention.
-     */
+    /// Which direction to convert in.
+    ///
+    /// Spelled as §27 spells it — `--to=pain.001`, not
+    /// `--to=PAIN_001`. A message identifier has dots in it and an enum
+    /// constant cannot, so the two are kept apart rather than the user being
+    /// asked to learn a Java naming convention.
     enum Target {
-        /** Zengin fixed-length to {@code pain.001.001.03}. */
+        /// Zengin fixed-length to `pain.001.001.03`.
         PAIN_001("pain.001"),
-        /** {@code pain.001.001.03} to Zengin fixed-length. */
+        /// `pain.001.001.03` to Zengin fixed-length.
         ZENGIN("zengin");
 
         private final String spelling;
@@ -97,7 +87,7 @@ public final class ConvertCommand implements Callable<Integer> {
         }
     }
 
-    /** Turns {@code pain.001} into a {@link Target}. */
+    /// Turns `pain.001` into a [Target].
     static final class TargetConverter implements CommandLine.ITypeConverter<Target> {
         @Override
         public Target convert(String value) {
@@ -219,14 +209,12 @@ public final class ConvertCommand implements Callable<Integer> {
         return finish(err, converted.loss());
     }
 
-    /**
-     * The report is written and the status says whether anything was lost.
-     *
-     * <p>Loss below the refusal threshold is exit 1 rather than 0. A pipeline
-     * that treats 1 as failure will stop on every conversion, which is roughly
-     * correct: this conversion is never lossless, and a team that wants it
-     * automated should have to say so.
-     */
+    /// The report is written and the status says whether anything was lost.
+    ///
+    /// Loss below the refusal threshold is exit 1 rather than 0. A pipeline
+    /// that treats 1 as failure will stop on every conversion, which is roughly
+    /// correct: this conversion is never lossless, and a team that wants it
+    /// automated should have to say so.
     private int finish(PrintWriter err, MappingLossReport loss) throws IOException {
         writeReport(err, loss);
         if (loss.hasAtLeast(LossSeverity.CRITICAL)) {
@@ -235,13 +223,11 @@ public final class ConvertCommand implements Callable<Integer> {
         return loss.isLossless() ? ExitCode.OK.value() : ExitCode.WARNINGS.value();
     }
 
-    /**
-     * stderr for a human, a file for a machine.
-     *
-     * <p>The reader's own warnings go to stderr as well, so a JSON report there
-     * is not parseable however carefully it is written. Rather than pretend
-     * otherwise, {@code --loss-out} gives the report a destination of its own.
-     */
+    /// stderr for a human, a file for a machine.
+    ///
+    /// The reader's own warnings go to stderr as well, so a JSON report there
+    /// is not parseable however carefully it is written. Rather than pretend
+    /// otherwise, `--loss-out` gives the report a destination of its own.
     private void writeReport(PrintWriter err, MappingLossReport loss) throws IOException {
         if (lossOut == null) {
             err.print(report(loss));

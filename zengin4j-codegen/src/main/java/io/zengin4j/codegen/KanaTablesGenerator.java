@@ -1,32 +1,25 @@
 package io.zengin4j.codegen;
 
-import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.text.Normalizer;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import module java.base;
 
-/**
- * Emits the transliteration tables as committed Java (R-K9).
- *
- * <p><strong>The mechanical correspondence is derived, not transcribed.</strong>
- * Unicode already defines which half-width form corresponds to which full-width
- * one, through the compatibility decompositions: normalising {@code ｶﾞ} under
- * NFKC yields {@code ガ}, so inverting that over the half-width block yields the
- * narrowing table complete with voiced decomposition. Writing those ~190 pairs
- * by hand would be the same error-prone transcription R-F2 forbids for byte
- * offsets, and a slip would be invisible — ｼ for ｿ reads as a plausible name.
- *
- * <p>What cannot be derived is which characters the standard's field rules
- * refuse and what to write instead. Those are declared in
- * {@code kana-substitutions.yaml} and merged in here.
- *
- * <p>The generator asserts its own output: every narrowed form must be a single
- * byte in JIS X 0201, and the table must have the expected cardinality. A JDK
- * whose Unicode data disagreed would fail the build rather than quietly emit a
- * different table on one leg of the CI matrix.
- */
+/// Emits the transliteration tables as committed Java (R-K9).
+///
+/// **The mechanical correspondence is derived, not transcribed.**
+/// Unicode already defines which half-width form corresponds to which full-width
+/// one, through the compatibility decompositions: normalising `ｶﾞ` under
+/// NFKC yields `ガ`, so inverting that over the half-width block yields the
+/// narrowing table complete with voiced decomposition. Writing those ~190 pairs
+/// by hand would be the same error-prone transcription R-F2 forbids for byte
+/// offsets, and a slip would be invisible — ｼ for ｿ reads as a plausible name.
+///
+/// What cannot be derived is which characters the standard's field rules
+/// refuse and what to write instead. Those are declared in
+/// `kana-substitutions.yaml` and merged in here.
+///
+/// The generator asserts its own output: every narrowed form must be a single
+/// byte in JIS X 0201, and the table must have the expected cardinality. A JDK
+/// whose Unicode data disagreed would fail the build rather than quietly emit a
+/// different table on one leg of the CI matrix.
 final class KanaTablesGenerator {
 
     static final String PACKAGE = "io.zengin4j.core.kana.generated";
@@ -34,32 +27,30 @@ final class KanaTablesGenerator {
 
     private static final String NL = "\n";
 
-    /** JIS X 0201 as Windows extends it — the encoding these files actually use. */
+    /// JIS X 0201 as Windows extends it — the encoding these files actually use.
     private static final Charset JIS = Charset.forName("windows-31j");
 
-    /** Half-width katakana and punctuation. */
+    /// Half-width katakana and punctuation.
     private static final char HALF_WIDTH_FIRST = 0xFF61;
     private static final char HALF_WIDTH_LAST = 0xFF9F;
 
-    /** Full-width ASCII forms. */
+    /// Full-width ASCII forms.
     private static final char FULL_WIDTH_ASCII_FIRST = 0xFF01;
     private static final char FULL_WIDTH_ASCII_LAST = 0xFF5E;
 
     private static final char DAKUTEN = 0xFF9E;
     private static final char HANDAKUTEN = 0xFF9F;
 
-    /** Hiragana and katakana run in parallel at this distance (R-K5). */
+    /// Hiragana and katakana run in parallel at this distance (R-K5).
     private static final int HIRAGANA_TO_KATAKANA = 0x60;
 
     private static final char HIRAGANA_FIRST = 0x3041;
     private static final char HIRAGANA_LAST = 0x3096;
 
-    /**
-     * What the derivation is expected to produce.
-     *
-     * <p>Pinned so that a change in the JDK's Unicode data is a build failure
-     * with a number in it, rather than a silently different table.
-     */
+    /// What the derivation is expected to produce.
+    ///
+    /// Pinned so that a change in the JDK's Unicode data is a build failure
+    /// with a number in it, rather than a silently different table.
     private static final int EXPECTED_NARROWING_ENTRIES = 186;
 
     private final Path javaRoot;
@@ -68,13 +59,11 @@ final class KanaTablesGenerator {
         this.javaRoot = javaRoot;
     }
 
-    /**
-     * Generates the tables.
-     *
-     * @param substitutions the declared judgement calls
-     * @param source        the file they came from, for the header
-     * @return the generated file
-     */
+    /// Generates the tables.
+    ///
+    /// @param substitutions the declared judgement calls
+    /// @param source        the file they came from, for the header
+    /// @return the generated file
     GeneratedFile generate(List<KanaSubstitutionReader.Substitution> substitutions, String source) {
         Map<String, String> narrowing = deriveNarrowing();
         verify(narrowing, substitutions);
@@ -91,19 +80,18 @@ final class KanaTablesGenerator {
         return new GeneratedFile(path, out.toString());
     }
 
-    /** The package's {@code package-info}. */
+    /// The package's `package-info`.
     GeneratedFile packageInfo() {
-        String content = "/**" + NL
-                + " * Transliteration tables, compiled from Unicode and from the declared" + NL
-                + " * substitutions." + NL
-                + " *" + NL
-                + " * <p>GENERATED and committed, never hand-edited (R-M8). The mechanical" + NL
-                + " * width correspondence is derived from Unicode's compatibility" + NL
-                + " * decompositions; the judgement calls come from" + NL
-                + " * {@code zengin4j-core/kana/kana-substitutions.yaml}." + NL
-                + " *" + NL
-                + " * @since 0.4.0" + NL
-                + " */" + NL
+        String content =
+                "/// Transliteration tables, compiled from Unicode and from the declared" + NL
+                + "/// substitutions." + NL
+                + "///" + NL
+                + "/// GENERATED and committed, never hand-edited (R-M8). The mechanical" + NL
+                + "/// width correspondence is derived from Unicode's compatibility" + NL
+                + "/// decompositions; the judgement calls come from" + NL
+                + "/// `zengin4j-core/kana/kana-substitutions.yaml`." + NL
+                + "///" + NL
+                + "/// @since 0.4.0" + NL
                 + "package " + PACKAGE + ";" + NL;
         Path path = javaRoot.resolve(PACKAGE.replace('.', '/')).resolve("package-info.java");
         return new GeneratedFile(path, content);
@@ -111,14 +99,12 @@ final class KanaTablesGenerator {
 
     // ------------------------------------------------------------- derivation
 
-    /**
-     * Full-width form to half-width sequence, derived from Unicode.
-     *
-     * <p>Two directions are needed because the compatibility data runs one way
-     * for each block: a full-width ASCII form normalises <em>to</em> its ASCII
-     * character, while a half-width kana normalises <em>to</em> its full-width
-     * one, so the kana table is the inverse of what NFKC gives.
-     */
+    /// Full-width form to half-width sequence, derived from Unicode.
+    ///
+    /// Two directions are needed because the compatibility data runs one way
+    /// for each block: a full-width ASCII form normalises *to* its ASCII
+    /// character, while a half-width kana normalises *to* its full-width
+    /// one, so the kana table is the inverse of what NFKC gives.
     private static Map<String, String> deriveNarrowing() {
         Map<String, String> narrowing = new LinkedHashMap<>();
 
@@ -146,9 +132,7 @@ final class KanaTablesGenerator {
         return narrowing;
     }
 
-    /**
-     * Fails the build rather than emitting a table that cannot be right.
-     */
+    /// Fails the build rather than emitting a table that cannot be right.
     private static void verify(Map<String, String> narrowing,
             List<KanaSubstitutionReader.Substitution> substitutions) {
 
@@ -191,27 +175,24 @@ final class KanaTablesGenerator {
 
     private void header(StringBuilder out, String source) {
         out.append("package ").append(PACKAGE).append(';').append(NL).append(NL)
+                .append("import module java.base;").append(NL)
                 .append("import io.zengin4j.core.annotation.Generated;").append(NL)
                 .append("import io.zengin4j.core.kana.KanaSubstitution;").append(NL)
-                .append("import io.zengin4j.core.loss.LossSeverity;").append(NL)
-                .append("import java.util.LinkedHashMap;").append(NL)
-                .append("import java.util.Map;").append(NL).append(NL)
-                .append("/**").append(NL)
-                .append(" * Transliteration tables (R-K9).").append(NL)
-                .append(" *").append(NL)
-                .append(" * <p>GENERATED by ").append(GENERATOR).append(" — do not edit.").append(NL)
-                .append(" *").append(NL)
-                .append(" * <p>The width correspondence is derived from Unicode's compatibility")
+                .append("import io.zengin4j.core.loss.LossSeverity;").append(NL).append(NL)
+                .append("/// Transliteration tables (R-K9).").append(NL)
+                .append("///").append(NL)
+                .append("/// GENERATED by ").append(GENERATOR).append(" — do not edit.").append(NL)
+                .append("///").append(NL)
+                .append("/// The width correspondence is derived from Unicode's compatibility")
                 .append(NL)
-                .append(" * decompositions rather than transcribed, so a slip of the kind that")
+                .append("/// decompositions rather than transcribed, so a slip of the kind that")
                 .append(NL)
-                .append(" * turns ｼ into ｿ cannot happen here. The substitutions below it are the")
+                .append("/// turns ｼ into ｿ cannot happen here. The substitutions below it are the")
                 .append(NL)
-                .append(" * judgement calls, declared in {@code ").append(source).append("}.")
+                .append("/// judgement calls, declared in {@code ").append(source).append("}.")
                 .append(NL)
-                .append(" *").append(NL)
-                .append(" * @since 0.4.0").append(NL)
-                .append(" */").append(NL)
+                .append("///").append(NL)
+                .append("/// @since 0.4.0").append(NL)
                 .append("@Generated(value = \"").append(GENERATOR)
                 .append("\", source = \"kana/kana-substitutions.yaml + Unicode NFKC\")").append(NL)
                 .append("public final class KanaTables {").append(NL).append(NL)
@@ -220,7 +201,7 @@ final class KanaTablesGenerator {
     }
 
     private void narrowTable(StringBuilder out, Map<String, String> narrowing) {
-        out.append("    /** Full-width form to its half-width sequence. */").append(NL)
+        out.append("    /// Full-width form to its half-width sequence.").append(NL)
                 .append("    private static final Map<String, String> NARROW = narrow();").append(NL)
                 .append(NL)
                 .append("    private static Map<String, String> narrow() {").append(NL)
@@ -231,13 +212,11 @@ final class KanaTablesGenerator {
                         .append(literal(half)).append(");").append(NL));
         out.append("        return Map.copyOf(table);").append(NL)
                 .append("    }").append(NL).append(NL)
-                .append("    /**").append(NL)
-                .append("     * The half-width sequence for a full-width character.").append(NL)
-                .append("     *").append(NL)
-                .append("     * @param character the character to narrow").append(NL)
-                .append("     * @return the half-width sequence, or {@code null} if there is none")
+                .append("    /// The half-width sequence for a full-width character.").append(NL)
+                .append("    ///").append(NL)
+                .append("    /// @param character the character to narrow").append(NL)
+                .append("    /// @return the half-width sequence, or `null` if there is none")
                 .append(NL)
-                .append("     */").append(NL)
                 .append("    public static String narrow(String character) {").append(NL)
                 .append("        return NARROW.get(character);").append(NL)
                 .append("    }").append(NL).append(NL);
@@ -247,15 +226,13 @@ final class KanaTablesGenerator {
         Map<String, String> widening = new LinkedHashMap<>();
         narrowing.forEach((full, half) -> widening.putIfAbsent(half, full));
 
-        out.append("    /**").append(NL)
-                .append("     * Half-width sequence back to its full-width form (R-K8).").append(NL)
-                .append("     *").append(NL)
-                .append("     * <p>The inverse of the table above, and not a perfect one: several")
+        out.append("    /// Half-width sequence back to its full-width form (R-K8).").append(NL)
+                .append("    ///").append(NL)
+                .append("    /// The inverse of the table above, and not a perfect one: several")
                 .append(NL)
-                .append("     * full-width characters narrow to the same half-width sequence, so")
+                .append("    /// full-width characters narrow to the same half-width sequence, so")
                 .append(NL)
-                .append("     * widening is informational rather than reversible.").append(NL)
-                .append("     */").append(NL)
+                .append("    /// widening is informational rather than reversible.").append(NL)
                 .append("    private static final Map<String, String> WIDEN = widen();").append(NL)
                 .append(NL)
                 .append("    private static Map<String, String> widen() {").append(NL)
@@ -266,15 +243,13 @@ final class KanaTablesGenerator {
                         .append(literal(full)).append(");").append(NL));
         out.append("        return Map.copyOf(table);").append(NL)
                 .append("    }").append(NL).append(NL)
-                .append("    /**").append(NL)
-                .append("     * The full-width form for a half-width sequence.").append(NL)
-                .append("     *").append(NL)
-                .append("     * @param sequence the half-width character, with its voicing mark")
+                .append("    /// The full-width form for a half-width sequence.").append(NL)
+                .append("    ///").append(NL)
+                .append("    /// @param sequence the half-width character, with its voicing mark")
                 .append(NL)
-                .append("     *                 where it has one").append(NL)
-                .append("     * @return the full-width form, or {@code null} if there is none")
+                .append("    ///   where it has one").append(NL)
+                .append("    /// @return the full-width form, or `null` if there is none")
                 .append(NL)
-                .append("     */").append(NL)
                 .append("    public static String widen(String sequence) {").append(NL)
                 .append("        return WIDEN.get(sequence);").append(NL)
                 .append("    }").append(NL).append(NL);
@@ -283,7 +258,7 @@ final class KanaTablesGenerator {
     private void substitutionTable(StringBuilder out,
             List<KanaSubstitutionReader.Substitution> substitutions) {
 
-        out.append("    /** The declared judgement calls: what the field rules refuse. */").append(NL)
+        out.append("    /// The declared judgement calls: what the field rules refuse.").append(NL)
                 .append("    private static final Map<String, KanaSubstitution> SUBSTITUTIONS =")
                 .append(NL)
                 .append("            buildSubstitutions();").append(NL).append(NL)
@@ -302,37 +277,31 @@ final class KanaTablesGenerator {
         }
         out.append("        return Map.copyOf(table);").append(NL)
                 .append("    }").append(NL).append(NL)
-                .append("    /**").append(NL)
-                .append("     * The substitution for a character the field rules refuse.").append(NL)
-                .append("     *").append(NL)
-                .append("     * @param character the character").append(NL)
-                .append("     * @return the substitution, or {@code null} if none applies").append(NL)
-                .append("     */").append(NL)
+                .append("    /// The substitution for a character the field rules refuse.").append(NL)
+                .append("    ///").append(NL)
+                .append("    /// @param character the character").append(NL)
+                .append("    /// @return the substitution, or `null` if none applies").append(NL)
                 .append("    public static KanaSubstitution substitution(String character) {").append(NL)
                 .append("        return SUBSTITUTIONS.get(character);").append(NL)
                 .append("    }").append(NL).append(NL)
-                .append("    /**").append(NL)
-                .append("     * Every declared substitution, for the exhaustive table test.").append(NL)
-                .append("     *").append(NL)
-                .append("     * @return the substitutions, keyed by the character they replace")
+                .append("    /// Every declared substitution, for the exhaustive table test.").append(NL)
+                .append("    ///").append(NL)
+                .append("    /// @return the substitutions, keyed by the character they replace")
                 .append(NL)
-                .append("     */").append(NL)
                 .append("    public static Map<String, KanaSubstitution> substitutions() {")
                 .append(NL)
                 .append("        return SUBSTITUTIONS;").append(NL)
                 .append("    }").append(NL).append(NL)
-                .append("    /**").append(NL)
-                .append("     * Every narrowing, for the exhaustive table test (R-T10).").append(NL)
-                .append("     *").append(NL)
-                .append("     * @return the table, keyed by full-width character").append(NL)
-                .append("     */").append(NL)
+                .append("    /// Every narrowing, for the exhaustive table test (R-T10).").append(NL)
+                .append("    ///").append(NL)
+                .append("    /// @return the table, keyed by full-width character").append(NL)
                 .append("    public static Map<String, String> narrowings() {").append(NL)
                 .append("        return NARROW;").append(NL)
                 .append("    }").append(NL).append(NL);
     }
 
     private void hiragana(StringBuilder out) {
-        out.append("    /** Hiragana and katakana run in parallel at this distance. */").append(NL)
+        out.append("    /// Hiragana and katakana run in parallel at this distance.").append(NL)
                 .append("    private static final int HIRAGANA_TO_KATAKANA = 0x")
                 .append(Integer.toHexString(HIRAGANA_TO_KATAKANA).toUpperCase(java.util.Locale.ROOT))
                 .append(';').append(NL).append(NL)
@@ -342,39 +311,33 @@ final class KanaTablesGenerator {
                 .append("    private static final int HIRAGANA_LAST = 0x")
                 .append(Integer.toHexString(HIRAGANA_LAST).toUpperCase(java.util.Locale.ROOT))
                 .append(';').append(NL).append(NL)
-                .append("    /**").append(NL)
-                .append("     * Whether a code point is hiragana.").append(NL)
-                .append("     *").append(NL)
-                .append("     * @param codePoint the code point").append(NL)
-                .append("     * @return {@code true} if it is").append(NL)
-                .append("     */").append(NL)
+                .append("    /// Whether a code point is hiragana.").append(NL)
+                .append("    ///").append(NL)
+                .append("    /// @param codePoint the code point").append(NL)
+                .append("    /// @return `true` if it is").append(NL)
                 .append("    public static boolean isHiragana(int codePoint) {").append(NL)
                 .append("        return codePoint >= HIRAGANA_FIRST && codePoint <= HIRAGANA_LAST;")
                 .append(NL)
                 .append("    }").append(NL).append(NL)
-                .append("    /**").append(NL)
-                .append("     * The katakana for a hiragana code point (R-K5).").append(NL)
-                .append("     *").append(NL)
-                .append("     * <p>A fixed offset rather than a table: the two syllabaries were")
+                .append("    /// The katakana for a hiragana code point (R-K5).").append(NL)
+                .append("    ///").append(NL)
+                .append("    /// A fixed offset rather than a table: the two syllabaries were")
                 .append(NL)
-                .append("     * encoded in parallel, and every character in the range corresponds.")
+                .append("    /// encoded in parallel, and every character in the range corresponds.")
                 .append(NL)
-                .append("     *").append(NL)
-                .append("     * @param codePoint a hiragana code point").append(NL)
-                .append("     * @return the katakana code point").append(NL)
-                .append("     */").append(NL)
+                .append("    ///").append(NL)
+                .append("    /// @param codePoint a hiragana code point").append(NL)
+                .append("    /// @return the katakana code point").append(NL)
                 .append("    public static int katakanaFor(int codePoint) {").append(NL)
                 .append("        return codePoint + HIRAGANA_TO_KATAKANA;").append(NL)
                 .append("    }").append(NL);
     }
 
-    /**
-     * A Java string literal, with every non-ASCII character escaped.
-     *
-     * <p>Escaped rather than written literally so the generated file is pure
-     * ASCII: it is committed, diffed and reviewed, and a table of kana renders
-     * differently depending on what opens it.
-     */
+    /// A Java string literal, with every non-ASCII character escaped.
+    ///
+    /// Escaped rather than written literally so the generated file is pure
+    /// ASCII: it is committed, diffed and reviewed, and a table of kana renders
+    /// differently depending on what opens it.
     private static String literal(String value) {
         StringBuilder out = new StringBuilder(value.length() + 2).append('"');
         for (int i = 0; i < value.length(); i++) {

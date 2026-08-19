@@ -1,5 +1,6 @@
 package io.zengin4j.testkit;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
@@ -7,16 +8,10 @@ import io.zengin4j.core.codec.ZenginReaders;
 import io.zengin4j.core.model.Batch;
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.core.model.ZenginFile;
-import java.io.ByteArrayInputStream;
-import java.time.MonthDay;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/**
- * Milestone M1 seen from outside the library: the published fixtures parse
- * through the published reader.
- */
+/// Milestone M1 seen from outside the library: the published fixtures parse
+/// through the published reader.
 class SougouFurikomiFixturesTest {
 
     private final SougouFurikomiFixtures fixtures = SougouFurikomiFixtures.create();
@@ -69,7 +64,7 @@ class SougouFurikomiFixturesTest {
                 .isEqualTo(SougouFurikomiFixtures.AMOUNT * 50);
     }
 
-    /** R-CLI3: the same seed produces the same bytes, everywhere, always. */
+    /// R-CLI3: the same seed produces the same bytes, everywhere, always.
     @Test
     void theGeneratorIsDeterministic() {
         byte[] first = ZenginGenerator.builder().seed(42).payments(20).build().generate();
@@ -117,7 +112,7 @@ class SougouFurikomiFixturesTest {
                 .withMessageContaining("has no field 'noSuchField'");
     }
 
-    /** P1, R-L1: nothing in the testkit resembles a real identifier. */
+    /// P1, R-L1: nothing in the testkit resembles a real identifier.
     @Test
     void everyIdentifierIsOutsideTheRangesRealInstitutionsUse() {
         assertThat(SougouFurikomiFixtures.BENEFICIARY_BANK_CODE).isEqualTo("9999");

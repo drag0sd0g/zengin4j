@@ -1,27 +1,21 @@
 package io.zengin4j.iso20022.envelope;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 import io.zengin4j.iso20022.xml.MalformedXmlException;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * The concatenation quirk, and what it takes to survive it.
- *
- * <p>A ZEDI file contains several XML declarations and is therefore not a single
- * well-formed document. Every claim this library makes about being able to read
- * one rests on the splitting being right, so this is where that gets tested: the
- * happy path, the ambiguous path, and the path where a {@code <?xml} sequence
- * appears somewhere it does not belong.
- */
+/// The concatenation quirk, and what it takes to survive it.
+///
+/// A ZEDI file contains several XML declarations and is therefore not a single
+/// well-formed document. Every claim this library makes about being able to read
+/// one rests on the splitting being right, so this is where that gets tested: the
+/// happy path, the ambiguous path, and the path where a `<?xml` sequence
+/// appears somewhere it does not belong.
 class ZediEnvelopeTest {
 
     private static final String DECL = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n";
@@ -62,7 +56,7 @@ class ZediEnvelopeTest {
         assertThat(message.body().textAt("CstmrCdtTrfInitn/GrpHdr/MsgId")).contains("MSG-1");
     }
 
-    /** R-I7 — several groups in one file. */
+    /// R-I7 — several groups in one file.
     @Test
     void severalGroupsInOneFileReadAsSeveralMessages() {
         ZediFile file = ZediEnvelopeReader.read(bytes(
@@ -75,13 +69,11 @@ class ZediEnvelopeTest {
                 .containsExactly("MSG-1", "MSG-2", "MSG-3");
     }
 
-    /**
-     * A body with no header is a message, not a header with no body.
-     *
-     * <p>Pairing by root element rather than by position. Most fixtures — and
-     * some senders — produce a bare {@code pain.001}, and reading that as a
-     * malformed pair would refuse a file that is perfectly usable.
-     */
+    /// A body with no header is a message, not a header with no body.
+    ///
+    /// Pairing by root element rather than by position. Most fixtures — and
+    /// some senders — produce a bare `pain.001`, and reading that as a
+    /// malformed pair would refuse a file that is perfectly usable.
     @Test
     void aBareBodyReadsAsAMessageWithoutAHeader() {
         ZediFile file = ZediEnvelopeReader.read(bytes(body("MSG-1")));
@@ -125,16 +117,14 @@ class ZediEnvelopeTest {
 
     // -------------------------------------------------------- false boundaries
 
-    /**
-     * R-I8, and the part of it the requirement does not cover.
-     *
-     * <p>Character content cannot hold a literal {@code <}, and the base64
-     * alphabet does not include one — so a payload cannot contain
-     * {@code <?xml} however large it gets. A comment can, though, and the
-     * requirement's argument does not reach that case. The split is therefore
-     * checked rather than assumed: a false boundary produces a segment that is
-     * not well-formed, and the diagnostic says so.
-     */
+    /// R-I8, and the part of it the requirement does not cover.
+    ///
+    /// Character content cannot hold a literal `<`, and the base64
+    /// alphabet does not include one — so a payload cannot contain
+    /// `<?xml` however large it gets. A comment can, though, and the
+    /// requirement's argument does not reach that case. The split is therefore
+    /// checked rather than assumed: a false boundary produces a segment that is
+    /// not well-formed, and the diagnostic says so.
     @Test
     void aDeclarationInsideACommentIsCaughtRatherThanSilentlySplitting() {
         String withComment = DECL + "<Document xmlns=\""
@@ -163,7 +153,7 @@ class ZediEnvelopeTest {
                 .contains("<?xml here");
     }
 
-    /** The base64 alphabet has no {@code <}, so a payload cannot fake a boundary. */
+    /// The base64 alphabet has no `<`, so a payload cannot fake a boundary.
     @Test
     void aLargeBase64PayloadDoesNotSplitTheDocument() {
         String payload = "PD94bWwgdmVyc2lvbj0iMS4wIj8+".repeat(200);
@@ -182,7 +172,7 @@ class ZediEnvelopeTest {
 
     // ------------------------------------------------------------ write back
 
-    /** R-I6 — what was read is what is written. */
+    /// R-I6 — what was read is what is written.
     @Test
     void aFileThatWasReadIsWrittenBackByteForByte() {
         byte[] original = bytes(header("M1") + body("MSG-1") + header("M2") + body("MSG-2"));
@@ -192,7 +182,7 @@ class ZediEnvelopeTest {
         assertThat(written).isEqualTo(original);
     }
 
-    /** Including whatever preceded the first declaration. */
+    /// Including whatever preceded the first declaration.
     @Test
     void bytesBeforeTheFirstDeclarationSurvive() {
         byte[] original = bytes("﻿" + header("M1") + body("MSG-1"));
@@ -203,7 +193,7 @@ class ZediEnvelopeTest {
         assertThat(ZediEnvelopeWriter.toByteArray(file)).isEqualTo(original);
     }
 
-    /** Including line endings that are not the ones the profile specifies. */
+    /// Including line endings that are not the ones the profile specifies.
     @Test
     void unusualFramingSurvivesUnchanged() {
         byte[] original = bytes(header("M1").replace("\r\n", "\n") + body("MSG-1"));

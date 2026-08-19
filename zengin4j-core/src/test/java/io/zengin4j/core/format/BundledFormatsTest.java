@@ -1,19 +1,17 @@
 package io.zengin4j.core.format;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.charset.CharacterClass;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * Issues 3.4 and 3.5: the remaining 120-byte formats.
- *
- * <p>These tests assert the things that make each format <em>different</em>
- * from 総合振込. Asserting that a layout loads proves the loader works; asserting
- * where it diverges proves the layout was read rather than derived, which is
- * the failure mode §13.1 warns about twice.
- */
+/// Issues 3.4 and 3.5: the remaining 120-byte formats.
+///
+/// These tests assert the things that make each format *different*
+/// from 総合振込. Asserting that a layout loads proves the loader works; asserting
+/// where it diverges proves the layout was read rather than derived, which is
+/// the failure mode §13.1 warns about twice.
 class BundledFormatsTest {
 
     private final FormatRegistry registry = FormatRegistry.defaults();
@@ -37,11 +35,9 @@ class BundledFormatsTest {
 
     // ------------------------------------------------------------ 給与振込 (3.4)
 
-    /**
-     * The whole reason 給与振込 has its own descriptor: fourteen data fields, not
-     * sixteen. Deriving it from 総合振込 would read filler as a 振込指定区分 and an
-     * 識別表示, and 社員番号 as an EDI payload.
-     */
+    /// The whole reason 給与振込 has its own descriptor: fourteen data fields, not
+    /// sixteen. Deriving it from 総合振込 would read filler as a 振込指定区分 and an
+    /// 識別表示, and 社員番号 as an EDI payload.
     @Test
     void payrollTransferHasFourteenDataFieldsNotSixteen() {
         RecordDescriptor payroll = format("kyuyo-furikomi").record(RecordKind.DATA);
@@ -65,10 +61,8 @@ class BundledFormatsTest {
         assertThat(payroll.field("dummy").length()).isEqualTo(9);
     }
 
-    /**
-     * The payee field sits at the same offset as 総合振込's and permits a
-     * narrower character set — no Latin letters at all.
-     */
+    /// The payee field sits at the same offset as 総合振込's and permits a
+    /// narrower character set — no Latin letters at all.
     @Test
     void payrollTransferForbidsLatinLettersInThePayeeName() {
         RecordDescriptor payroll = format("kyuyo-furikomi").record(RecordKind.DATA);
@@ -85,11 +79,9 @@ class BundledFormatsTest {
         assertThat(payee.charClass().permits('A')).isTrue();
     }
 
-    /**
-     * D-002 again, in a third place. 社員番号 and 所属コード occupy the bytes
-     * 総合振込 uses for 顧客コード1/2, and sources split on their attribute the
-     * same way. Declared C, which preserves either reading.
-     */
+    /// D-002 again, in a third place. 社員番号 and 所属コード occupy the bytes
+    /// 総合振込 uses for 顧客コード1/2, and sources split on their attribute the
+    /// same way. Declared C, which preserves either reading.
     @Test
     void payrollCustomerCodeFieldsAreDeclaredTextLikeTheirBulkTransferCounterparts() {
         RecordDescriptor payroll = format("kyuyo-furikomi").record(RecordKind.DATA);
@@ -112,7 +104,7 @@ class BundledFormatsTest {
                 .containsExactly("1", "2", "4", "9");
     }
 
-    /** 賞与振込 borrows the layout, which the standard states — and only the type code differs. */
+    /// 賞与振込 borrows the layout, which the standard states — and only the type code differs.
     @Test
     void bonusTransferIsPayrollTransferWithADifferentTypeCode() {
         FormatDescriptor payroll = format("kyuyo-furikomi");
@@ -148,11 +140,9 @@ class BundledFormatsTest {
 
     // ---------------------------------------------------------- 預金口座振替 (3.5)
 
-    /**
-     * OQ-1: one descriptor, because the instruction and result files have the
-     * same layout. Two would make every 91 file ambiguous while distinguishing
-     * nothing.
-     */
+    /// OQ-1: one descriptor, because the instruction and result files have the
+    /// same layout. Two would make every 91 file ambiguous while distinguishing
+    /// nothing.
     @Test
     void directDebitIsOneDescriptorForBothDirections() {
         assertThat(registry.byTypeCode("91")).hasSize(1);
@@ -170,11 +160,9 @@ class BundledFormatsTest {
                 .isEqualTo("No direct debit mandate on file");
     }
 
-    /**
-     * §13.1's strong requirement: the direction must be visible in the names.
-     * The header names where funds <em>land</em>; the data records name accounts
-     * to be <em>debited</em>. Reusing 総合振込's names would invert the payment.
-     */
+    /// §13.1's strong requirement: the direction must be visible in the names.
+    /// The header names where funds *land*; the data records name accounts
+    /// to be *debited*. Reusing 総合振込's names would invert the payment.
     @Test
     void directDebitNamesItsDirectionExplicitly() {
         RecordDescriptor header = format("kouza-furikae").record(RecordKind.HEADER);
@@ -195,7 +183,7 @@ class BundledFormatsTest {
         }
     }
 
-    /** Q6: the trailer is not 総合振込's, and must not be derived from it. */
+    /// Q6: the trailer is not 総合振込's, and must not be derived from it.
     @Test
     void directDebitHasItsOwnTrailerCarryingResultTotals() {
         RecordDescriptor trailer = format("kouza-furikae").record(RecordKind.TRAILER);
@@ -214,7 +202,7 @@ class BundledFormatsTest {
         assertThat(format("sougou-furikomi").record(RecordKind.TRAILER).fields()).hasSize(4);
     }
 
-    /** 預金口座振替 admits 納税準備預金, which 総合振込 does not. */
+    /// 預金口座振替 admits 納税準備預金, which 総合振込 does not.
     @Test
     void directDebitAdmitsATaxReserveAccount() {
         assertThat(format("kouza-furikae").record(RecordKind.DATA).field("payerAccountType").codes())
@@ -223,7 +211,7 @@ class BundledFormatsTest {
                 .containsExactly("1", "2", "9");
     }
 
-    /** The four bytes 総合振込 uses for 手形交換所番号 are unused here, and say so. */
+    /// The four bytes 総合振込 uses for 手形交換所番号 are unused here, and say so.
     @Test
     void directDebitLeavesTheClearingHouseBytesUnused() {
         FieldDescriptor reserved = format("kouza-furikae").record(RecordKind.DATA).field("reserved");
@@ -237,7 +225,7 @@ class BundledFormatsTest {
 
     // ------------------------------------------------------------------- OQ-9
 
-    /** The master list carries all nine codes; fields narrow it. */
+    /// The master list carries all nine codes; fields narrow it.
     @Test
     void accountTypeIsTheMasterListNarrowedPerField() {
         CodeList accountType = registry.codeLists().get("accountType");

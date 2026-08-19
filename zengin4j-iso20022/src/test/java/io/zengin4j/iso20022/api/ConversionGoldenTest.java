@@ -1,5 +1,6 @@
 package io.zengin4j.iso20022.api;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.codec.ZenginReaders;
@@ -7,31 +8,24 @@ import io.zengin4j.core.format.FormatId;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.iso20022.envelope.ZediEnvelopeWriter;
 import io.zengin4j.testkit.FormatFixtures;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
-/**
- * A committed conversion, so that a change to it is a diff somebody reads.
- *
- * <p>The mapping is thirty-five rows of judgement, none of them verified. A
- * coverage number cannot tell you that {@code ClrSysId/Cd} moved or that a
- * loss line changed severity; a diff of the actual XML can, and that is the
- * only review this mapping is going to get until somebody obtains the profile
- * documentation.
- *
- * <p>To update after an intentional change:
- *
- * <pre>./gradlew :zengin4j-iso20022:test --tests '*ConversionGoldenTest*' -Pgolden.regenerate</pre>
- *
- * <p>Then read the diff before committing it. A golden updated without being
- * read is worse than no golden at all.
- */
+/// A committed conversion, so that a change to it is a diff somebody reads.
+///
+/// The mapping is thirty-five rows of judgement, none of them verified. A
+/// coverage number cannot tell you that `ClrSysId/Cd` moved or that a
+/// loss line changed severity; a diff of the actual XML can, and that is the
+/// only review this mapping is going to get until somebody obtains the profile
+/// documentation.
+///
+/// To update after an intentional change:
+///
+/// ```
+/// ./gradlew :zengin4j-iso20022:test --tests '*ConversionGoldenTest*' -Pgolden.regenerate
+/// ```
+///
+/// Then read the diff before committing it. A golden updated without being
+/// read is worse than no golden at all.
 class ConversionGoldenTest {
 
     private static final String EXPECTED_XML = "/conformance/sougou-furikomi.pain001.xml";
@@ -39,11 +33,9 @@ class ConversionGoldenTest {
 
     private static final FormatId FORMAT = FormatId.of("sougou-furikomi");
 
-    /**
-     * Fixed, and the reason the golden is possible at all: {@code CreDtTm} and
-     * {@code MsgId} default to values derived from this date rather than from
-     * the clock.
-     */
+    /// Fixed, and the reason the golden is possible at all: `CreDtTm` and
+    /// `MsgId` default to values derived from this date rather than from
+    /// the clock.
     private static final LocalDate REFERENCE = LocalDate.of(2026, 9, 1);
 
     private static MappingResult<io.zengin4j.iso20022.envelope.ZediFile> convert() {
@@ -89,7 +81,7 @@ class ConversionGoldenTest {
                 .isEqualTo(normalise(new String(resource(EXPECTED_LOSS), StandardCharsets.UTF_8)));
     }
 
-    /** The same input converts to the same bytes however often it is run. */
+    /// The same input converts to the same bytes however often it is run.
     @Test
     void theConversionIsReproducible() {
         assertThat(ZediEnvelopeWriter.toByteArray(convert().output()))
@@ -98,7 +90,7 @@ class ConversionGoldenTest {
 
     // ---------------------------------------------------------------- fixtures
 
-    /** Line endings vary by check-out; content does not. */
+    /// Line endings vary by check-out; content does not.
     private static String normalise(String content) {
         return content.replace("\r\n", "\n");
     }
@@ -119,7 +111,7 @@ class ConversionGoldenTest {
         }
     }
 
-    /** Writes back into the source tree, not the build output, so the diff is reviewable. */
+    /// Writes back into the source tree, not the build output, so the diff is reviewable.
     private static void write(String name, String content) {
         Path path = Path.of("src/test/resources").resolve(name.substring(1));
         try {

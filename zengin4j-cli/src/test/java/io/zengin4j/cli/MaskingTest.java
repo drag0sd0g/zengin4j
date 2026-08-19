@@ -1,34 +1,30 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.testkit.SougouFurikomiFixtures;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * No command leaks payment data by default (R-CLI4).
- *
- * <p>The requirement this module most needs to keep. Terminal output becomes
- * scrollback, CI output becomes the CI provider's storage for ever, and a
- * pasted diagnostic becomes an attachment on a ticket. Every one of those is a
- * place an account number should not be, and none of them is a place it can be
- * taken back from.
- *
- * <p>Written as "the account number does not appear anywhere in the output"
- * rather than "the masking function was called", because the second passes
- * happily while some other code path prints the value.
- */
+/// No command leaks payment data by default (R-CLI4).
+///
+/// The requirement this module most needs to keep. Terminal output becomes
+/// scrollback, CI output becomes the CI provider's storage for ever, and a
+/// pasted diagnostic becomes an attachment on a ticket. Every one of those is a
+/// place an account number should not be, and none of them is a place it can be
+/// taken back from.
+///
+/// Written as "the account number does not appear anywhere in the output"
+/// rather than "the masking function was called", because the second passes
+/// happily while some other code path prints the value.
 class MaskingTest {
 
-    /** The account number the fixtures put in the data record. Invented (R-L1). */
+    /// The account number the fixtures put in the data record. Invented (R-L1).
     private static final String ACCOUNT = SougouFurikomiFixtures.BENEFICIARY_ACCOUNT;
 
     @TempDir
@@ -101,11 +97,9 @@ class MaskingTest {
         assertThat(result.all()).doesNotContain(ACCOUNT);
     }
 
-    /**
-     * The safe path is the default one, for every command that can print record
-     * contents. A new command that forgets this fails here rather than in
-     * somebody's CI log.
-     */
+    /// The safe path is the default one, for every command that can print record
+    /// contents. A new command that forgets this fails here rather than in
+    /// somebody's CI log.
     @Test
     void everyCommandThatReadsAFileMasksByDefault() {
         List<String[]> invocations = List.of(
@@ -122,15 +116,13 @@ class MaskingTest {
         }
     }
 
-    /**
-     * Generated files are synthetic, so the values in them are invented (R-L1).
-     *
-     * <p>Checked field by field rather than by searching the whole file for a
-     * code. In a fixed-length format the fields abut, so {@code "0001"} occurs
-     * inside the originator code {@code 9900000001} and inside account
-     * {@code 9000001} — a substring search finds identifiers that are not
-     * there. The same trap caught the CI identifier scan in Epic 2.
-     */
+    /// Generated files are synthetic, so the values in them are invented (R-L1).
+    ///
+    /// Checked field by field rather than by searching the whole file for a
+    /// code. In a fixed-length format the fields abut, so `"0001"` occurs
+    /// inside the originator code `9900000001` and inside account
+    /// `9000001` — a substring search finds identifiers that are not
+    /// there. The same trap caught the CI identifier scan in Epic 2.
     @Test
     void generatedFilesUseTheSyntheticRanges() throws Exception {
         Path generated = Cli.generate(directory, "generated.txt", "--count=20");

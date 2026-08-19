@@ -1,12 +1,10 @@
 package io.zengin4j.codegen;
 
-import java.nio.file.Path;
+import module java.base;
 
-/**
- * One file the generator produces.
- *
- * @param path    where it belongs, absolute
- * @param content its full text
- */
+/// One file the generator produces.
+///
+/// @param path    where it belongs, absolute
+/// @param content its full text
 record GeneratedFile(Path path, String content) {
 }

@@ -1,5 +1,6 @@
 package io.zengin4j.cli.command;
 
+import module java.base;
 import io.zengin4j.cli.ExitCode;
 import io.zengin4j.cli.internal.FieldRendering;
 import io.zengin4j.cli.internal.Json;
@@ -9,35 +10,26 @@ import io.zengin4j.core.format.FieldDescriptor;
 import io.zengin4j.core.format.RecordDescriptor;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.ZenginRecord;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-/**
- * {@code zengin diff} — what changed between two files, field by field.
- *
- * <p>A textual diff of a fixed-length file tells you that record 4 changed and
- * nothing else: the records are one line each and every byte of that line is on
- * the same line as every other. This reports which <em>field</em> changed, and
- * from what to what, which is the question anyone running a diff on a payment
- * file is actually asking.
- *
- * <p>Records are aligned by longest common subsequence rather than by position,
- * so inserting a payment near the top does not report every later record as
- * changed.
- *
- * <p><strong>Sensitive fields are masked unless {@code --unsafe-print} is
- * given</strong> (R-CLI4). A diff that says an account number changed from one
- * masked value to a different masked value still tells you the field changed,
- * which is the part you needed.
- *
- * @since 0.3.0
- */
+/// `zengin diff` — what changed between two files, field by field.
+///
+/// A textual diff of a fixed-length file tells you that record 4 changed and
+/// nothing else: the records are one line each and every byte of that line is on
+/// the same line as every other. This reports which *field* changed, and
+/// from what to what, which is the question anyone running a diff on a payment
+/// file is actually asking.
+///
+/// Records are aligned by longest common subsequence rather than by position,
+/// so inserting a payment near the top does not report every later record as
+/// changed.
+///
+/// **Sensitive fields are masked unless `--unsafe-print` is
+/// given** (R-CLI4). A diff that says an account number changed from one
+/// masked value to a different masked value still tells you the field changed,
+/// which is the part you needed.
+///
+/// @since 0.3.0
 @CommandLine.Command(
         name = "diff",
         mixinStandardHelpOptions = true,
@@ -167,7 +159,7 @@ public final class DiffCommand implements Callable<Integer> {
         return pairs.stream().filter(pair -> pair.change() == change).count();
     }
 
-    /** A one-line description of a whole record, for an addition or removal. */
+    /// A one-line description of a whole record, for an addition or removal.
     private String summarise(ZenginFile file, byte[] record) {
         RecordDescriptor layout = file.descriptor().forDiscriminator(record[0]).orElse(null);
         if (layout == null) {
@@ -188,7 +180,7 @@ public final class DiffCommand implements Callable<Integer> {
         return text.toString();
     }
 
-    /** Which fields differ between two records of the same kind. */
+    /// Which fields differ between two records of the same kind.
     private List<FieldChange> fieldChanges(ZenginFile file, byte[] left, byte[] right) {
         RecordDescriptor layout = file.descriptor().forDiscriminator(left[0]).orElse(null);
         if (layout == null || left[0] != right[0]) {

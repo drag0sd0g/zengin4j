@@ -1,16 +1,13 @@
 package io.zengin4j.codegen;
 
-import java.nio.file.Path;
-import java.util.List;
+import module java.base;
 
-/**
- * Generates {@code docs/mapping.md} from the declared mappings.
- *
- * <p>R-I19 requires unverified rows to be visibly marked in the generated
- * documentation. Generating the page from the same file the mapper is compiled
- * from is what makes that mark trustworthy: a row cannot be quietly implemented
- * one way and documented another.
- */
+/// Generates `docs/mapping.md` from the declared mappings.
+///
+/// R-I19 requires unverified rows to be visibly marked in the generated
+/// documentation. Generating the page from the same file the mapper is compiled
+/// from is what makes that mark trustworthy: a row cannot be quietly implemented
+/// one way and documented another.
 final class MappingDocGenerator {
 
     private static final String NL = "\n";
@@ -21,13 +18,11 @@ final class MappingDocGenerator {
         this.docsOut = docsOut;
     }
 
-    /**
-     * Generates the page.
-     *
-     * @param mappings the declarations
-     * @param sources  each declaration's file name
-     * @return the generated file
-     */
+    /// Generates the page.
+    ///
+    /// @param mappings the declarations
+    /// @param sources  each declaration's file name
+    /// @return the generated file
     GeneratedFile generate(List<MappingReader.Mapping> mappings, List<String> sources) {
         StringBuilder out = new StringBuilder();
         out.append("# Mapping reference").append(NL).append(NL)

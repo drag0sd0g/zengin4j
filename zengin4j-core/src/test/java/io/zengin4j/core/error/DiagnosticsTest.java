@@ -1,20 +1,17 @@
 package io.zengin4j.core.error;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.core.charset.CodeKubun;
 import io.zengin4j.core.charset.ZenginCharset;
-import java.util.List;
-import java.util.Locale;
 import org.junit.jupiter.api.Test;
 
-/**
- * The diagnostic contract: bilingual messages (R-E4), account masking (R-E6)
- * and enough context to act on (R-E3).
- */
+/// The diagnostic contract: bilingual messages (R-E4), account masking (R-E6)
+/// and enough context to act on (R-E3).
 class DiagnosticsTest {
 
-    /** R-E6: showing all four digits of a four-digit value would not be masking. */
+    /// R-E6: showing all four digits of a four-digit value would not be masking.
     @Test
     void masksIdentifiersToTheirLastFourCharacters() {
         assertThat(Diagnostics.maskIdentifier("9876543")).isEqualTo("***6543");
@@ -65,7 +62,7 @@ class DiagnosticsTest {
         }
     }
 
-    /** R-E3: what was expected, what was found, and where. */
+    /// R-E3: what was expected, what was found, and where.
     @Test
     void locatesEveryProblem() {
         MalformedFileException file = new MalformedFileException(240, 3, "en", "ja");

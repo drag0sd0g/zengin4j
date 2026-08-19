@@ -6,7 +6,7 @@ implementing. An implementation that makes twenty undocumented judgement calls i
 | # | Decision | Status |
 |---|---|---|
 | [0001](0001-hand-written-yaml-reader.md) | A hand-written YAML subset reader in `core` | **Superseded by 0016** |
-| [0002](0002-java-21-baseline-without-a-toolchain.md) | Java 21 baseline via `--release`, not a toolchain | Accepted |
+| [0002](0002-java-21-baseline-without-a-toolchain.md) | Java 21 baseline via `--release`, not a toolchain | **Superseded by 0036** |
 | [0003](0003-codegen-as-a-separate-module.md) | Code generation lives in its own unpublished module | Accepted |
 | [0004](0004-generated-record-shape.md) | Generated record shape and the field-id convention | Accepted |
 | [0005](0005-record-equality-by-raw-bytes.md) | Record equality is defined by raw bytes | Accepted |
@@ -40,6 +40,8 @@ implementing. An implementation that makes twenty undocumented judgement calls i
 | [0033](0033-critical-loss-fails-by-default.md) | A critical loss stops the conversion by default | Accepted |
 | [0034](0034-the-mapping-context-is-flags-not-a-file.md) | The mapping context is command-line flags, not a context file | Accepted |
 | [0035](0035-the-mapping-is-data-not-a-rule-engine.md) | The mapping is declared data, not an executable rule interface | Accepted |
+| [0036](0036-java-25-baseline.md) | The baseline moves from Java 21 to Java 25 | Accepted |
+| [0037](0037-markdown-doc-comments-and-module-imports.md) | Markdown doc comments throughout, and `import module java.base` | Accepted |
 
 ## Template
 

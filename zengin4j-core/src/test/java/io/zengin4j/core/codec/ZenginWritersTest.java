@@ -1,5 +1,6 @@
 package io.zengin4j.core.codec;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -11,19 +12,11 @@ import io.zengin4j.core.model.FileFraming;
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.testing.Fixtures;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * Issue 2.2: deterministic writing (R-C19) that reproduces what it read
- * (R-D5).
- */
+/// Issue 2.2: deterministic writing (R-C19) that reproduces what it read
+/// (R-D5).
 class ZenginWritersTest {
 
     private final FormatDescriptor descriptor = Fixtures.descriptor();
@@ -53,7 +46,7 @@ class ZenginWritersTest {
         }
     }
 
-    /** R-C10: a stripped byte order mark is written back, so the file survives intact. */
+    /// R-C10: a stripped byte order mark is written back, so the file survives intact.
     @Test
     void reproducesAByteOrderMark() {
         byte[] source = Fixtures.framed(descriptor, new FileFraming(true, SeparatorStyle.CRLF, true, false));
@@ -64,7 +57,7 @@ class ZenginWritersTest {
         assertThat(ZenginWriters.toByteArray(parsed, WriterOptions.defaults())).isEqualTo(source);
     }
 
-    /** OQ-4: whether a separator followed the last record is part of the file, and is reproduced. */
+    /// OQ-4: whether a separator followed the last record is part of the file, and is reproduced.
     @Test
     void reproducesTheAbsenceOfATrailingSeparator() {
         byte[] withTrailing = Fixtures.framed(descriptor, new FileFraming(false, SeparatorStyle.CRLF, true, false));
@@ -92,7 +85,7 @@ class ZenginWritersTest {
                 .withMessageContaining("mixed record separator conventions");
     }
 
-    /** R-C9: and choosing a convention explicitly makes such a file writable again. */
+    /// R-C9: and choosing a convention explicitly makes such a file writable again.
     @Test
     void animposedSeparatorRescuesAMixedFile() {
         byte[] mixed = Fixtures.concat(List.of(
@@ -108,10 +101,8 @@ class ZenginWritersTest {
         assertThat(written).hasSize(4 * (Fixtures.RECORD_LENGTH + 2));
     }
 
-    /**
-     * R-D5: records are written from the bytes they carry. Filler this library
-     * does not interpret must come back untouched.
-     */
+    /// R-D5: records are written from the bytes they carry. Filler this library
+    /// does not interpret must come back untouched.
     @Test
     void writesRecordsFromTheirRawBytesRatherThanReEncodingThem() {
         // Put a byte in the header's filler that no accessor models.
@@ -126,7 +117,7 @@ class ZenginWritersTest {
                 .isEqualTo("XYZ");
     }
 
-    /** Malformed records keep their place, because every record carries its position. */
+    /// Malformed records keep their place, because every record carries its position.
     @Test
     void preservesRecordOrderIncludingMalformedRecords() {
         byte[] source = Fixtures.join(Fixtures.CRLF, Fixtures.header(descriptor),

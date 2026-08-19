@@ -1,5 +1,6 @@
 package io.zengin4j.cli.command;
 
+import module java.base;
 import io.zengin4j.cli.ExitCode;
 import io.zengin4j.cli.internal.CliMessages;
 import io.zengin4j.validation.ZenginValidator;
@@ -7,28 +8,20 @@ import io.zengin4j.validation.api.Severity;
 import io.zengin4j.validation.api.ValidationReport;
 import io.zengin4j.validation.calendar.BusinessCalendar;
 import io.zengin4j.validation.calendar.JapaneseBankCalendar;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-/**
- * {@code zengin validate} — checks a file and says what is wrong with it.
- *
- * <p>A front end over {@code zengin4j-validation}, which does the work. What
- * this command adds is the part a pipeline needs: an exit status that
- * distinguishes "fine", "worth a look" and "do not send this", and output in a
- * shape a machine can read.
- *
- * <p>It never throws for a bad file. A file that cannot be parsed at all
- * produces a {@code V-100} finding and exit status 2, because "this is not a
- * file I can read" is an answer to the question that was asked.
- *
- * @since 0.3.0
- */
+/// `zengin validate` — checks a file and says what is wrong with it.
+///
+/// A front end over `zengin4j-validation`, which does the work. What
+/// this command adds is the part a pipeline needs: an exit status that
+/// distinguishes "fine", "worth a look" and "do not send this", and output in a
+/// shape a machine can read.
+///
+/// It never throws for a bad file. A file that cannot be parsed at all
+/// produces a `V-100` finding and exit status 2, because "this is not a
+/// file I can read" is an answer to the question that was asked.
+///
+/// @since 0.3.0
 @CommandLine.Command(
         name = "validate",
         mixinStandardHelpOptions = true,
@@ -115,13 +108,11 @@ public final class ValidateCommand implements Callable<Integer> {
         return statusOf(report);
     }
 
-    /**
-     * Maps a report to an exit status (R-CLI1).
-     *
-     * <p>Errors outrank warnings, and warnings outrank a clean run. Information
-     * findings do not affect the status: {@code V-505} telling you the value
-     * date is inside the calendar's horizon is not a reason to stop a pipeline.
-     */
+    /// Maps a report to an exit status (R-CLI1).
+    ///
+    /// Errors outrank warnings, and warnings outrank a clean run. Information
+    /// findings do not affect the status: `V-505` telling you the value
+    /// date is inside the calendar's horizon is not a reason to stop a pipeline.
     private static int statusOf(ValidationReport report) {
         if (report.counts().getOrDefault(Severity.ERROR, 0) > 0) {
             return ExitCode.ERRORS.value();
@@ -139,11 +130,9 @@ public final class ValidateCommand implements Callable<Integer> {
         return "ja".equalsIgnoreCase(language) ? Locale.JAPANESE : Locale.ENGLISH;
     }
 
-    /**
-     * Resolves {@code --calendar}, or {@code null} when the caller did not ask
-     * for one. The tier-5 rules then do not run at all, which is R-V6's design
-     * rather than a silent skip.
-     */
+    /// Resolves `--calendar`, or `null` when the caller did not ask
+    /// for one. The tier-5 rules then do not run at all, which is R-V6's design
+    /// rather than a silent skip.
     private BusinessCalendar calendar(PrintWriter err) {
         if (calendar == null) {
             return null;

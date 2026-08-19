@@ -1,5 +1,6 @@
 package io.zengin4j.testkit;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
@@ -13,24 +14,20 @@ import io.zengin4j.core.model.Batch;
 import io.zengin4j.core.model.SeparatorStyle;
 import io.zengin4j.core.model.ZenginFile;
 import io.zengin4j.core.model.ZenginRecord;
-import java.io.ByteArrayInputStream;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * Every format's fixtures, held to the same bar as 総合振込's.
- *
- * <p>The point of generating fixtures for four formats is worthless if three of
- * them produce bytes the library cannot read back, so each one goes through the
- * published reader and has to come out with the batch totals it went in with.
- *
- * <p>The character checks matter more here than they look. The payroll formats
- * use a name class that admits no Latin letters, and Epic 4 found that this
- * project's own fixtures contained a small kana the standard excludes. Fixtures
- * that violate the character rules teach every downstream test the wrong thing.
- */
+/// Every format's fixtures, held to the same bar as 総合振込's.
+///
+/// The point of generating fixtures for four formats is worthless if three of
+/// them produce bytes the library cannot read back, so each one goes through the
+/// published reader and has to come out with the batch totals it went in with.
+///
+/// The character checks matter more here than they look. The payroll formats
+/// use a name class that admits no Latin letters, and Epic 4 found that this
+/// project's own fixtures contained a small kana the standard excludes. Fixtures
+/// that violate the character rules teach every downstream test the wrong thing.
 class AllFormatFixturesTest {
 
     static List<FormatId> formats() {
@@ -91,13 +88,11 @@ class AllFormatFixturesTest {
                 .allSatisfy(record -> assertThat(record).hasSize(expected));
     }
 
-    /**
-     * Every text field holds only characters its own class permits.
-     *
-     * <p>Checked against the descriptor's per-field character class rather than
-     * one blanket rule, because the classes genuinely differ: bank names admit
-     * one symbol, party names four, and payroll names no Latin at all.
-     */
+    /// Every text field holds only characters its own class permits.
+    ///
+    /// Checked against the descriptor's per-field character class rather than
+    /// one blanket rule, because the classes genuinely differ: bank names admit
+    /// one symbol, party names four, and payroll names no Latin at all.
     @ParameterizedTest
     @MethodSource("formats")
     void everyTextFieldIsWritableInItsOwnCharacterClass(FormatId id) {
@@ -172,10 +167,8 @@ class AllFormatFixturesTest {
                 .withMessageContaining("sougou-furikomi");
     }
 
-    /**
-     * 預金口座振替 moves money the other way, and the fixtures say so in the
-     * field ids they populate rather than only in prose.
-     */
+    /// 預金口座振替 moves money the other way, and the fixtures say so in the
+    /// field ids they populate rather than only in prose.
     @Test
     void directDebitFixturesNameThePayerNotTheBeneficiary() {
         KouzaFurikaeFixtures fixtures = KouzaFurikaeFixtures.create();
@@ -188,7 +181,7 @@ class AllFormatFixturesTest {
                 .isEmpty();
     }
 
-    /** An instruction file carries no outcome yet. */
+    /// An instruction file carries no outcome yet.
     @Test
     void directDebitInstructionsCarryNoResultYet() {
         KouzaFurikaeFixtures fixtures = KouzaFurikaeFixtures.create();

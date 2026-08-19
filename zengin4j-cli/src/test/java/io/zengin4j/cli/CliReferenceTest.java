@@ -1,5 +1,6 @@
 package io.zengin4j.cli;
 
+import module java.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.zengin4j.cli.internal.FieldRendering;
@@ -8,28 +9,15 @@ import io.zengin4j.core.format.FormatDescriptor;
 import io.zengin4j.core.format.FormatRegistry;
 import io.zengin4j.core.format.RecordKind;
 import io.zengin4j.testkit.SougouFurikomiFixtures;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
-/**
- * {@code docs/cli.md} matches the parser.
- *
- * <p>A reference that lists an option the tool does not have sends somebody to
- * a usage error; one that omits an option they needed sends them away. Both are
- * the kind of rot that sets in quietly, so the page is checked rather than
- * trusted — the same treatment {@code docs/validation-rules.md} gets.
- */
+/// `docs/cli.md` matches the parser.
+///
+/// A reference that lists an option the tool does not have sends somebody to
+/// a usage error; one that omits an option they needed sends them away. Both are
+/// the kind of rot that sets in quietly, so the page is checked rather than
+/// trusted — the same treatment `docs/validation-rules.md` gets.
 class CliReferenceTest {
 
     private static final Path REFERENCE = Path.of("..", "docs", "cli.md");
@@ -77,13 +65,11 @@ class CliReferenceTest {
         assertThat(documented).isNotEmpty();
     }
 
-    /**
-     * Every option the parser accepts appears somewhere on the page.
-     *
-     * <p>Deliberately not the reverse for options: the page mentions
-     * {@code --help} and shell fragments, and demanding an exact match would
-     * make the check about prose rather than about accuracy.
-     */
+    /// Every option the parser accepts appears somewhere on the page.
+    ///
+    /// Deliberately not the reverse for options: the page mentions
+    /// `--help` and shell fragments, and demanding an exact match would
+    /// make the check about prose rather than about accuracy.
     @Test
     void everyOptionIsMentioned() throws IOException {
         String text = reference();
@@ -105,7 +91,7 @@ class CliReferenceTest {
         }
     }
 
-    /** Nothing on the page claims an option that no command accepts. */
+    /// Nothing on the page claims an option that no command accepts.
     @Test
     void noDocumentedOptionIsInvented() throws IOException {
         Set<String> real = new TreeSet<>(List.of("--help", "--version"));
@@ -137,13 +123,11 @@ class CliReferenceTest {
         }
     }
 
-    /**
-     * The sample table on the page has the columns the table actually emits.
-     *
-     * <p>Not an exact match — the sample elides rows, and column widths depend
-     * on the data — but a renamed or dropped column shows up here rather than
-     * in a reader's confusion. The headings are the part that carries meaning.
-     */
+    /// The sample table on the page has the columns the table actually emits.
+    ///
+    /// Not an exact match — the sample elides rows, and column widths depend
+    /// on the data — but a renamed or dropped column shows up here rather than
+    /// in a reader's confusion. The headings are the part that carries meaning.
     @Test
     void theSampleTableHasTheColumnsTheToolPrints() throws IOException {
         String text = reference();
@@ -173,16 +157,14 @@ class CliReferenceTest {
         return rows;
     }
 
-    /**
-     * Every command §27 names exists.
-     *
-     * <p>This used to assert the opposite for {@code convert} and
-     * {@code dryrun} — that they were absent and the page said so — which was
-     * the honest thing to check while they were absent. They arrived in Epic 7,
-     * and the check that replaces it is the one worth keeping: the synopsis in
-     * the specification is now implemented in full, and a command quietly
-     * disappearing would be a regression nothing else notices.
-     */
+    /// Every command §27 names exists.
+    ///
+    /// This used to assert the opposite for `convert` and
+    /// `dryrun` — that they were absent and the page said so — which was
+    /// the honest thing to check while they were absent. They arrived in Epic 7,
+    /// and the check that replaces it is the one worth keeping: the synopsis in
+    /// the specification is now implemented in full, and a command quietly
+    /// disappearing would be a regression nothing else notices.
     @Test
     void everyCommandTheSpecificationNamesExists() {
         assertThat(parser().getSubcommands())
