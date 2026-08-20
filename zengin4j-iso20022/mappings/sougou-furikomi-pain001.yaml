@@ -207,7 +207,10 @@ rows:
   - zengin: header.originBankCode
     iso: CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId
     direction: both
-    verified: false
+    verified: true
+    sources:
+      - 全銀ネット ZEDI 接続ガイダンス 一括ファイル伝送編 (2020-04), 総合振込依頼明細 項番 40
+      - 三菱UFJ銀行 BizSTATION 総合振込（XML形式）レコードフォーマット (2018-12), 項番 40
     why-en: >-
       仕向銀行番号, as the first four digits of the member identifier. MmbId means
       "this party's identifier within the named clearing system", and within
@@ -223,7 +226,10 @@ rows:
   - zengin: "-"
     iso: CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
     direction: to-iso
-    verified: false
+    verified: true
+    sources:
+      - 全銀ネット ZEDI 接続ガイダンス 一括ファイル伝送編 (2020-04), 総合振込依頼明細 項番 39
+      - 三菱UFJ銀行 BizSTATION 総合振込（XML形式）レコードフォーマット (2018-12), 項番 39
     why-en: >-
       JPZGN, and unconfirmed — see Q8. It names the scheme the member identifier
       belongs to, so getting it wrong makes every bank code in the file
@@ -243,19 +249,22 @@ rows:
     why-ja: 仕向銀行名。往路で全角化し、復路で半角化します。
 
   - zengin: header.originBranchCode
-    iso: CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    iso: CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BrnchId/Id
     direction: both
-    verified: false
-    loss: COERCED/CRITICAL
+    verified: true
+    sources:
+      - 全銀ネット ZEDI 接続ガイダンス 一括ファイル伝送編 (2020-04), 総合振込依頼明細 項番 42-43
+      - 三菱UFJ銀行 BizSTATION 総合振込（XML形式）レコードフォーマット (2018-12), 項番 42-43
+    loss: DROPPED/CRITICAL
     why-en: >-
-      仕向支店番号, as the last three digits of the same member identifier. Coming
-      back, a member id that is not four digits plus three cannot be taken apart
-      — 支店番号 is left empty rather than guessed at, and reported CRITICAL,
-      because a wrong branch code sends the payment to a different office.
+      仕向支店番号, in its own element rather than the tail of the member id.
+      Coming back, a document with no BrnchId/Id leaves nothing to put in a
+      field a Zengin record requires, so 支店番号 is left empty and reported
+      CRITICAL: a payment naming a bank but no office does not reach anybody.
     why-ja: >-
-      仕向支店番号。同じメンバー識別子の末尾 3 桁に相当します。復路で 4 桁 + 3 桁
-      でないメンバー識別子は分解できないため、支店番号は推測せず空欄とし、CRITICAL
-      として報告します。支店番号を誤ると別の店舗に振り込まれるためです。
+      仕向支店番号。メンバー識別子の末尾ではなく専用の要素に設定します。復路で
+      BrnchId/Id がない場合、全銀レコードの必須項目を埋められないため、支店番号は
+      空欄とし CRITICAL として報告します。銀行だけで店舗がない振込は届きません。
 
   - zengin: header.originBranchName
     iso: "-"
@@ -322,14 +331,20 @@ rows:
   - zengin: data.beneficiaryBankCode
     iso: CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId
     direction: both
-    verified: false
+    verified: true
+    sources:
+      - 全銀ネット ZEDI 接続ガイダンス 一括ファイル伝送編 (2020-04), 総合振込依頼明細 項番 55
+      - 三菱UFJ銀行 BizSTATION 総合振込（XML形式）レコードフォーマット (2018-12), 項番 55
     why-en: 被仕向銀行番号, as the first four digits of the member identifier.
     why-ja: 被仕向銀行番号。メンバー識別子の先頭 4 桁に相当します。
 
   - zengin: "-"
     iso: CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
     direction: to-iso
-    verified: false
+    verified: true
+    sources:
+      - 全銀ネット ZEDI 接続ガイダンス 一括ファイル伝送編 (2020-04), 総合振込依頼明細 項番 54
+      - 三菱UFJ銀行 BizSTATION 総合振込（XML形式）レコードフォーマット (2018-12), 項番 54
     why-en: >-
       JPZGN again, on the beneficiary's side, and unconfirmed for the same
       reason — see Q8 and the debtor agent's row.
@@ -346,16 +361,17 @@ rows:
     why-ja: 被仕向銀行名。往路で全角化し、復路で半角化します。
 
   - zengin: data.beneficiaryBranchCode
-    iso: CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    iso: CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BrnchId/Id
     direction: both
-    verified: false
-    loss: COERCED/CRITICAL
+    verified: true
+    sources:
+      - 全銀ネット ZEDI 接続ガイダンス 一括ファイル伝送編 (2020-04), 総合振込依頼明細 項番 59-60
+      - 三菱UFJ銀行 BizSTATION 総合振込（XML形式）レコードフォーマット (2018-12), 項番 59-60
+    loss: DROPPED/CRITICAL
     why-en: >-
-      被仕向支店番号, as the last three digits of the beneficiary's member
-      identifier, for the same reason as the originator's.
+      被仕向支店番号, in its own element, for the same reason as the originator's.
     why-ja: >-
-      被仕向支店番号。仕向側と同じ理由で、被仕向側メンバー識別子の末尾 3 桁に
-      相当します。
+      被仕向支店番号。仕向側と同じ理由で専用の要素に設定します。
 
   - zengin: data.beneficiaryBranchName
     iso: "-"

@@ -130,31 +130,60 @@ class Pain001ModelTest {
         assertThat(RemittanceInformation.NONE.toXml()).isEmpty();
     }
 
-    /// Within 全銀システム a participant is an office, so the member id is 銀行番号
-    /// followed by 支店番号 — seven digits, not four.
+    /// 銀行番号 identifies the member; 支店番号 is a second identifier beside it,
+    /// not the tail of the first. Both the profile and an independent bank's
+    /// own specification give it that way (D-004).
     @Test
-    void anAgentNamesTheClearingSystemItsMemberIdBelongsTo() {
+    void aBankGoesInTheMemberIdAndABranchGoesBesideIt() {
         XmlElement agent = new Agent("9999", "998", "").toXml("DbtrAgt").orElseThrow();
 
         assertThat(agent.textAt("FinInstnId/ClrSysMmbId/ClrSysId/Cd")).contains("JPZGN");
-        assertThat(agent.textAt("FinInstnId/ClrSysMmbId/MmbId")).contains("9999998");
-        assertThat(agent.at("BrnchId"))
-                .as("the branch is part of the member id, not a second identifier")
-                .isEmpty();
+        assertThat(agent.textAt("FinInstnId/ClrSysMmbId/MmbId"))
+                .as("the member id is the bank alone, four digits")
+                .contains("9999");
+        assertThat(agent.textAt("FinInstnId/BrnchId/Id")).contains("998");
     }
 
     @Test
-    void aSevenDigitMemberIdSplitsBackIntoABankAndABranch() {
+    void anAgentReadsBackIntoTheCodesItWasWrittenFrom() {
         var read = Agent.from(new Agent("9999", "998", "ﾃｽﾄ").toXml("DbtrAgt").orElseThrow());
+
+        assertThat(read).isEqualTo(new Agent("9999", "998", "ﾃｽﾄ"));
+    }
+
+    /// Files this library wrote before D-004 was found carry one seven-digit
+    /// member id and no `BrnchId`. They still read: the reader splits a
+    /// seven-digit id only when no explicit branch is present.
+    @Test
+    void aSevenDigitMemberIdWrittenByAnEarlierVersionStillReads() {
+        var read = Agent.from(XmlElement.element("CdtrAgt")
+                .child(XmlElement.element("FinInstnId")
+                        .child(XmlElement.element("ClrSysMmbId")
+                                .textChild("MmbId", "9999998")))
+                .build());
 
         assertThat(read.bankCode()).isEqualTo("9999");
         assertThat(read.branchCode()).isEqualTo("998");
-        assertThat(read.memberId()).isEqualTo("9999998");
-        assertThat(read.splitsCleanly()).isTrue();
+    }
+
+    /// And an explicit branch always wins, so a document carrying both is not
+    /// read two different ways depending on the length of its member id.
+    @Test
+    void anExplicitBranchBeatsAnythingInferredFromALongMemberId() {
+        var read = Agent.from(XmlElement.element("CdtrAgt")
+                .child(XmlElement.element("FinInstnId")
+                        .child(XmlElement.element("ClrSysMmbId")
+                                .textChild("MmbId", "9999998"))
+                        .child(XmlElement.element("BrnchId").textChild("Id", "001")))
+                .build());
+
+        assertThat(read.bankCode()).isEqualTo("9999998");
+        assertThat(read.branchCode()).isEqualTo("001");
     }
 
     /// A member id of another shape is kept whole rather than cut somewhere
-    /// arbitrary. The mapper reports it; the model only declines to guess.
+    /// arbitrary. The mapper reports what it means; the model only declines to
+    /// guess.
     @Test
     void aMemberIdOfAnotherShapeIsKeptWholeRatherThanCutArbitrarily() {
         var read = Agent.from(XmlElement.element("CdtrAgt")
@@ -165,19 +194,13 @@ class Pain001ModelTest {
 
         assertThat(read.bankCode()).isEqualTo("SOMEBANKXXX");
         assertThat(read.branchCode()).isEmpty();
-        assertThat(read.splitsCleanly()).isFalse();
     }
 
-    /// An absent agent is not a malformed one.
-    ///
-    /// Reporting "this is not four digits plus three" for an element that was
-    /// never there sends a reader looking for a defect in a value that does not
-    /// exist.
     @Test
-    void anAbsentAgentSplitsCleanlyByVacuity() {
-        assertThat(new Agent("", "", "").splitsCleanly()).isTrue();
-        assertThat(Agent.from(XmlElement.element("CdtrAgt").build()).splitsCleanly()).isTrue();
-        assertThat(new Agent("9999", "998", "").splitsCleanly()).isTrue();
+    void anAgentWithNothingInItIsEmpty() {
+        assertThat(new Agent("", "", "").isEmpty()).isTrue();
+        assertThat(Agent.from(XmlElement.element("CdtrAgt").build()).isEmpty()).isTrue();
+        assertThat(new Agent("9999", "998", "").isEmpty()).isFalse();
     }
 
     @Test

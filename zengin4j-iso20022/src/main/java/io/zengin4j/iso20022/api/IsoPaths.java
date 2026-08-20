@@ -41,8 +41,11 @@ final class IsoPaths {
     /// `PmtInf/DbtrAgt/FinInstnId/Nm` — 仕向銀行名.
     static final String DEBTOR_AGENT_NAME = PAYMENT + "DbtrAgt/FinInstnId/Nm";
 
-    /// `PmtInf/DbtrAgt/…/MmbId` — 仕向銀行番号 followed by 仕向支店番号.
+    /// `PmtInf/DbtrAgt/…/MmbId` — 仕向銀行番号.
     static final String DEBTOR_AGENT_MEMBER = PAYMENT + "DbtrAgt/FinInstnId/ClrSysMmbId/MmbId";
+
+    /// `PmtInf/DbtrAgt/FinInstnId/BrnchId/Id` — 仕向支店番号.
+    static final String DEBTOR_AGENT_BRANCH = PAYMENT + "DbtrAgt/FinInstnId/BrnchId/Id";
 
     /// `CdtTrfTxInf/PmtId/EndToEndId` — the creditor's reconciliation reference.
     static final String END_TO_END_ID = TRANSACTION + "PmtId/EndToEndId";
@@ -56,9 +59,13 @@ final class IsoPaths {
     /// `CdtTrfTxInf/CdtrAgt/FinInstnId/Nm` — 被仕向銀行名.
     static final String CREDITOR_AGENT_NAME = TRANSACTION + "CdtrAgt/FinInstnId/Nm";
 
-    /// `CdtTrfTxInf/CdtrAgt/…/MmbId` — 被仕向銀行番号 followed by 被仕向支店番号.
+    /// `CdtTrfTxInf/CdtrAgt/…/MmbId` — 被仕向銀行番号.
     static final String CREDITOR_AGENT_MEMBER =
             TRANSACTION + "CdtrAgt/FinInstnId/ClrSysMmbId/MmbId";
+
+    /// `CdtTrfTxInf/CdtrAgt/FinInstnId/BrnchId/Id` — 被仕向支店番号.
+    static final String CREDITOR_AGENT_BRANCH =
+            TRANSACTION + "CdtrAgt/FinInstnId/BrnchId/Id";
 
     /// `CdtTrfTxInf/Cdtr/Nm` — 受取人名, where the conversion does its real damage.
     static final String CREDITOR_NAME = TRANSACTION + "Cdtr/Nm";

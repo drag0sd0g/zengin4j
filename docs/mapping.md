@@ -8,18 +8,8 @@ element, in both directions, with what each one costs.
 
 ## Verification status
 
-**No row here is verified.** All 36 of them are marked `verified: false`, which under R-I19 means none has
-been checked against published profile documentation. They are not guesses — they follow
-the table in the build specification and the shape of the message definition — but "not a
-guess" and "verified" are different claims, and only the second one is worth trusting a
-payment to.
-
-The load-bearing one is the clearing-system identifier `JPZGN`. It names the scheme every
-bank code in the file belongs to, and it is unconfirmed — see Q8 in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
-
-The flag is not on the honour system: a row marked `verified: true` must cite at least two
-independent published sources, or the build fails. That is the same bar R-0.1 sets for a
-format descriptor.
+6 of 36 rows have been checked against published profile documentation. The rest are marked
+`unverified` in the tables below.
 
 ## sougou-furikomi ↔ pain.001.001.03
 
@@ -41,18 +31,18 @@ Bidirectional. The downward leg (ISO to Zengin) needs a MappingContext for 委�
 | `header.originatorName` | `CstmrCdtTrfInitn/PmtInf/Dbtr/Nm` | both | `TRANSLITERATED` / `INFORMATIONAL` | unverified |
 | `header.accountNumber` | `CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/Othr/Id` | both | — | unverified |
 | `header.accountType` | `CstmrCdtTrfInitn/PmtInf/DbtrAcct/Tp/Prtry` | both | — | unverified |
-| `header.originBankCode` | `CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId` | both | — | unverified |
-| — | `CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd` | → ISO | — | unverified |
+| `header.originBankCode` | `CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId` | both | — | verified |
+| — | `CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd` | → ISO | — | verified |
 | `header.originBankName` | `CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/Nm` | both | `TRANSLITERATED` / `INFORMATIONAL` | unverified |
-| `header.originBranchCode` | `CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId` | both | `COERCED` / `CRITICAL` | unverified |
+| `header.originBranchCode` | `CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BrnchId/Id` | both | `DROPPED` / `CRITICAL` | verified |
 | `header.originBranchName` | — | → ISO | `DROPPED` / `INFORMATIONAL` | unverified |
 | `data.customerCode1` | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/EndToEndId` | both | `TRUNCATED` / `CRITICAL` | unverified |
 | — | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/InstrId` | → Zengin | `DROPPED` / `MATERIAL` | unverified |
 | `data.amount` | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Amt/InstdAmt` | both | `COERCED` / `CRITICAL` | unverified |
-| `data.beneficiaryBankCode` | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId` | both | — | unverified |
-| — | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd` | → ISO | — | unverified |
+| `data.beneficiaryBankCode` | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId` | both | — | verified |
+| — | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd` | → ISO | — | verified |
 | `data.beneficiaryBankName` | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/Nm` | both | `TRANSLITERATED` / `INFORMATIONAL` | unverified |
-| `data.beneficiaryBranchCode` | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId` | both | `COERCED` / `CRITICAL` | unverified |
+| `data.beneficiaryBranchCode` | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BrnchId/Id` | both | `DROPPED` / `CRITICAL` | verified |
 | `data.beneficiaryBranchName` | — | → ISO | `DROPPED` / `INFORMATIONAL` | unverified |
 | `data.beneficiaryName` | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/Nm` | both | `TRUNCATED` / `MATERIAL` | unverified |
 | `data.accountNumber` | `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/Othr/Id` | both | — | unverified |
@@ -168,11 +158,11 @@ JPZGN。未確認です (Q8)。メンバー識別子が属する清算機関を�
 
 仕向銀行名。往路で全角化し、復路で半角化します。
 
-**`header.originBranchCode` → `CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId`**
+**`header.originBranchCode` → `CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BrnchId/Id`**
 
-仕向支店番号, as the last three digits of the same member identifier. Coming back, a member id that is not four digits plus three cannot be taken apart — 支店番号 is left empty rather than guessed at, and reported CRITICAL, because a wrong branch code sends the payment to a different office.
+仕向支店番号, in its own element rather than the tail of the member id. Coming back, a document with no BrnchId/Id leaves nothing to put in a field a Zengin record requires, so 支店番号 is left empty and reported CRITICAL: a payment naming a bank but no office does not reach anybody.
 
-仕向支店番号。同じメンバー識別子の末尾 3 桁に相当します。復路で 4 桁 + 3 桁 でないメンバー識別子は分解できないため、支店番号は推測せず空欄とし、CRITICAL として報告します。支店番号を誤ると別の店舗に振り込まれるためです。
+仕向支店番号。メンバー識別子の末尾ではなく専用の要素に設定します。復路で BrnchId/Id がない場合、全銀レコードの必須項目を埋められないため、支店番号は 空欄とし CRITICAL として報告します。銀行だけで店舗がない振込は届きません。
 
 **`header.originBranchName` → —**
 
@@ -216,11 +206,11 @@ JPZGN again, on the beneficiary's side, and unconfirmed for the same reason — 
 
 被仕向銀行名。往路で全角化し、復路で半角化します。
 
-**`data.beneficiaryBranchCode` → `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId`**
+**`data.beneficiaryBranchCode` → `CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BrnchId/Id`**
 
-被仕向支店番号, as the last three digits of the beneficiary's member identifier, for the same reason as the originator's.
+被仕向支店番号, in its own element, for the same reason as the originator's.
 
-被仕向支店番号。仕向側と同じ理由で、被仕向側メンバー識別子の末尾 3 桁に 相当します。
+被仕向支店番号。仕向側と同じ理由で専用の要素に設定します。
 
 **`data.beneficiaryBranchName` → —**
 

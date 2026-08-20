@@ -332,24 +332,34 @@ class MappingDeclarationTest {
 
     // ---------------------------------------------------------- R-I19 itself
 
-    /// No row claims to be verified.
+    /// Exactly these rows claim to be verified.
     ///
-    /// Not a permanent property — the point of the flag is that it can change
-    /// — but a row cannot become verified without somebody citing a source in
-    /// `docs/SOURCES.md`, and this test failing is the prompt to do that
-    /// rather than an obstacle to it.
+    /// This began as "no row claims to be verified", which was true until the
+    /// ZEDI profile and an independent bank specification settled the routing
+    /// elements. It is pinned as a list rather than a count so that a row
+    /// cannot drift into the verified set as a side effect of editing the
+    /// declaration: adding one has to be a deliberate edit here as well, and
+    /// the codegen separately refuses `verified: true` without two cited
+    /// sources.
     @Test
-    void noRowClaimsVerificationItHasNotEarned() {
+    void exactlyTheRoutingRowsClaimVerification() {
         List<String> claimed = rows().stream()
                 .filter(MappingRow::verified)
-                .map(MappingRow::toString)
+                .map(MappingRow::isoPath)
+                .sorted()
                 .toList();
 
         assertThat(claimed)
                 .as("R-I19: a row may be marked verified only once it has been checked against "
-                        + "published profile documentation. If that has happened, cite it in "
-                        + "docs/SOURCES.md and update this test.")
-                .isEmpty();
+                        + "published profile documentation, with two independent sources cited on "
+                        + "the row. Adding one? Cite them in docs/SOURCES.md and list it here.")
+                .containsExactly(
+                        "CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BrnchId/Id",
+                        "CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd",
+                        "CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId",
+                        "CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BrnchId/Id",
+                        "CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd",
+                        "CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId");
     }
 
     @Test
