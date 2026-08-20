@@ -26,7 +26,10 @@ import module java.base;
 /// such a file does not conform, whatever it looks like when decoded.
 ///
 /// Sources: 全国銀行協会 付録1 使用文字一覧 (新旧対照表, 令和元年12月);
-/// 但馬信用金庫 全銀仕様データレコード使用可能文字; PCA 全銀協使用可能文字.
+/// 但馬信用金庫 全銀仕様データレコード使用可能文字; PCA 全銀協使用可能文字;
+/// 全銀ネット ZEDI 接続ガイダンス 一括ファイル伝送編 (2020年4月), which maps every
+/// fixed-length field to one of these classes and agrees with all four of them —
+/// including that only the EDI class admits `ｦ`.
 /// Cited in `docs/SOURCES.md`. Where they diverge, see
 /// `docs/DISCREPANCIES.md`.
 ///
