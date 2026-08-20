@@ -6,9 +6,11 @@ meantime, which is always the more conservative reading (§0.6).
 Resolutions become ADRs in [`adr/`](adr/).
 
 A research pass on **2026-08-15** closed six of these against published sources and narrowed two
-more; Epic 7 closed one more and raised one. Closed entries are kept rather than deleted: the
-reasoning is why the code looks the way it does, and a future reader deserves the evidence, not just
-the outcome.
+more; Epic 7 closed one more and raised one. A second pass on **2026-08-20** obtained Zengin-Net's
+own ZEDI connection guidance, which closed three of the carried questions, corroborated the
+character work against a fourth publisher, and turned up a reader defect (OQ-13). Closed entries are
+kept rather than deleted: the reasoning is why the code looks the way it does, and a future reader
+deserves the evidence, not just the outcome.
 
 | | Question | State |
 |---|---|---|
@@ -23,7 +25,10 @@ the outcome.
 | OQ-9 | 預金種目 narrower set | **Closed** — master list of nine, narrowed per field, implemented in Epic 3 |
 | OQ-10 | Should writing gate on `verified` as reading does? | **Closed** — yes, on the builder ([ADR-0019](adr/0019-building-gates-on-verified.md)) |
 | OQ-11 | Should a conversion refuse on critical loss, or report it? | **Closed** — refuse, by default ([ADR-0033](adr/0033-critical-loss-fails-by-default.md)) |
-| OQ-12 | What `To` belongs in the business application header | Open (research) |
+| OQ-12 | What `To` belongs in the business application header | **Closed 2026-08-20** — the profile specifies the shape; the value is a bilateral credential. See OQ-15 |
+| OQ-13 | A BAH with no message body is refused, and the profile allows one | **Open (defect)** — the two header-only requests identified |
+| OQ-14 | The `pain.001` mapping does not follow the profile | **Open (epic-sized)** — ~14 rows differ |
+| OQ-15 | The business application header does not follow the profile | **Open** — two small defects, one modelling decision |
 
 ---
 
@@ -113,7 +118,9 @@ index exists so that whoever picks up an epic sees those tasks without reading t
   writes the overlay back on the downward leg, because twenty bytes cannot hold a base64 payload.
   → [OQ-8](#oq-8--the-金融edi情報-overlay-is-not-modelled)
 - The Base64 encoding is preserved exactly, line splitting and padding included (R-I12).
-- **`JPZGN` is still unconfirmed** and is now load-bearing. → [Q8](#q8--jpzgn-pending-primary-confirmation)
+- **`JPZGN` rests on three secondary sources** and is load-bearing; the registry file itself is
+  what would let the row stop saying `verified: false`. →
+  [Q8](#q8--jpzgn-corroborated-three-times-one-primary-citation-short)
 - **What belongs in the header's `To`** is a new question. → [OQ-12](#oq-12--what-belongs-in-the-headers-to)
 
 ### Epic 8 — 200-byte formats
@@ -129,6 +136,28 @@ index exists so that whoever picks up an epic sees those tasks without reading t
 ### Unassigned
 
 - **Over-length records (R-C5)** is in no epic in the work breakdown. → [OQ-3](#oq-3--over-length-records-r-c5)
+- **A header-only ZEDI file is refused**, and R-I5 needs rewording before the reader changes.
+  → [OQ-13](#oq-13--a-business-application-header-with-no-body-is-refused-and-the-profile-allows-one)
+
+### Conforming to the ZEDI profile — the order to do it in
+
+The 2026-08-20 pass produced more work than it closed, and the pieces are not equal in size. Doing
+them in this order keeps each one reviewable, and puts the cheap certain fixes ahead of the large
+uncertain one.
+
+1. **Record the findings** — this document, [D-004](DISCREPANCIES.md), and the source entry.
+   *Done 2026-08-20.*
+2. **Fix the two `CreDt` formats.** The header's must be UTC to satisfy `ISONormalisedDateTime`;
+   `pain.001`'s carries no offset at all. Small, self-contained, and wrong today whatever else
+   changes. → [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile),
+   [OQ-14](#oq-14--the-pain001-mapping-does-not-follow-the-profile)
+3. **Fix the writer's `To` path** to `FIId/FinInstnId/Othr/Id`. The reader already accepts both, so
+   this is a change to one method. → [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile)
+4. **Revise the mapping**, as its own epic: the branch codes out of `MmbId`, the trailer totals down
+   into `PmtInf`, the party fields onto `Dbtr`/`UltmtDbtr`/`Cdtr`, the six dropped fields into the
+   elements that hold them, and the inverse leg to match. Rows that end up matching the profile can
+   cite it and stop saying `verified: false`, which is the whole point.
+   → [OQ-14](#oq-14--the-pain001-mapping-does-not-follow-the-profile)
 
 ---
 
@@ -399,13 +428,141 @@ invented. `MappingContext.receiver(...)` overrides it, and a file with no header
 envelope that omits `To` and says so in the loss report, rather than one carrying a placeholder that
 looks structurally fine and means nothing.
 
-**Open, and researchable.** In the live profile the recipient is presumably 全銀ネット or the
-originating bank's ZEDI endpoint, and it is presumably identified by something other than a
-four-digit bank code. Which, and in which of `OrgId` or `FIId`, is not settled here — no source
-consulted addresses it, and a ZEDI participant's own connection guide would.
+**Open, and — as of 2026-08-20 — not researchable after all.** The connection guide this entry was
+waiting for has now been read, and it declines to answer. Zengin-Net's own material tells a company
+transmitting a file that it must add a business application header and to confirm the details with
+whichever transmission package it uses. The content of `Fr` and `To` is delegated to the bank or the
+vendor, deliberately, which means there is no single correct value to find and no document that
+would supply one.
 
-The same uncertainty covers the whole business application header: `BizSvc`, `Prty` and
-`Rltd` are not modelled at all, because nothing seen says whether the profile uses them.
+That changes what the entry is. It is not a gap in the research; it is a variable the profile
+leaves open, and the implementation already has the right shape for one: derive a default from the
+file's own 仕向銀行番号, let `MappingContext.receiver(...)` override it, and omit `To` with a loss
+entry rather than invent a placeholder when there is no header record to derive from. A caller
+integrating with a named bank fills in what that bank asks for.
+
+The connection guidance does specify the header's field table, but on image-only pages that no text
+extraction reaches. Reading them needs OCR or a person, and would settle the shape of `BizSvc`,
+`Prty` and `Rltd` — none of which is modelled, for the same reason as before.
+
+**Closed 2026-08-20, once the tables were read rather than extracted.** The field tables are images,
+which is why the text layer said nothing; rendering the pages and reading them settles it. The
+profile specifies the shape exactly — `To` is a financial institution, reached through
+`FIId/FinInstnId/Othr/Id`, and its value is 仕向銀行番号 followed by a colon and the counterparty's
+centre confirmation code. `Fr` is an organisation, reached through `OrgId/Id/OrgId/Othr/Id`, and its
+value ends in a password.
+
+So both halves of this entry resolve, in opposite directions. The **shape** was findable and is now
+known — and what is written does not match it, which is [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile).
+The **value** genuinely is delegated: a centre confirmation code and a password are agreed between a
+company and its bank, so no amount of reading settles what a given file should carry. Deriving a
+default from the file's own 仕向銀行番号 and letting the caller override it remains the right design,
+because the derivable part is exactly the part the profile derives too.
+
+`BizSvc`, `Prty` and `Rltd` are answered as well: the first is used and unmodelled, the other two do
+not appear in the profile at all.
+
+### OQ-13 — A business application header with no body is refused, and the profile allows one
+
+**Raised 2026-08-20, from Zengin-Net's connection guidance.** `ZediEnvelopeReader` pairs each body
+with the header in front of it and throws `danglingHeader()` when a header has no body, on the
+stated reasoning that every `head.001` in the profile introduces exactly one body (R-I5).
+
+That reasoning is true of 総合振込 and false of the profile. The guidance says plainly that a
+振込入金通知 or 入出金取引明細 *request* consists of the header alone — there is no `pain.001` to
+follow it, because the request carries no detail. The business the header refers to is named in its
+own `MsgDefIdr`, which is how a reader is meant to tell the three apart.
+
+**Impact is narrower than it sounds.** This library models 総合振込 only, so it cannot produce such
+a file and no round trip it performs can hit the case. But `ZediEnvelopeReader.read` is a general
+entry point over ZEDI bytes, and it currently rejects a file the profile defines as valid — with a
+diagnostic that confidently states the opposite of the specification.
+
+**Implemented:** nothing yet. The fix is small — a header with no body becomes a message with no
+body, mirroring the bare-body case the reader already handles — but it needs a decision about what
+`ZediMessage` means when it has no body, and R-I5 should be reworded before the code changes, since
+the code is only repeating what the requirement says.
+
+**Sharpened 2026-08-20.** The header's own `MsgDefIdr` names which business it introduces, and the
+profile lists three values: `pain.001.001.03` for a 総合振込 request, `camt.054.001.02` for
+振込入金通知, and `camt.052.001.02` for 入出金取引明細. The header-only files are the latter two —
+the identifier names the message that *would* follow, and for a request there is nothing to follow
+it. So the reader can tell the cases apart without guessing: a header naming a `camt` message is
+complete on its own.
+
+**One source.** The claim rests on a single document, though that document is the profile owner's
+own. A second would be an institution's ZEDI guide describing either request type.
+
+### OQ-14 — The `pain.001` mapping does not follow the profile
+
+**Raised 2026-08-20, from the request mapping in Zengin-Net's connection guidance.** The document
+lists every XML tag the system accepts, what each one carries, and its type and length. Read against
+the declared mapping, about twelve rows agree and roughly fourteen do not.
+
+*Rows that go somewhere else.*
+
+| 全銀 field | Declared here | The profile's element |
+|---|---|---|
+| 仕向支店番号 / 被仕向支店番号 | packed into `ClrSysMmbId/MmbId` | `FinInstnId/BrnchId/Id`, `N(3)` — see [D-004](DISCREPANCIES.md) |
+| トレーラ 合計件数 | `GrpHdr/NbOfTxs` | `PmtInf/NbOfTxs` |
+| トレーラ 合計金額 | `GrpHdr/CtrlSum` | `PmtInf/CtrlSum` |
+| 委託者コード | `GrpHdr/InitgPty/Id/OrgId/Othr/Id` | `PmtInf/Dbtr/Id/OrgId/Othr/Id`, with `SchmeNm/Cd` fixed to `BANK` |
+| 委託者名 | `GrpHdr/InitgPty/Nm` and `PmtInf/Dbtr/Nm` | `PmtInf/UltmtDbtr/Nm` |
+| 顧客コード1 | `CdtTrfTxInf/PmtId/EndToEndId` | `Cdtr/Id/OrgId/Othr/Id`, with `SchmeNm/Prtry` fixed to `Customer Code1` |
+| 顧客コード2 | `CdtTrfTxInf/RmtInf/Ustrd` | the same shape, `Customer Code2` |
+
+`GrpHdr/NbOfTxs` counts `PmtInf` blocks rather than payments, so both trailer totals are currently
+one level too high in the tree. `RmtInf/Ustrd` is reserved for 金融EDI情報 (item 90), so 顧客コード2
+is occupying an element that belongs to something else. `EndToEndId` is a reference the originating
+company assigns freely (item 49), which is what [Q2](#q2-answered--endtoendid-has-no-right-home-so-the-caller-picks-one)
+concluded independently — but it is not where 顧客コード1 goes.
+
+*Fields dropped here that the profile has a home for.* 仕向支店名 and 被仕向支店名 (`BrnchId/Nm`,
+店舗名称属性), 手形交換所番号 (`CdtrAgt/FinInstnId/Othr/Id`), 新規コード (`Purp/Prtry`), 振込指定区分
+(`InstrForCdtrAgt/InstrInf`), and 識別表示 — which the profile packs together with both ダミー fields
+into a 27-character colon-delimited `InstrForDbtrAgt`. That last one is how the profile achieves what
+R-I6 wants: the filler bytes survive the round trip because there is somewhere to put them.
+
+Each of these is currently reported as a loss. Six loss entries would stop existing.
+
+*One more, unrelated to placement.* `GrpHdr/CreDtTm` is specified with **no UTC offset at all** —
+nineteen characters, or twenty-three with milliseconds. `IsoDateTime` appends one, which makes the
+value twenty-five characters for a JST input and puts it past the stated maximum.
+
+**Implemented:** the mapping as declared, every row `verified: false`, which is exactly the claim the
+evidence supported. Nothing was ever asserted about conformance that this refutes.
+
+**What this is.** Not a defect report — a specification arriving after the fact. The work is a
+revision of the mapping, its loss model, its round-trip properties and its fixtures, and it is large
+enough to be its own epic. The reward is that the corrected rows can cite a source and stop saying
+`verified: false`.
+
+### OQ-15 — The business application header does not follow the profile
+
+**Raised 2026-08-20.** The same document specifies the header in twenty-four items, and three things
+differ from what is written.
+
+- **`To` uses the wrong identifier path.** The profile addresses a bank through
+  `FIId/FinInstnId/Othr/Id`; `BusinessApplicationHeader.party(...)` writes the `OrgId/Id/OrgId/Othr/Id`
+  shape for both `Fr` and `To`. The **reader is already correct** — it tries both paths, and the
+  organisation path first — so only the writer is wrong.
+- **`CreDt` must be UTC.** Its type is `ISONormalisedDateTime`, whose lexical space ends in `Z`.
+  `IsoDateTime` formats with `XXX`, which emits `+09:00` for a JST input and would fail that facet.
+- **`BizSvc` is used and is not modelled.** It carries a colon-delimited control string — transfer
+  mode, file name, character-code flag, connection type, resend flag. `Prty` and `Rltd` do not appear
+  in the profile at all, which closes the other half of
+  [OQ-12](#oq-12--what-belongs-in-the-headers-to).
+
+**Not modellable in full, and that is not a gap.** Both `Fr` and `To` embed centre confirmation codes
+agreed bilaterally between a company and its bank, and `Fr` embeds a **password**. No library can
+derive a submittable header from file content, which is why `MappingContext.receiver(...)` exists and
+why omitting `To` with a loss entry is the right failure. Two consequences worth carrying: a real
+header read from a file **contains a credential**, so R-E6 masking applies to it in any diagnostic;
+and the header this library writes should be understood as a placeholder a caller completes, not as
+something submittable.
+
+**The first two are small and self-contained.** The third needs a decision about how much of the
+header to model at all.
 
 ---
 
@@ -413,14 +570,14 @@ The same uncertainty covers the whole business application header: `BizSvc`, `Pr
 
 | # | Question | Status |
 |---|---|---|
-| Q1 | Project name and Maven coordinate | Placeholder `io.zengin4j` retained; check before publishing (R-B3) |
+| Q1 | Project name and Maven coordinate | **Answered 2026-08-20** — the coordinate is free; what remains is a choice. See below |
 | Q2 | Where `EndToEndId` goes on the inverse leg | **Answered — the caller chooses. See below** |
-| Q3 | Bundle bank/branch reference data, or require it? | Epic 4. `zengin-code/source-data` is the obvious dataset — see OQ-5 |
+| Q3 | Bundle bank/branch reference data, or require it? | **Answered 2026-08-20 — require it.** See below |
 | Q4 | Hiragana input handling | **Answered** — `HiraganaPolicy`, defaulting to convert (Epic 6) |
 | Q5 | Exact permitted symbol set for `C` fields | **Answered 2026-08-15 — see below** |
 | Q6 | 振替結果コード list and per-institution variation | **Answered 2026-08-15 — see below** |
 | Q7 | 200-byte format layouts | **Available** — JBA §§1–2. See OQ-2 |
-| Q8 | ISO 20022 clearing system identifier | **Probably `JPZGN`** — see below, needs primary confirmation |
+| Q8 | ISO 20022 clearing system identifier | **`JPZGN` confirmed by the profile**; the seven-digit `MmbId` reading is **overturned** — see [D-004](DISCREPANCIES.md) |
 | Q9 | 給与 / 賞与 field repurposing | **Answered — three independent sources** |
 | Q10 | Should `0.1.0` ship `verified: false` formats? | Yes, gated behind `allowUnverifiedFormats` |
 
@@ -439,6 +596,19 @@ The same uncertainty covers the whole business application header: `BizSvc`, `Pr
 **New work this creates:** Epic 3's character-set validation needs a per-field character class, not
 one global permitted set. Note also that 給与振込 forbidding A–Z is a rule a 総合振込-shaped
 validator would never catch.
+
+**Corroborated 2026-08-20 by the profile owner.** Zengin-Net's ZEDI connection guidance does exactly
+what this entry claims the answer is: it names five item attributes, maps every fixed-length field
+to one of them, and lists what each admits. Its lists agree with `CharacterClass` on every symbol
+and on the one detail most easily got wrong — that `ｦ` is admitted by the EDI attribute alone. That
+is a fourth independent publisher, and the first that is the body defining the profile rather than
+an institution describing it.
+
+Two cautions for anyone re-reading that document. Its tables sit in a two-column layout that
+collapses under naive text extraction, and a collapsed read makes the branch-name attribute look as
+though it permits no symbols at all — it permits `-`, exactly as implemented. And every character
+list renders its digits without a `0`, which is an artefact of the file rather than a claim about
+the format.
 
 ### Q6, answered — 振替結果コード
 
@@ -483,26 +653,84 @@ defines for exactly that — and is not reported as lost, because nothing was.
 The default is `CUSTOMER_CODE_1`, which is where §15.9 puts it. Under the default refusal threshold
 a reference that does not fit **stops the conversion**, so the truncation cannot happen by accident.
 
-### Q8 — `JPZGN`, pending primary confirmation
+### Q8 — `JPZGN`, corroborated three times, one primary citation short
 
 `JPZGN` is the ISO 20022 External Clearing System Identification code for the Zengin system, with
 the member id being the seven digits of bank code plus branch code — consistent with the mapping
 table in §15.9, which shows `MmbId` as `0009123`.
 
-**Not yet confirmed against a primary source.** This came from secondary references, and the
-authority is the ISO 20022 External Code Sets published by iso20022.org. Confirm there before the
-mapping row is marked anything but `verified: false` (R-I19).
+**Corroborated 2026-08-20 by three independent published sources, and still one short of the bar.**
+All three agree that `JPZGN` is the `ExternalClearingSystemIdentification1Code` value for Japan, and
+the registered definition is **"Bank Branch code used in Japan"**. That wording settles more than the
+question asked: *Branch* is why the member id is seven digits rather than four, and why `BrnchId`
+carries nothing. Industry references state the same shape independently — a seven-digit identifier,
+no separator, for `pain.001`.
+
+The authority is still the External Code Sets file itself, published quarterly by the Registration
+Authority at the end of February, May, August and November as XLSX, XSD and JSON. It is a binary
+download rather than a page, so it has not been read here, and **the mapping row stays
+`verified: false` until it has been** (R-I19). When it is cited, cite the quarter: the sets are
+versioned by publication, not by content, and "the External Code Sets" alone does not identify what
+was read.
+
+Nothing about the implementation is waiting on that citation — the value written and the
+seven-digit structure are what all three sources describe. What is waiting is the claim that it has
+been verified, which is a different thing and the one R-I19 governs.
 
 **Implemented in Epic 7, and it is the single most load-bearing unverified value in the mapping.**
 `ClrSysId/Cd` names the scheme that every bank code in the file belongs to, so getting it wrong
 makes each of them ambiguous. It is written rather than omitted because omitting it would be no
 safer — an unqualified `MmbId` is not more correct, only less legible.
 
-The seven-digit structure is implemented as Q8 describes it: `MmbId` is 銀行番号 followed by
-支店番号, because `MmbId` means "identifier within the named clearing system" and within
-全銀システム a participant is an office rather than an institution. `BrnchId` is therefore not used.
-Coming back, a member id that is not four digits plus three cannot be taken apart, and 支店番号 is
-left empty and reported `CRITICAL` rather than guessed at.
+**The seven-digit half is overturned, 2026-08-20.** The profile's own request mapping gives
+`ClrSysMmbId/MmbId` as 銀行番号 alone, `N(4)`, and puts 支店番号 in `FinInstnId/BrnchId/Id` as `N(3)`,
+on both the debtor and creditor sides. The reasoning recorded here — that `MmbId` identifies an
+office and so must carry both — is a fair inference from the code set's own definition, and the
+document describing how these files are actually built says otherwise. Recorded as
+[D-004](DISCREPANCIES.md); correcting it is part of [OQ-14](#oq-14--the-pain001-mapping-does-not-follow-the-profile).
+
+What is implemented today is the seven-digit reading: `Agent.memberId()` returns 銀行番号 followed by
+支店番号 and `BrnchId` is unused. Coming back, a member id that is not four digits plus three cannot
+be taken apart, and 支店番号 is left empty and reported `CRITICAL` rather than guessed at. That
+inverse logic disappears with the concatenation, which is why this is not a one-line fix.
+
+**The `JPZGN` half is confirmed, and by the strongest possible source.** The profile fixes
+`ClrSysId/Cd` to that constant outright, so the value written has now been checked against the
+document the receiving system is built from — not merely against the registry that defines the code.
+
+### Q1, answered — the coordinate is free; the namespace is the decision
+
+`io.zengin4j` returns no artifacts on Maven Central, so nothing is squatting on it. What stands
+between that and a release is not availability but namespace verification: Central grants a
+domain-shaped groupId only to someone who can prove they own the domain, by publishing a DNS TXT
+record for `zengin4j.io`. The alternative costs nothing — `io.github.<user>` is verified by creating
+a named public repository under that account.
+
+So the research half is closed and the remaining half is a choice with a price attached: buy and
+hold a domain for as long as the artifact is published, or accept a coordinate that names a
+forge rather than a project. Deferred to R-B3, where it belongs, but no longer deferred for want of
+knowing.
+
+### Q3, answered — require the reference data, and the reason is freshness rather than licence
+
+`zengin-code/source-data` is **MIT licensed**, which the README states and no `LICENSE` file
+records — so tooling that reads repository metadata reports it as unlicensed, and a reviewer
+checking that way will reach the wrong conclusion. Redistribution is permitted, with attribution.
+
+Licensing is therefore not what decides this. Cadence is: the dataset is regenerated **monthly**,
+and a snapshot compiled into a library that releases a few times a year would be stale for most of
+its life. Stale bank and branch data in a *validator* is worse than absent data, because it produces
+a confident finding about a branch that has since moved, merged or closed — and V-2xx rules exist to
+be believed.
+
+**Decided: not bundled.** `ReferenceDataProvider` stays the seam, and a consumer points it at a
+copy they refresh on their own schedule. This is the same reasoning as R-M1 arriving at the same
+place by a different road: the thing a payment library should not ship is a fact with an expiry
+date.
+
+One provenance note for anyone tempted to treat the dataset as a source rather than as evidence: it
+credits its data to a third-party site, not to 全銀協. It is good evidence of which codes are *in
+use* — which is all OQ-5 needed — and it is not a specification.
 
 ### Q9, answered — 給与振込 is not 総合振込 with three fields renamed
 

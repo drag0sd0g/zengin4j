@@ -103,12 +103,28 @@ is only an opinion.
    `<Ustrd>` elements at 76 characters per line, inside `<RmtInf>`. Narrows OQ-8 and supplies the
    detail R-I10 and R-I12 depend on.
 
-9. **`zengin-code/source-data`** — machine-readable Japanese financial institution codes.
+9. **一般社団法人全国銀行資金決済ネットワーク (Zengin-Net)** — 「全銀EDIシステム（ZEDI）接続のための
+    ガイダンス 一括ファイル伝送（FB）編」, 2020年4月1日. Retrieved 2026-08-20 via
+    <https://www.zengin-net.jp/zedi/pdf/zedi_fb_guidance.pdf>.
+    The profile owner's own connection guidance, and the fourth independent publisher of the
+    per-field character attributes: it maps each fixed-length field to one of five classes and lists
+    what each class admits. Those lists agree with `CharacterClass` exactly, including the detail
+    that only the EDI class admits `ｦ` and that branch and office names admit `-` and nothing else.
+    Also the source for OQ-13: it states that a 振込入金通知 or 入出金取引明細 request is
+    transmitted as a business application header with no message body.
+
+    **Its tables are images, and have now been read.** The field-level tables carry no text layer, so
+    text extraction sees only the surrounding prose. Rendering those pages and reading them supplied
+    the business application header in twenty-four items (OQ-12, OQ-15) and the `pain.001` request
+    mapping in ninety (OQ-14, [D-004](DISCREPANCIES.md)) — including `ClrSysId/Cd` fixed to `JPZGN`,
+    which is Q8's primary confirmation. Anyone re-reading it should render rather than extract.
+
+10. **`zengin-code/source-data`** — machine-readable Japanese financial institution codes.
    <https://github.com/zengin-code/source-data>, retrieved 2026-08-15. 1,146 institutions; `9900`
    (ゆうちょ銀行) is the only assigned code in the `99xx` block, which is what closes OQ-5. A
    dataset, not a specification — evidence about which codes are *in use*, not about the format.
 
-10. **`Kyash/zengin-go`** — `samples/sample.txt`. Retrieved 2026-08-15. Used for differential
+11. **`Kyash/zengin-go`** — `samples/sample.txt`. Retrieved 2026-08-15. Used for differential
     testing (R-T17), not as authority: decoding it with this library's offsets reconciles the
     file's own trailer totals, which is empirical corroboration no document can provide. Also the
     source of a data point in [D-002](DISCREPANCIES.md), and of the observation recorded in OQ-4.
@@ -192,8 +208,9 @@ Two things would change that, and they are the ones to look for:
 
 | What | Where | What it would settle |
 |---|---|---|
-| The ZEDI XML format documentation | 全銀ネット, for participants | Which elements the profile requires, what belongs in the header's `Fr` and `To` (OQ-12), and whether the 金融EDI payload is framed as this library assumes |
-| The External Code Sets | iso20022.org | Whether `JPZGN` is the clearing-system identifier, and whether `MmbId` is 銀行番号 + 支店番号 (Q8) |
+| ~~The ZEDI connection guidance~~ | 全銀ネット | **Obtained and read, 2026-08-20.** It settled the character attributes, OQ-12, OQ-13, and supplied the mapping R-I19 needs — which turned out to differ from the one implemented (OQ-14) |
+| The External Code Sets, **as published** | iso20022.org | `JPZGN` and the seven-digit `MmbId` now rest on three independent sources (Q8). The registry file itself, cited by quarter, is what lets the mapping row stop saying `verified: false` |
+| An institution's own ZEDI connection guide | a participating bank | What belongs in the header's `Fr` and `To` for *that* bank (OQ-12). Zengin-Net delegates it, so there is no general answer to find |
 
 **The message schemas are not redistributed here.** The XSDs are published by ISO 20022 under terms
 this repository is not in a position to redistribute under, so the library models the subset it needs
@@ -211,8 +228,10 @@ Download `pain.001.001.03.xsd` and `head.001.001.01.xsd` from the message catalo
 
 Per Appendix B of the build specification:
 
-- **全銀ネット** — ZEDI connection guidance and XML format documentation. This is the document that
-  would let any mapping row become `verified: true`; without it, none can.
+- **全銀ネット** — the ZEDI connection guidance is held and has been read in full. What it settled is
+  above; what it created is [OQ-14](OPEN_QUESTIONS.md). The remaining documents from this publisher
+  are the result-side formats (`pain.002`, `camt.052`, `camt.054`), which this library does not model
+  yet and which the same file specifies.
 - **Institution-published format guides** — at least three independent institutions per format.
   Regional banks and 信用金庫 publish the most complete documents.
 - **ISO 20022** — the iso20022.org message catalogue and XSDs.

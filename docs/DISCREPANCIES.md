@@ -128,6 +128,36 @@ conservative default rather than the only reading.
 
 ---
 
+## D-004 — Where the 支店番号 goes in `ClrSysMmbId`
+
+**Status:** open, and the implementation is on the wrong side of it. Raised 2026-08-20.
+
+**Sources**
+
+| Source | Reading |
+|---|---|
+| ISO 20022 `ExternalClearingSystemIdentification1Code`, the registered definition of `JPZGN` | "Bank **Branch** code used in Japan" — a single identifier naming an office, which reads as bank code followed by branch code |
+| Industry references describing `pain.001` for Japan | A seven-digit identifier after `JPZGN`, with no separator |
+| 全銀ネット ZEDI 接続ガイダンス FB編, the request mapping (items 40, 43, 55, 60) | `ClrSysMmbId/MmbId` is 銀行番号 alone, `N(4)`. 支店番号 is `N(3)` and belongs in `FinInstnId/BrnchId/Id` |
+
+**Analysis.** The first two readings are about the code set; the third is about the profile that uses
+it. They are not equally authoritative for this question. `JPZGN`'s definition says what the code
+names — an office rather than an institution — and that is a fact about the code set. It does not
+say how a given profile lays that identifier out, and the profile that actually carries these files
+splits it across two elements, giving each an explicit length.
+
+Nothing here contradicts Q8's other half: `JPZGN` is the right value for `ClrSysId/Cd`, and the same
+guidance fixes it as a constant (item 39). Only the seven-digit `MmbId` reading is refused.
+
+**Implemented:** the seven-digit reading. `Agent.memberId()` returns 銀行番号 followed by 支店番号 and
+`BrnchId` is deliberately unused, on the reasoning recorded in Q8 — which was a reasonable inference
+from the code-set definition alone, and is contradicted by the profile.
+
+**The conservative reading is now the profile's**, because it is the document the receiving system is
+built from. Correcting it is part of [OQ-14](OPEN_QUESTIONS.md); it is not a one-line change, because
+the inverse leg takes a member id apart on the assumption that it is four digits plus three, and that
+assumption disappears along with the concatenation.
+
 ## Reporting a discrepancy
 
 If your institution's specification places a field differently from `docs/formats/`, please open an

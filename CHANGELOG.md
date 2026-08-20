@@ -818,6 +818,54 @@ it, which is the only reason this is a footnote rather than a defect.
   N(19) field's capacity as a negative number, which would have zeroed every inbound payment.
 - `FieldSpec` now also rejects a length below 1, which `FieldDescriptor` already did.
 
+### Documented — research pass, 2026-08-20
+
+- **Zengin-Net's own ZEDI connection guidance obtained and cited** (`docs/SOURCES.md` entry 9). Its
+  per-field character attributes agree with `CharacterClass` exactly — a fourth independent
+  publisher, and the first that is the profile owner. Its field-level tables are images, so the
+  XML-tag-to-全銀-field mapping R-I19 needs is still unread.
+- **Q8 closed to three sources.** `JPZGN` is the ISO 20022 clearing-system identifier for Japan and
+  its registered definition is "Bank Branch code used in Japan" — which is why `MmbId` is seven
+  digits and `BrnchId` is unused. The mapping row stays `verified: false` until the External Code
+  Sets file itself is cited, by quarter.
+- **Q1 closed** — the `io.zengin4j` coordinate is unclaimed on Maven Central; what remains is
+  choosing between owning the domain and an `io.github.*` namespace.
+- **Q3 closed — reference data is not bundled.** `zengin-code/source-data` is MIT (stated in its
+  README, absent from its metadata), so licensing does not decide it. It is regenerated monthly, and
+  a stale branch list in a validator produces confident wrong findings.
+- **OQ-12 reclassified.** The connection guide it was waiting for delegates the header's `Fr` and
+  `To` to the transmitting bank or package, so there is no general answer to find. The current
+  derive-override-or-omit behaviour is the right shape for a value the profile leaves open.
+- **OQ-13 raised.** `ZediEnvelopeReader` refuses a business application header with no message body,
+  but the profile transmits 振込入金通知 and 入出金取引明細 requests in exactly that form. Not
+  reachable through this library's own 総合振込 round trip; reachable by anyone handing
+  `ZediEnvelopeReader.read` a valid ZEDI file. R-I5 should be reworded before the reader changes.
+
+### Documented — the ZEDI profile's own tables, read 2026-08-20
+
+The connection guidance's field tables carry no text layer. Rendering those pages and reading them
+settled three questions and opened two.
+
+- **Q8 is half confirmed and half overturned.** The profile fixes `ClrSysId/Cd` to `JPZGN`, which is
+  the primary confirmation that entry was waiting for. It also gives `ClrSysMmbId/MmbId` as the
+  four-digit 銀行番号 alone and puts 支店番号 in `FinInstnId/BrnchId/Id` — so the seven-digit member
+  id implemented today is wrong. Recorded as D-004.
+- **OQ-12 closed.** `To` is a financial institution reached through `FIId/FinInstnId/Othr/Id`; `Fr`
+  is an organisation, and its value ends in a password agreed bilaterally with the bank. The shape
+  was findable; the value genuinely is not, which is why deriving a default and letting the caller
+  override it stays right. `Prty` and `Rltd` are not in the profile; `BizSvc` is.
+- **OQ-13 sharpened.** `MsgDefIdr` distinguishes the three request types, so a header-only file
+  identifies itself and the reader need not guess.
+- **OQ-14 raised** — about fourteen mapping rows go somewhere other than where the profile puts them,
+  including both trailer totals, both branch codes, and 顧客コード1 and 2. Six fields currently
+  reported as losses have documented homes. Epic-sized.
+- **OQ-15 raised** — the business application header's `To` uses the organisation path where the
+  profile uses the financial-institution one, and `CreDt` must be UTC to satisfy
+  `ISONormalisedDateTime`. Both small.
+
+No mapping row changes state on the strength of this yet; the corrections come first. Nothing that
+was previously claimed is refuted — every row already said `verified: false`.
+
 ### Known limitations
 
 - **Every bundled format descriptor is `verified: false`**, though not for want of evidence: the
