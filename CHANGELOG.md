@@ -805,6 +805,19 @@ it, which is the only reason this is a footnote rather than a defect.
   `byte 43, first differs at 45`, and the JSON carries `firstDifferingByte` beside `offset`. The
   suffix is omitted when a field differs from its first byte.
 
+### Fixed — numeric field widths
+
+- **An `N` field wider than 18 digits is refused when the descriptor is built.** It was accepted,
+  and `FieldCodec.decodeNumeric` accumulates with `value * 10 + digit` and never checks for
+  overflow — so an N(19) amount decoded to a *negative* number and an N(20) one to a plausible
+  wrong positive, both silently. No bundled format could reach this (the widest numeric field any
+  of them declares is 12 digits); it was reachable only through the consumer-supplied descriptors
+  R-X1 allows. The limit is `FieldType.MAX_NUMERIC_DIGITS`, and it is checked in both `FieldSpec`
+  and `FieldDescriptor` — the latter because its constructor is public, so a spec is not the only
+  way to reach one. The same guard closes a second site: `Pain001ToZengin.maximumFor` computed an
+  N(19) field's capacity as a negative number, which would have zeroed every inbound payment.
+- `FieldSpec` now also rejects a length below 1, which `FieldDescriptor` already did.
+
 ### Known limitations
 
 - **Every bundled format descriptor is `verified: false`**, though not for want of evidence: the
