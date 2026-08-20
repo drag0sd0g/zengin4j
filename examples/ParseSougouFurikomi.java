@@ -65,7 +65,7 @@ private static void wholeFile(byte[] file, ReaderOptions options) {
 
         for (DataRecord record : batch.data()) {
             // The record is format-shaped: exactly the fields 総合振込 has.
-            SougouFurikomiData payment = (SougouFurikomiData) record;
+            var payment = (SougouFurikomiData) record;
             System.out.printf("    %-20s %s/%s  ¥%,d%n",
                     payment.beneficiaryName(),
                     payment.beneficiaryBankCode(),

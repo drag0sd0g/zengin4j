@@ -211,7 +211,7 @@ class KanaTableTest {
     /// set aside, nothing else in the table strands a mark.
     @Test
     void everyOtherDecompositionPutsItsMarkOnALegalBase() {
-        List<String> known = List.of("\u30F7", "\u30FA", "\u3099", "\u309A");
+        var known = List.of("\u30F7", "\u30FA", "\u3099", "\u309A");
 
         KanaTables.narrowings().forEach((full, half) -> {
             if (known.contains(full)) {

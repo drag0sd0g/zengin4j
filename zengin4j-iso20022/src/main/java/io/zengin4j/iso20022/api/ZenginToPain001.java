@@ -59,14 +59,14 @@ final class ZenginToPain001 {
             instructions.add(instruction(file.batches().get(i), i + 1));
         }
 
-        Pain001Document document = new Pain001Document(groupHeader(file), instructions);
+        var document = new Pain001Document(groupHeader(file), instructions);
         crossCheckTrailers(file, document);
         reportUnreadableRecords(file);
         reportDroppedReferences();
         reportDisagreeingOriginators(file);
         reportDroppedFields(file);
 
-        BusinessApplicationHeader header = new BusinessApplicationHeader(
+        var header = new BusinessApplicationHeader(
                 context.originatorCode(), receiver(file),
                 context.messageId(), Pain001Document.MESSAGE_ID, context.creationDateTime());
 

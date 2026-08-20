@@ -60,8 +60,8 @@ class WritePolicyTest {
     @Test
     void aValueTheFieldAcceptsIsWrittenUnchangedUnderEveryPolicy() {
         for (CharacterWritePolicy policy : CharacterWritePolicy.values()) {
-            EncodingOptions options = EncodingOptions.builder().characters(policy).build();
-            LossCollector loss = new LossCollector();
+            var options = EncodingOptions.builder().characters(policy).build();
+            var loss = new LossCollector();
 
             byte[] frame = RecordEncoder.encode(DATA, ZenginCharset.MS932,
                     withName("ﾔﾏﾀﾞ ﾀﾛｳ"), options, loss);
@@ -77,9 +77,9 @@ class WritePolicyTest {
 
     @Test
     void transliterateConvertsAFullWidthNameAndSaysWhatItDid() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.TRANSLITERATE).build();
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
 
         byte[] frame = RecordEncoder.encode(DATA, ZenginCharset.MS932,
                 withName("ガクブチ ジロウ"), options, loss);
@@ -90,9 +90,9 @@ class WritePolicyTest {
 
     @Test
     void transliterateLocatesItsLossesAtTheFieldTheyHappenedIn() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.TRANSLITERATE).build();
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
 
         RecordEncoder.encode(DATA, ZenginCharset.MS932, withName("キャノン"), options, loss);
 
@@ -103,7 +103,7 @@ class WritePolicyTest {
     /// The engine still refuses what it cannot convert, whatever the policy.
     @Test
     void transliterateStillRefusesKanji() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.TRANSLITERATE).build();
 
         assertThatExceptionOfType(UntransliterableCharacterException.class)
@@ -118,7 +118,7 @@ class WritePolicyTest {
     /// reason the transliterator takes a character class.
     @Test
     void transliterateAppliesTheFieldsOwnCharacterClass() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.TRANSLITERATE).build();
 
         byte[] party = RecordEncoder.encode(DATA, ZenginCharset.MS932,
@@ -133,11 +133,11 @@ class WritePolicyTest {
 
     @Test
     void transliterateCanBeToldToDropWhatItCannotWrite() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.TRANSLITERATE)
                 .unmappable(UnmappableCharacterPolicy.DROP)
                 .build();
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
 
         byte[] frame = RecordEncoder.encode(PAYROLL_DATA, ZenginCharset.MS932,
                 withName("ヨーコ"), options, loss);
@@ -150,11 +150,11 @@ class WritePolicyTest {
 
     @Test
     void replaceSubstitutesTheConfiguredByteAndRecordsIt() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.REPLACE)
                 .replacement((byte) '.')
                 .build();
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
 
         byte[] frame = RecordEncoder.encode(DATA, ZenginCharset.MS932,
                 withName("ﾔﾏﾀﾞ*ﾀﾛｳ"), options, loss);
@@ -171,7 +171,7 @@ class WritePolicyTest {
     /// field `V-202` then rejected.
     @Test
     void aReplacementTheFieldWouldRefuseIsRefused() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.REPLACE)
                 .replacement((byte) '?')
                 .build();
@@ -185,7 +185,7 @@ class WritePolicyTest {
     /// And a voicing mark as a replacement would strand itself.
     @Test
     void aVoicingMarkCannotBeUsedAsAReplacement() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.REPLACE)
                 .replacement((byte) 0xDE)
                 .build();
@@ -205,7 +205,7 @@ class WritePolicyTest {
     /// once, here, so the next one fails a test instead.
     @Test
     void nothingAnyPolicyWritesIsEverInvalid() {
-        List<String> inputs = List.of("ﾔﾏﾀﾞ ﾀﾛｳ", "ガクブチ ジロウ", "キャノン", "ヨーコ",
+        var inputs = List.of("ﾔﾏﾀﾞ ﾀﾛｳ", "ガクブチ ジロウ", "キャノン", "ヨーコ",
                 "ﾔﾏﾀﾞ*ﾀﾛｳ", "ＡＢＣ", "abc", "ｱｲｳｴｵ");
 
         for (RecordDescriptor record : List.of(DATA, PAYROLL_DATA)) {
@@ -213,7 +213,7 @@ class WritePolicyTest {
 
             for (CharacterWritePolicy policy : CharacterWritePolicy.values()) {
                 for (String input : inputs) {
-                    EncodingOptions options = EncodingOptions.builder()
+                    var options = EncodingOptions.builder()
                             .characters(policy)
                             .truncation(io.zengin4j.core.kana.TruncationPolicy.TRUNCATE_SAFE)
                             .unmappable(UnmappableCharacterPolicy.DROP)
@@ -259,7 +259,7 @@ class WritePolicyTest {
     /// fixed — and a silent one.
     @Test
     void replaceKeepsTheFieldTheSameLength() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.REPLACE)
                 .replacement((byte) ' ')
                 .build();
@@ -272,7 +272,7 @@ class WritePolicyTest {
 
     @Test
     void whatReplaceProducesIsWritableIntoTheField() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.REPLACE)
                 .replacement((byte) ' ')
                 .build();
@@ -297,7 +297,7 @@ class WritePolicyTest {
     void transliterateMeasuresLengthInTheEncoderSCharset() {
         Map<String, String> values = new LinkedHashMap<>();
         values.put("beneficiaryName", "アイウエオカキクケコサシスセソ");
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.TRANSLITERATE)
                 .truncation(io.zengin4j.core.kana.TruncationPolicy.TRUNCATE_SAFE)
                 .build();
@@ -316,11 +316,11 @@ class WritePolicyTest {
 
     @Test
     void numericFieldsAreLeftAloneBecauseDigitsArePermittedEverywhere() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.TRANSLITERATE).build();
         Map<String, String> values = new LinkedHashMap<>();
         values.put("amount", "150000");
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
 
         byte[] frame = RecordEncoder.encode(DATA, ZenginCharset.MS932, values, options, loss);
 

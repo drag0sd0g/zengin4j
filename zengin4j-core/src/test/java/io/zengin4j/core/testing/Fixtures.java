@@ -144,11 +144,11 @@ public final class Fixtures {
     /// @return the framed file
     public static byte[] framed(FormatDescriptor descriptor, FileFraming framing) {
         byte[] separator = framing.separator().bytes().orElseThrow();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        var out = new ByteArrayOutputStream();
         if (framing.byteOrderMarkPresent()) {
             out.writeBytes(RecordFramer.BYTE_ORDER_MARK);
         }
-        List<byte[]> records = List.of(header(descriptor), data(descriptor),
+        var records = List.of(header(descriptor), data(descriptor),
                 trailer(descriptor, 1, AMOUNT), end(descriptor));
         for (int i = 0; i < records.size(); i++) {
             out.writeBytes(records.get(i));
@@ -181,7 +181,7 @@ public final class Fixtures {
 
     /// Joins records, writing the separator after each one.
     public static byte[] join(byte[] separator, byte[]... records) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        var out = new ByteArrayOutputStream();
         for (byte[] record : records) {
             out.writeBytes(record);
             out.writeBytes(separator);
@@ -190,14 +190,14 @@ public final class Fixtures {
     }
 
     public static byte[] concat(List<byte[]> chunks) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        var out = new ByteArrayOutputStream();
         chunks.forEach(out::writeBytes);
         return out.toByteArray();
     }
 
     /// The same layout under a different id, for registry and ambiguity tests.
     public static FormatDescriptor renamed(FormatDescriptor descriptor, String newId) {
-        FormatId id = FormatId.of(newId);
+        var id = FormatId.of(newId);
         Map<RecordKind, RecordDescriptor> records = new java.util.EnumMap<>(RecordKind.class);
         descriptor.records().forEach((kind, record) -> records.put(kind,
                 new RecordDescriptor(id, record.kind(), record.discriminator(), record.recordLength(),

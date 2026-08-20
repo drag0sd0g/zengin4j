@@ -505,7 +505,7 @@ final class Pain001ToZengin {
 
     /// The year is dropped, and that is not recoverable.
     private MonthDay executionDate(PaymentInstruction instruction) {
-        MonthDay monthDay = MonthDay.of(instruction.requestedExecutionDate().getMonth(),
+        var monthDay = MonthDay.of(instruction.requestedExecutionDate().getMonth(),
                 instruction.requestedExecutionDate().getDayOfMonth());
         loss.record(LossEntry.of(LossKind.DROPPED, LossSeverity.INFORMATIONAL,
                         instruction.requestedExecutionDate().toString(), monthDay.toString(),
@@ -567,7 +567,7 @@ final class Pain001ToZengin {
             return "";
         }
         FieldDescriptor field = descriptor.record(kind).field(fieldId);
-        TransliterationOptions options = TransliterationOptions.builder()
+        var options = TransliterationOptions.builder()
                 .characterClass(field.charClass())
                 .charset(context.targetCharset())
                 .truncation(context.truncationPolicy())
@@ -661,7 +661,7 @@ final class Pain001ToZengin {
             return value;
         }
 
-        String kept = new String(bytes, 0, limit, context.targetCharset().charset()).trim();
+        var kept = new String(bytes, 0, limit, context.targetCharset().charset()).trim();
         loss.record(LossEntry.of(LossKind.TRUNCATED, severity, value, kept,
                         "'" + value + "' is " + bytes.length + " bytes and " + fieldId
                                 + " holds " + limit + ". It was cut to '" + kept

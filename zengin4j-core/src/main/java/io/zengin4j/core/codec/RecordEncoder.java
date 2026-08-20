@@ -208,7 +208,7 @@ public final class RecordEncoder {
         // bytes of the encoding the record is written in, and a transliterator
         // measuring MS932 while the caller writes UTF-8 would call a 45-byte
         // value a 15-byte one and let it overflow the field.
-        TransliterationOptions transliteration = TransliterationOptions.builder()
+        var transliteration = TransliterationOptions.builder()
                 .characterClass(field.charClass())
                 .charset(charset)
                 .truncation(options.truncation())

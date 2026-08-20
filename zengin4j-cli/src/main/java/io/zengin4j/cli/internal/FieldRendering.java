@@ -71,7 +71,7 @@ public final class FieldRendering {
         if (clean) {
             return value;
         }
-        StringBuilder out = new StringBuilder(value.length());
+        var out = new StringBuilder(value.length());
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
             if (c == '\r') {
@@ -232,7 +232,7 @@ public final class FieldRendering {
     private static String pad(String value, int width) {
         int actual = displayWidth(value);
         if (actual > width) {
-            StringBuilder cut = new StringBuilder();
+            var cut = new StringBuilder();
             int used = 0;
             for (int i = 0; i < value.length(); i++) {
                 int next = charWidth(value.charAt(i));

@@ -132,8 +132,8 @@ class CliReferenceTest {
     void theSampleTableHasTheColumnsTheToolPrints() throws IOException {
         String text = reference();
 
-        StringWriter buffer = new StringWriter();
-        PrintWriter writer = new PrintWriter(buffer);
+        var buffer = new StringWriter();
+        var writer = new PrintWriter(buffer);
         FieldRendering.table(writer, sampleRows());
         writer.flush();
         String headingRow = buffer.toString().lines().findFirst().orElseThrow();

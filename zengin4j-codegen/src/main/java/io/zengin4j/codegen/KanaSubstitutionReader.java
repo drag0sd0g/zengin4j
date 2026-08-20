@@ -50,7 +50,7 @@ final class KanaSubstitutionReader {
             if (!(element instanceof Map<?, ?> entry)) {
                 throw new CodegenException(file + ": every substitution must be a mapping");
             }
-            Substitution substitution = new Substitution(
+            var substitution = new Substitution(
                     required(file, entry, "from"),
                     required(file, entry, "to"),
                     required(file, entry, "severity"),

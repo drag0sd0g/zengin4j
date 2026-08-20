@@ -57,7 +57,7 @@ public final class ZediEnvelopeWriter {
     /// @return the file's bytes
     public static byte[] toByteArray(ZediFile file) {
         Objects.requireNonNull(file, "file");
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        var out = new ByteArrayOutputStream();
         out.writeBytes(file.preamble());
         for (ZediMessage message : file.messages()) {
             out.writeBytes(message.bytes());

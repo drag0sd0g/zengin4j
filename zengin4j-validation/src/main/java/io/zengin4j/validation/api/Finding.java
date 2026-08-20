@@ -111,7 +111,7 @@ public record Finding(
     /// @param locale the locale to render for
     /// @return the line, never `null`
     public String toLine(java.util.Locale locale) {
-        StringBuilder out = new StringBuilder();
+        var out = new StringBuilder();
         out.append(severity).append(' ').append(ruleId);
         recordNumber.ifPresent(number -> out.append(" record ").append(number));
         byteOffset.ifPresent(offset -> out.append(" byte ").append(offset));

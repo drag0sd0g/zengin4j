@@ -60,7 +60,7 @@ class MonthDayResolverTest {
 
     @Test
     void nearestConsidersThreeYears() {
-        MonthDayResolver resolver = MonthDayResolver.of(ResolutionStrategy.NEAREST, LocalDate.of(2026, 7, 1));
+        var resolver = MonthDayResolver.of(ResolutionStrategy.NEAREST, LocalDate.of(2026, 7, 1));
 
         assertThat(resolver.resolve(MonthDay.of(7, 2)).candidateYears()).containsExactly(2025, 2026, 2027);
         assertThat(resolver.resolve(MonthDay.of(7, 2)).date()).contains(LocalDate.of(2026, 7, 2));

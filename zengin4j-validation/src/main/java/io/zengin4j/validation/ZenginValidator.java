@@ -80,7 +80,7 @@ public final class ZenginValidator {
     public ValidationReport validate(ZenginFile file) {
         Objects.requireNonNull(file, "file");
         FormatDescriptor descriptor = file.descriptor();
-        ValidationContext context = ValidationContext.create(
+        var context = ValidationContext.create(
                 file, descriptor, dateResolver, calendar, referenceData, unmaskSensitiveValues);
         return new ValidationReport(engine.run(context), engine.rules());
     }

@@ -31,7 +31,7 @@ class NativeImageConfigTest {
     private static List<String> runtimeResources() throws IOException {
         List<String> found = new ArrayList<>();
         for (String module : List.of("zengin4j-core", "zengin4j-validation", "zengin4j-testkit")) {
-            Path root = Path.of("..", module, "src", "main", "resources");
+            var root = Path.of("..", module, "src", "main", "resources");
             if (!Files.isDirectory(root)) {
                 continue;
             }

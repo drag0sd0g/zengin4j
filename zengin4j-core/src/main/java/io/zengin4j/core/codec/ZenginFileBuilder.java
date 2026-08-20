@@ -166,7 +166,7 @@ public final class ZenginFileBuilder {
     /// @return this builder
     public ZenginFileBuilder header(Consumer<FieldValues> values) {
         RecordDescriptor header = descriptor.record(RecordKind.HEADER);
-        FieldValues collected = new FieldValues(header);
+        var collected = new FieldValues(header);
         values.accept(collected);
         current = new PendingBatch(collected.values());
         batches.add(current);
@@ -182,7 +182,7 @@ public final class ZenginFileBuilder {
         if (current == null) {
             throw new IllegalStateException("a data record must follow a header; call header(...) first");
         }
-        FieldValues collected = new FieldValues(descriptor.record(RecordKind.DATA));
+        var collected = new FieldValues(descriptor.record(RecordKind.DATA));
         values.accept(collected);
         current.data.add(collected.values());
         return this;
@@ -201,7 +201,7 @@ public final class ZenginFileBuilder {
         if (current == null) {
             throw new IllegalStateException("a trailer must follow a header; call header(...) first");
         }
-        FieldValues collected = new FieldValues(descriptor.record(RecordKind.TRAILER));
+        var collected = new FieldValues(descriptor.record(RecordKind.TRAILER));
         values.accept(collected);
         current.trailerOverrides.putAll(collected.values());
         return this;
@@ -212,7 +212,7 @@ public final class ZenginFileBuilder {
     /// @param values sets the end record's fields
     /// @return this builder
     public ZenginFileBuilder endRecord(Consumer<FieldValues> values) {
-        FieldValues collected = new FieldValues(descriptor.record(RecordKind.END));
+        var collected = new FieldValues(descriptor.record(RecordKind.END));
         values.accept(collected);
         endValues = collected.values();
         return this;
@@ -250,11 +250,11 @@ public final class ZenginFileBuilder {
         RecordDescriptor dataDescriptor = descriptor.record(RecordKind.DATA);
         Optional<RecordDescriptor> trailerDescriptor = descriptor.find(RecordKind.TRAILER);
 
-        Cursor cursor = new Cursor();
+        var cursor = new Cursor();
         List<Batch> built = new ArrayList<>(batches.size());
 
         for (PendingBatch pending : batches) {
-            HeaderRecord header = (HeaderRecord) materialise(headerDescriptor, pending.header, cursor);
+            var header = (HeaderRecord) materialise(headerDescriptor, pending.header, cursor);
 
             List<DataRecord> data = new ArrayList<>(pending.data.size());
             for (Map<String, String> values : pending.data) {

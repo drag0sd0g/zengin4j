@@ -102,7 +102,7 @@ class EdgeCaseTest {
     /// whose execution date was made up.
     @Test
     void aLeapDayInANonLeapYearFallsBackAndSaysItIsCritical() {
-        MappingContext nonLeap = MappingContext.builder("9900000001", LocalDate.of(2026, 3, 1))
+        var nonLeap = MappingContext.builder("9900000001", LocalDate.of(2026, 3, 1))
                 .targetFormat(fixtures().descriptor())
                 .acceptAnyLoss()
                 .build();
@@ -227,7 +227,7 @@ class EdgeCaseTest {
     /// reconciles against. Both 顧客コード fields are already spoken for.
     @Test
     void anInstructionIdThatCannotBeCarriedIsReported() {
-        PaymentInstruction withInstrId = new PaymentInstruction("P-1",
+        var withInstrId = new PaymentInstruction("P-1",
                 LocalDate.of(2026, 9, 30), Party.named("テストシヨウジ"),
                 new Account("9000001", "1"), new Agent("9999", "998", ""),
                 List.of(new CreditTransferTransaction("INV-1", "DEBTOR-REF-9", Money.yen(1),
@@ -278,7 +278,7 @@ class EdgeCaseTest {
     /// at the same branch — the same number can exist under two types.
     @Test
     void anAccountWithNoTypeIsAssumedOrdinaryAndSaidToBeCritical() {
-        PaymentInstruction untyped = new PaymentInstruction("P-1",
+        var untyped = new PaymentInstruction("P-1",
                 LocalDate.of(2026, 9, 30), Party.named("テストシヨウジ"),
                 new Account("9000001", ""), new Agent("9999", "998", ""),
                 List.of(new CreditTransferTransaction("INV-1", "", Money.yen(1),
@@ -304,7 +304,7 @@ class EdgeCaseTest {
     @Test
     void anAmountTheFieldCannotHoldIsReportedRatherThanThrown() {
         for (String impossible : List.of("99999999999", "1".repeat(25), "-500")) {
-            PaymentInstruction instruction = new PaymentInstruction("P-1",
+            var instruction = new PaymentInstruction("P-1",
                     LocalDate.of(2026, 9, 30), Party.named("テストシヨウジ"),
                     new Account("9000001", "1"), new Agent("9999", "998", ""),
                     List.of(new CreditTransferTransaction("INV-1", "",
@@ -355,7 +355,7 @@ class EdgeCaseTest {
     /// And under the default threshold, that stops the conversion.
     @Test
     void anImpossibleAmountStopsTheConversionByDefault() {
-        PaymentInstruction instruction = new PaymentInstruction("P-1",
+        var instruction = new PaymentInstruction("P-1",
                 LocalDate.of(2026, 9, 30), Party.named("テストシヨウジ"),
                 new Account("9000001", "1"), new Agent("9999", "998", ""),
                 List.of(new CreditTransferTransaction("INV-1", "",
@@ -373,7 +373,7 @@ class EdgeCaseTest {
 
     @Test
     void theLargestRepresentableAmountIsStillWritten() {
-        PaymentInstruction instruction = new PaymentInstruction("P-1",
+        var instruction = new PaymentInstruction("P-1",
                 LocalDate.of(2026, 9, 30), Party.named("テストシヨウジ"),
                 new Account("9000001", "1"), new Agent("9999", "998", ""),
                 List.of(new CreditTransferTransaction("INV-1", "",
@@ -509,7 +509,7 @@ class EdgeCaseTest {
     /// looks perfectly valid, so the field is emptied rather than cut.
     @Test
     void anIdentifierTooLongForItsFieldIsDroppedRatherThanShortened() {
-        PaymentInstruction longAccount = new PaymentInstruction("P-1",
+        var longAccount = new PaymentInstruction("P-1",
                 LocalDate.of(2026, 9, 30), Party.named("テストシヨウジ"),
                 new Account("9000001", "1"), new Agent("9999", "998", ""),
                 List.of(new CreditTransferTransaction("INV-1", "", Money.yen(1),
@@ -535,7 +535,7 @@ class EdgeCaseTest {
     /// only reason a zeroed identifier is survivable.
     @Test
     void anIdentifierThatCannotBeWrittenStopsTheConversionByDefault() {
-        PaymentInstruction longAccount = new PaymentInstruction("P-1",
+        var longAccount = new PaymentInstruction("P-1",
                 LocalDate.of(2026, 9, 30), Party.named("テストシヨウジ"),
                 new Account("9000001", "1"), new Agent("9999", "998", ""),
                 List.of(new CreditTransferTransaction("INV-1", "", Money.yen(1),
@@ -554,7 +554,7 @@ class EdgeCaseTest {
     /// A member id of an unexpected shape reaches the bank-code field the same way.
     @Test
     void aMemberIdTooLongForTheBankCodeFieldIsDropped() {
-        PaymentInstruction longMember = new PaymentInstruction("P-1",
+        var longMember = new PaymentInstruction("P-1",
                 LocalDate.of(2026, 9, 30), Party.named("テストシヨウジ"),
                 new Account("9000001", "1"), new Agent("9999", "998", ""),
                 List.of(new CreditTransferTransaction("INV-1", "", Money.yen(1),
@@ -575,7 +575,7 @@ class EdgeCaseTest {
     /// throw out of the encoder.
     @Test
     void aProprietaryAccountTypeThatIsNotOneCharacterIsAssumedOrdinary() {
-        PaymentInstruction wordy = new PaymentInstruction("P-1",
+        var wordy = new PaymentInstruction("P-1",
                 LocalDate.of(2026, 9, 30), Party.named("テストシヨウジ"),
                 new Account("9000001", "1"), new Agent("9999", "998", ""),
                 List.of(new CreditTransferTransaction("INV-1", "", Money.yen(1),
@@ -645,14 +645,14 @@ class EdgeCaseTest {
 
     /// One payment of ¥1, with whatever the caller wants in the group header.
     private static byte[] withGroupHeaderClaiming(String claimed) {
-        PaymentInstruction one = new PaymentInstruction("P-1", LocalDate.of(2026, 9, 30),
+        var one = new PaymentInstruction("P-1", LocalDate.of(2026, 9, 30),
                 Party.named("テストシヨウジ"), new Account("9000001", "1"),
                 new Agent("9999", "998", ""),
                 List.of(new CreditTransferTransaction("INV-1", "", Money.yen(1),
                         new Agent("9999", "999", ""), Party.named("ヤマダ"),
                         new Account("9876543", "1"), RemittanceInformation.NONE)));
 
-        String xml = new String(io.zengin4j.iso20022.envelope.ZediEnvelopeWriter
+        var xml = new String(io.zengin4j.iso20022.envelope.ZediEnvelopeWriter
                 .toByteArray(isoFile(one)), java.nio.charset.StandardCharsets.UTF_8);
         return xml.replaceFirst("<NbOfTxs>[^<]*</NbOfTxs>\\s*<CtrlSum>[^<]*</CtrlSum>", claimed)
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8);
@@ -664,7 +664,7 @@ class EdgeCaseTest {
     /// (ADR-0022).
     @Test
     void theJsonReportParsesAndKeepsWhatItSaid() throws Exception {
-        MappingLossReport report = MappingLossReport.of(new LossReport(List.of(
+        var report = MappingLossReport.of(new LossReport(List.of(
                 LossEntry.of(LossKind.TRUNCATED, LossSeverity.MATERIAL,
                                 "a \"quoted\" name\nwith a newline\tand a tab",
                                 "back\\slash", "explanation", "説明")
@@ -697,7 +697,7 @@ class EdgeCaseTest {
     @Test
     void aControlCharacterInAValueIsEscapedRatherThanEmitted() throws Exception {
         String withControl = "beforeafter";
-        MappingLossReport report = MappingLossReport.of(new LossReport(List.of(
+        var report = MappingLossReport.of(new LossReport(List.of(
                 LossEntry.of(LossKind.DROPPED, LossSeverity.MATERIAL,
                         withControl, "", "en", "ja"))));
 
@@ -709,7 +709,7 @@ class EdgeCaseTest {
 
     @Test
     void anEnglishLocaleGetsTheEnglishText() {
-        MappingLossReport report = MappingLossReport.of(new LossReport(List.of(
+        var report = MappingLossReport.of(new LossReport(List.of(
                 LossEntry.of(LossKind.DROPPED, LossSeverity.MATERIAL, "a", "b", "en", "ja"))));
 
         assertThat(report.toText(Locale.ENGLISH)).contains("en").doesNotContain("ja");
@@ -721,12 +721,12 @@ class EdgeCaseTest {
 
     @Test
     void messagesAndFilesCompareByWhatTheyContain() {
-        ZediMessage message = ZediMessage.of(
+        var message = ZediMessage.of(
                 new BusinessApplicationHeader("9900000001", "9999", "M1",
                         MessageId.PAIN_001_001_03, OffsetDateTime.parse("2026-09-01T00:00:00Z")),
                 XmlElement.element("Document").namespace(MessageId.PAIN_001_001_03.namespace())
                         .child(XmlElement.element("CstmrCdtTrfInitn")).build());
-        ZediMessage same = ZediMessage.of(
+        var same = ZediMessage.of(
                 new BusinessApplicationHeader("9900000001", "9999", "M1",
                         MessageId.PAIN_001_001_03, OffsetDateTime.parse("2026-09-01T00:00:00Z")),
                 XmlElement.element("Document").namespace(MessageId.PAIN_001_001_03.namespace())
@@ -759,7 +759,7 @@ class EdgeCaseTest {
 
     @Test
     void aHeaderReadsBackWhatItWrote() {
-        BusinessApplicationHeader original = new BusinessApplicationHeader(
+        var original = new BusinessApplicationHeader(
                 "9900000001", "9999", "M1", MessageId.PAIN_001_001_03,
                 OffsetDateTime.parse("2026-09-01T00:00:00Z"));
 
@@ -768,7 +768,7 @@ class EdgeCaseTest {
 
     @Test
     void aHeaderMissingEverythingReadsAsBlanksRatherThanFailing() {
-        BusinessApplicationHeader read = BusinessApplicationHeader.from(
+        var read = BusinessApplicationHeader.from(
                 XmlElement.element(BusinessApplicationHeader.ROOT).build());
 
         assertThat(read.from()).isEmpty();
@@ -779,7 +779,7 @@ class EdgeCaseTest {
 
     @Test
     void aHeaderWithAnUnreadableDateDoesNotRefuseTheWholeFile() {
-        BusinessApplicationHeader read = BusinessApplicationHeader.from(
+        var read = BusinessApplicationHeader.from(
                 XmlElement.element(BusinessApplicationHeader.ROOT)
                         .textChild("CreDt", "not a date")
                         .build());
@@ -789,7 +789,7 @@ class EdgeCaseTest {
 
     @Test
     void aFinancialInstitutionIdentifiedByBicIsStillReadable() {
-        BusinessApplicationHeader read = BusinessApplicationHeader.from(
+        var read = BusinessApplicationHeader.from(
                 XmlElement.element(BusinessApplicationHeader.ROOT)
                         .child(XmlElement.element("Fr")
                                 .child(XmlElement.element("FIId")

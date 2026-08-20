@@ -11,10 +11,10 @@ import module java.base;
 record Cli(int status, String out, String err) {
 
     static Cli run(String... args) {
-        StringWriter outBuffer = new StringWriter();
-        StringWriter errBuffer = new StringWriter();
-        PrintWriter out = new PrintWriter(outBuffer);
-        PrintWriter err = new PrintWriter(errBuffer);
+        var outBuffer = new StringWriter();
+        var errBuffer = new StringWriter();
+        var out = new PrintWriter(outBuffer);
+        var err = new PrintWriter(errBuffer);
 
         int status = Zengin.run(args, out, err);
 

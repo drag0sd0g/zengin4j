@@ -33,7 +33,7 @@ public final class ReportWriters {
     /// @return the JSON document, never `null`
     public static String toJson(ValidationReport report) {
         Objects.requireNonNull(report, "report");
-        Json json = new Json();
+        var json = new Json();
         json.object(() -> {
             json.field("submittable", report.isSubmittable());
             json.name("counts").object(() -> {
@@ -73,7 +73,7 @@ public final class ReportWriters {
         Objects.requireNonNull(rules, "rules");
         String uri = fileUri == null ? "zengin-file" : fileUri;
 
-        Json json = new Json();
+        var json = new Json();
         json.object(() -> {
             json.field("$schema", SARIF_SCHEMA);
             json.field("version", SARIF_VERSION);
@@ -248,7 +248,7 @@ public final class ReportWriters {
         /// escaping katakana would only make the document unreadable to the
         /// people most likely to read it.
         private static String escape(String value) {
-            StringBuilder escaped = new StringBuilder(value.length() + 8);
+            var escaped = new StringBuilder(value.length() + 8);
             for (int i = 0; i < value.length(); i++) {
                 char c = value.charAt(i);
                 switch (c) {

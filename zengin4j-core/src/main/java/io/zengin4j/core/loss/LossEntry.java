@@ -95,7 +95,7 @@ public record LossEntry(
     ///
     /// @return the line, never `null`
     public String toLine() {
-        StringBuilder line = new StringBuilder()
+        var line = new StringBuilder()
                 .append(severity).append(' ').append(kind);
         targetField.ifPresent(field -> line.append(" [").append(field).append(']'));
         return line.append(": ").append(explanationEn).toString();

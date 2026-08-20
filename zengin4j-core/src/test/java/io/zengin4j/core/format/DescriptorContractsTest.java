@@ -194,7 +194,7 @@ class DescriptorContractsTest {
 
     @Test
     void codeListsAnswerMembershipQuestions() {
-        CodeList closed = new CodeList("x", "名", "Name", false, false,
+        var closed = new CodeList("x", "名", "Name", false, false,
                 List.of(new CodeValue("1", "一", "One", false, Optional.empty())), List.of(),
                 Optional.empty());
 
@@ -212,7 +212,7 @@ class DescriptorContractsTest {
                         List.of("only one citation"), Optional.empty()))
                 .withMessageContaining("at least 2 are required");
 
-        CodeList verified = new CodeList("x", "名", "Name", true, true, List.of(),
+        var verified = new CodeList("x", "名", "Name", true, true, List.of(),
                 List.of("first citation", "second citation"), Optional.empty());
         assertThat(verified.verified()).isTrue();
         assertThat(verified.sources()).hasSize(2);

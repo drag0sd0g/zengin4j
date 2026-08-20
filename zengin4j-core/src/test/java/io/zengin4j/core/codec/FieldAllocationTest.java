@@ -100,7 +100,7 @@ class FieldAllocationTest {
         assumeThat(threads.isThreadAllocatedMemoryEnabled()).isTrue();
 
         byte[] record = Fixtures.data(descriptor);
-        RecordDescriptorHolder holder = new RecordDescriptorHolder(descriptor.record(RecordKind.DATA));
+        var holder = new RecordDescriptorHolder(descriptor.record(RecordKind.DATA));
 
         for (int i = 0; i < 10_000; i++) {
             holder.check(record);

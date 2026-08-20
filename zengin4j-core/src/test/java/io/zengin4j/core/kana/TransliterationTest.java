@@ -143,7 +143,7 @@ class TransliterationTest {
 
     @Test
     void droppingIsAvailableForCallersWhoPreferItToRefusal() {
-        TransliterationOptions dropping = TransliterationOptions.builder()
+        var dropping = TransliterationOptions.builder()
                 .characterClass(CharacterClass.PAYROLL_NAME)
                 .unmappable(UnmappableCharacterPolicy.DROP)
                 .build();
@@ -164,7 +164,7 @@ class TransliterationTest {
     @Test
     void everyOutputSatisfiesItsOwnFieldClass() {
         for (CharacterClass characterClass : CharacterClass.values()) {
-            TransliterationOptions options = TransliterationOptions.builder()
+            var options = TransliterationOptions.builder()
                     .characterClass(characterClass)
                     .unmappable(UnmappableCharacterPolicy.DROP)
                     .build();
@@ -216,7 +216,7 @@ class TransliterationTest {
 
     @Test
     void hiraganaConvertsWhenAskedAndSaysSo() {
-        TransliterationOptions converting = TransliterationOptions.builder()
+        var converting = TransliterationOptions.builder()
                 .hiragana(HiraganaPolicy.CONVERT).build();
 
         Transliteration result = KanaTransliterator.toHalfWidth("やまだ", converting);

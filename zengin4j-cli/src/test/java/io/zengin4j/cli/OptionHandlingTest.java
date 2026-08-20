@@ -89,7 +89,7 @@ class OptionHandlingTest {
     /// explain it.
     @Test
     void aCalendarOfYourOwnCanBeSupplied() throws Exception {
-        StringBuilder csv = new StringBuilder("# a calendar of my own\nhorizon=2099-12-31\n");
+        var csv = new StringBuilder("# a calendar of my own\nhorizon=2099-12-31\n");
         for (int year = 2020; year <= 2099; year++) {
             csv.append(year).append("-09-30,Invented Bank Holiday\n");
         }

@@ -112,7 +112,7 @@ public final class ExplainCommand implements Callable<Integer> {
                 .sorted(java.util.Comparator.comparing(descriptor -> descriptor.id().value()))
                 .toList();
         if (outFormat == OutputFormat.JSON) {
-            Json json = new Json();
+            var json = new Json();
             json.object(() -> json.name("formats").array(() -> {
                 for (FormatDescriptor descriptor : all) {
                     json.object(() -> {
@@ -161,7 +161,7 @@ public final class ExplainCommand implements Callable<Integer> {
         }
 
         if (outFormat == OutputFormat.JSON) {
-            Json json = new Json();
+            var json = new Json();
             json.object(() -> {
                 json.field("format", descriptor.id().value());
                 json.name("occurrences").array(() -> {
@@ -287,7 +287,7 @@ public final class ExplainCommand implements Callable<Integer> {
     }
 
     private String json(FormatDescriptor descriptor) {
-        Json json = new Json();
+        var json = new Json();
         json.object(() -> {
             json.field("id", descriptor.id().value());
             json.field("nameJa", descriptor.nameJa());

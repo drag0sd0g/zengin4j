@@ -88,7 +88,7 @@ public final class RandomZenginFiles {
         }
         records.add(RecordEncoder.encode(descriptor.record(RecordKind.END), ZenginCharset.MS932, Map.of()));
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        var out = new ByteArrayOutputStream();
         if (framing.byteOrderMarkPresent()) {
             out.writeBytes(RecordFramer.BYTE_ORDER_MARK);
         }
@@ -249,12 +249,12 @@ public final class RandomZenginFiles {
     }
 
     private static String monthDay(Random random) {
-        MonthDay value = MonthDay.of(1 + random.nextInt(12), 1 + random.nextInt(28));
+        var value = MonthDay.of(1 + random.nextInt(12), 1 + random.nextInt(28));
         return String.format("%02d%02d", value.getMonthValue(), value.getDayOfMonth());
     }
 
     private static String digits(Random random, int count) {
-        StringBuilder result = new StringBuilder(count);
+        var result = new StringBuilder(count);
         for (int i = 0; i < count; i++) {
             result.append((char) ('0' + random.nextInt(10)));
         }

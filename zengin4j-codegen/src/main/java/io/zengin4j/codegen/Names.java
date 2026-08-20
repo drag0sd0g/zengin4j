@@ -57,7 +57,7 @@ final class Names {
     }
 
     static String constantPrefix(FieldDescriptor field) {
-        StringBuilder result = new StringBuilder();
+        var result = new StringBuilder();
         String id = field.id();
         for (int i = 0; i < id.length(); i++) {
             char c = id.charAt(i);

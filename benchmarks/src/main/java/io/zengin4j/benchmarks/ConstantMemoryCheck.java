@@ -44,7 +44,7 @@ public final class ConstantMemoryCheck {
         System.out.printf("streaming %,d bytes under a %,d MB heap%n",
                 target, runtime.maxMemory() / (1024 * 1024));
 
-        ReaderOptions options = ReaderOptions.builder()
+        var options = ReaderOptions.builder()
                 .registry(FormatRegistry.defaults())
                 .allowUnverifiedFormats(true)
                 .warningListener(warning -> {

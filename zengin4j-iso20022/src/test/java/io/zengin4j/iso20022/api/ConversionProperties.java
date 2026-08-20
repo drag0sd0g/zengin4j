@@ -63,7 +63,7 @@ class ConversionProperties {
     /// running one test, and it looks exactly like a thorough one.
     @Test
     void theGeneratedFilesAreActuallyDifferent() {
-        Random random = new Random(SEED);
+        var random = new Random(SEED);
         java.util.Set<String> names = new java.util.LinkedHashSet<>();
         java.util.Set<Long> amounts = new java.util.LinkedHashSet<>();
 
@@ -88,7 +88,7 @@ class ConversionProperties {
     /// epic presented — is a defect, not an answer.
     @Test
     void convertingAnyGeneratedFileEitherWorksOrFailsInTheDeclaredWay() {
-        Random random = new Random(SEED);
+        var random = new Random(SEED);
 
         for (int i = 0; i < FILES; i++) {
             long seed = random.nextLong();
@@ -124,7 +124,7 @@ class ConversionProperties {
     /// content rather than over one fixture's names.
     @Test
     void everyProducedMessageParsesBackToTheTreeItWasWrittenFrom() {
-        Random random = new Random(SEED);
+        var random = new Random(SEED);
 
         for (int i = 0; i < FILES; i++) {
             long seed = random.nextLong();
@@ -156,7 +156,7 @@ class ConversionProperties {
     /// returned fewer would be moving less money than it was asked to.
     @Test
     void aRoundTripKeepsEveryPayment() {
-        Random random = new Random(SEED);
+        var random = new Random(SEED);
 
         for (int i = 0; i < FILES; i++) {
             long seed = random.nextLong();
@@ -182,7 +182,7 @@ class ConversionProperties {
     /// no acceptable middle.
     @Test
     void everyAmountSurvivesARoundTripOrIsReportedCritical() {
-        Random random = new Random(SEED);
+        var random = new Random(SEED);
 
         for (int i = 0; i < FILES; i++) {
             long seed = random.nextLong();

@@ -38,7 +38,7 @@ class JsonOutputTest {
 
     @Test
     void everyCommandEmitsParseableJson() throws Exception {
-        List<String[]> invocations = List.of(
+        var invocations = List.of(
                 new String[] {"validate", file.toString(), "--allow-unverified"},
                 new String[] {"inspect", file.toString(), "--annotate", "--allow-unverified"},
                 new String[] {"diff", file.toString(), other.toString(), "--allow-unverified"},

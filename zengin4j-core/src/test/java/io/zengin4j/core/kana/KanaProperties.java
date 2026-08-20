@@ -34,7 +34,7 @@ class KanaProperties {
 
     private static Case generate(Random random) {
         int syllables = 1 + random.nextInt(12);
-        StringBuilder name = new StringBuilder(syllables);
+        var name = new StringBuilder(syllables);
         for (int i = 0; i < syllables; i++) {
             name.append(SYLLABLES.get(random.nextInt(SYLLABLES.size())));
         }
@@ -108,7 +108,7 @@ class KanaProperties {
         for (CharacterClass characterClass : List.of(CharacterClass.PARTY_NAME,
                 CharacterClass.BANK_NAME, CharacterClass.PAYROLL_NAME)) {
 
-            TransliterationOptions options = TransliterationOptions.builder()
+            var options = TransliterationOptions.builder()
                     .characterClass(characterClass)
                     .unmappable(UnmappableCharacterPolicy.DROP)
                     .build();
@@ -131,7 +131,7 @@ class KanaProperties {
     /// And it stays writable after being cut to length.
     @Test
     void truncatedOutputIsStillWritable() {
-        TransliterationOptions options = TransliterationOptions.builder()
+        var options = TransliterationOptions.builder()
                 .characterClass(CharacterClass.PARTY_NAME)
                 .truncation(TruncationPolicy.TRUNCATE_SAFE)
                 .build();

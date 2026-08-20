@@ -124,7 +124,7 @@ public abstract sealed class GenericRecord
     /// @return a diagnostic description
     @Override
     public final String toString() {
-        StringBuilder result = new StringBuilder(getClass().getSimpleName())
+        var result = new StringBuilder(getClass().getSimpleName())
                 .append("[format=").append(descriptor.formatId())
                 .append(", recordNumber=").append(recordNumber);
         for (FieldDescriptor field : descriptor.fields()) {

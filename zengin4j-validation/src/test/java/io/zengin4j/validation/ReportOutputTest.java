@@ -66,7 +66,7 @@ class ReportOutputTest {
     /// A message containing the characters JSON reserves must not break it.
     @Test
     void quotesAndBackslashesAreEscaped() {
-        ValidationReport report = new ValidationReport(List.of(
+        var report = new ValidationReport(List.of(
                 io.zengin4j.validation.api.Finding.of(
                                 io.zengin4j.validation.api.Severity.ERROR, "V-999")
                         .message("a \"quoted\" value with a \\ backslash\nand a newline",

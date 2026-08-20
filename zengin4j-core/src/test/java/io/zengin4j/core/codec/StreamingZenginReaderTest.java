@@ -189,7 +189,7 @@ class StreamingZenginReaderTest {
     /// R-0.1, issue 1.9: a provisional layout is refused unless the caller opts in.
     @Test
     void refusesAnUnverifiedFormatUnlessAllowed() {
-        ReaderOptions options = ReaderOptions.builder()
+        var options = ReaderOptions.builder()
                 .registry(Fixtures.registry())
                 .warningListener(warning -> {
                 })
@@ -203,7 +203,7 @@ class StreamingZenginReaderTest {
     @Test
     void warnsWhenAnUnverifiedFormatIsAllowed() {
         List<ZenginWarning> raised = new ArrayList<>();
-        ReaderOptions options = ReaderOptions.builder()
+        var options = ReaderOptions.builder()
                 .registry(Fixtures.registry())
                 .allowUnverifiedFormats(true)
                 .warningListener(raised::add)
@@ -224,7 +224,7 @@ class StreamingZenginReaderTest {
 
     @Test
     void reportsAnAmbiguousTypeCode() {
-        FormatRegistry registry = FormatRegistry.builder()
+        var registry = FormatRegistry.builder()
                 .codeLists(Fixtures.registry().codeLists())
                 .register(descriptor)
                 .register(Fixtures.renamed(descriptor, "sougou-furikomi-variant"))
@@ -406,7 +406,7 @@ class StreamingZenginReaderTest {
                 SeparatorStyle.LF, SeparatorStyle.CRLF)) {
             for (boolean mark : List.of(true, false)) {
                 for (boolean eof : List.of(true, false)) {
-                    FileFraming framing = new FileFraming(mark, style, style != SeparatorStyle.NONE, eof);
+                    var framing = new FileFraming(mark, style, style != SeparatorStyle.NONE, eof);
                     byte[] source = Fixtures.framed(descriptor, framing);
                     ReaderOptions tiny = Fixtures.optionsBuilder()
                             .byteOrderMark(ByteOrderMarkPolicy.STRIP)
@@ -464,7 +464,7 @@ class StreamingZenginReaderTest {
     /// A reader owns the stream it opened and must release it (R-C21).
     @Test
     void closingTheReaderClosesTheStreamItOpened() {
-        AtomicBoolean closed = new AtomicBoolean();
+        var closed = new AtomicBoolean();
         InputStream source = new ByteArrayInputStream(Fixtures.file(descriptor)) {
             @Override
             public void close() {

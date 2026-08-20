@@ -83,7 +83,7 @@ class ConvertedFilesValidateTest {
     }
 
     private static ZediFile isoFile(String name, Money amount, String reference) {
-        Pain001Document document = new Pain001Document(
+        var document = new Pain001Document(
                 new GroupHeader("MSG-1", OffsetDateTime.parse("2026-09-01T00:00:00Z"),
                         new Party("テストシヨウジ", "9900000001")),
                 List.of(new PaymentInstruction("MSG-1-1", LocalDate.of(2026, 9, 30),
@@ -187,8 +187,8 @@ class ConvertedFilesValidateTest {
 
         RoundTripResult round = Iso20022Mapper.create().roundTrip(original, context);
 
-        SougouFurikomiData before = (SougouFurikomiData) original.allData().get(0);
-        SougouFurikomiData after = (SougouFurikomiData) round.result().allData().get(0);
+        var before = (SougouFurikomiData) original.allData().get(0);
+        var after = (SougouFurikomiData) round.result().allData().get(0);
         String report = round.loss().toText();
 
         for (String code : List.of(before.customerCode1().trim(), before.customerCode2().trim())) {

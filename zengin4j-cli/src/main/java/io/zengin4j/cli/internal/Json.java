@@ -129,7 +129,7 @@ public final class Json {
     /// katakana would only make the document unreadable to the people most
     /// likely to read it.
     private static String escape(String value) {
-        StringBuilder escaped = new StringBuilder(value.length() + 8);
+        var escaped = new StringBuilder(value.length() + 8);
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
             switch (c) {

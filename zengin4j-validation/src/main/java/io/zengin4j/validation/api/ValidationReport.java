@@ -103,7 +103,7 @@ public final class ValidationReport {
     public String toText(Locale locale) {
         Objects.requireNonNull(locale, "locale");
         boolean japanese = "ja".equals(locale.getLanguage());
-        StringBuilder out = new StringBuilder();
+        var out = new StringBuilder();
         if (findings.isEmpty()) {
             return japanese ? "指摘事項はありません。\n" : "No findings.\n";
         }

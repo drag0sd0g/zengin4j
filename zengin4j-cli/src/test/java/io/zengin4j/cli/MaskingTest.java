@@ -102,7 +102,7 @@ class MaskingTest {
     /// somebody's CI log.
     @Test
     void everyCommandThatReadsAFileMasksByDefault() {
-        List<String[]> invocations = List.of(
+        var invocations = List.of(
                 new String[] {"inspect", file.toString(), "--annotate", "--allow-unverified"},
                 new String[] {"inspect", file.toString(), "--allow-unverified"},
                 new String[] {"validate", file.toString(), "--allow-unverified"},

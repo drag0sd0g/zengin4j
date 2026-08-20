@@ -54,7 +54,7 @@ class ConversionGoldenTest {
 
     @Test
     void theConvertedMessageIsWhatWasCommitted() {
-        String produced = new String(
+        var produced = new String(
                 ZediEnvelopeWriter.toByteArray(convert().output()), StandardCharsets.UTF_8);
 
         if (regenerating()) {
@@ -113,7 +113,7 @@ class ConversionGoldenTest {
 
     /// Writes back into the source tree, not the build output, so the diff is reviewable.
     private static void write(String name, String content) {
-        Path path = Path.of("src/test/resources").resolve(name.substring(1));
+        var path = Path.of("src/test/resources").resolve(name.substring(1));
         try {
             Files.createDirectories(path.getParent());
             Files.writeString(path, content, StandardCharsets.UTF_8);

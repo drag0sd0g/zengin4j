@@ -41,7 +41,7 @@ implementing. An implementation that makes twenty undocumented judgement calls i
 | [0034](0034-the-mapping-context-is-flags-not-a-file.md) | The mapping context is command-line flags, not a context file | Accepted |
 | [0035](0035-the-mapping-is-data-not-a-rule-engine.md) | The mapping is declared data, not an executable rule interface | Accepted |
 | [0036](0036-java-25-baseline.md) | The baseline moves from Java 21 to Java 25 | Accepted |
-| [0037](0037-markdown-doc-comments-and-module-imports.md) | Markdown doc comments throughout, and `import module java.base` | Accepted |
+| [0037](0037-markdown-doc-comments-and-module-imports.md) | Markdown doc comments, module imports, and where `var` stops | Accepted |
 
 ## Template
 

@@ -198,7 +198,7 @@ class FormatRegistryTest {
     }
 
     private static FormatDescriptor renamed(FormatDescriptor descriptor, String newId) {
-        FormatId id = FormatId.of(newId);
+        var id = FormatId.of(newId);
         Map<RecordKind, RecordDescriptor> records = new java.util.EnumMap<>(RecordKind.class);
         descriptor.records().forEach((kind, record) -> records.put(kind,
                 new RecordDescriptor(id, record.kind(), record.discriminator(), record.recordLength(),

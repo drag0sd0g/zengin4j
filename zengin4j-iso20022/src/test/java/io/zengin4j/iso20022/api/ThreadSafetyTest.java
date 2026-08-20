@@ -54,7 +54,7 @@ class ThreadSafetyTest {
     /// overlap rather than queueing behind each other.
     @Test
     void oneMapperSharedAcrossThreadsProducesIdenticalResults() throws Exception {
-        Iso20022Mapper shared = Iso20022Mapper.create();
+        var shared = Iso20022Mapper.create();
         ZenginFile file = file();
         MappingContext context = context();
 
@@ -62,7 +62,7 @@ class ThreadSafetyTest {
         byte[] expectedBytes = ZediEnvelopeWriter.toByteArray(reference.output());
         String expectedReport = reference.loss().toText();
 
-        CyclicBarrier start = new CyclicBarrier(THREADS);
+        var start = new CyclicBarrier(THREADS);
         List<Callable<Boolean>> work = new ArrayList<>(THREADS);
         for (int t = 0; t < THREADS; t++) {
             work.add(() -> {
@@ -89,7 +89,7 @@ class ThreadSafetyTest {
     /// The same for the leg that writes a file rather than a message.
     @Test
     void theInverseLegIsAlsoSafeToShare() throws Exception {
-        Iso20022Mapper shared = Iso20022Mapper.create();
+        var shared = Iso20022Mapper.create();
         MappingContext context = context();
         ZediFile message = shared.toIso(file(), context).output();
 
@@ -97,7 +97,7 @@ class ThreadSafetyTest {
         int expectedEntries = reference.loss().entries().size();
         int expectedPayments = reference.output().allData().size();
 
-        CyclicBarrier start = new CyclicBarrier(THREADS);
+        var start = new CyclicBarrier(THREADS);
         List<Callable<Boolean>> work = new ArrayList<>(THREADS);
         for (int t = 0; t < THREADS; t++) {
             work.add(() -> {

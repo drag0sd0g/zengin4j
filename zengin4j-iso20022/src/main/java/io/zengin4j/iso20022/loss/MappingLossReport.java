@@ -129,7 +129,7 @@ public final class MappingLossReport {
         if (report.isLossless()) {
             return "損失なし\n";
         }
-        StringBuilder out = new StringBuilder();
+        var out = new StringBuilder();
         for (LossEntry entry : report.entries()) {
             out.append(entry.severity()).append(' ').append(entry.kind());
             entry.targetField().ifPresent(field -> out.append(" [").append(field).append(']'));
@@ -148,7 +148,7 @@ public final class MappingLossReport {
     ///
     /// @return the JSON text
     public String toJson() {
-        StringBuilder out = new StringBuilder("{\n");
+        var out = new StringBuilder("{\n");
         out.append("  \"lossless\": ").append(report.isLossless()).append(",\n");
         out.append("  \"entries\": [");
         for (int i = 0; i < report.entries().size(); i++) {
@@ -180,7 +180,7 @@ public final class MappingLossReport {
     }
 
     private static String escape(String value) {
-        StringBuilder out = new StringBuilder(value.length() + 8);
+        var out = new StringBuilder(value.length() + 8);
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
             switch (c) {

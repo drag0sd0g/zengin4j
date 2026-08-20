@@ -21,7 +21,7 @@ class ModelTest {
     /// R-D7: a total that will not fit is reported, never wrapped into a negative.
     @Test
     void reportsRatherThanWrapsAnOverflowingTotal() {
-        Batch batch = new Batch(header(), List.of(data(Long.MAX_VALUE, 2), data(1L, 3)),
+        var batch = new Batch(header(), List.of(data(Long.MAX_VALUE, 2), data(1L, 3)),
                 Optional.empty(), List.of());
 
         assertThatExceptionOfType(AmountOverflowException.class)
@@ -32,7 +32,7 @@ class ModelTest {
 
     @Test
     void sumsAndCountsWhatIsActuallyPresent() {
-        Batch batch = new Batch(header(), List.of(data(1_000L, 2), data(2_000L, 3)),
+        var batch = new Batch(header(), List.of(data(1_000L, 2), data(2_000L, 3)),
                 Optional.empty(), List.of());
 
         assertThat(batch.computedCount()).isEqualTo(2);
@@ -85,7 +85,7 @@ class ModelTest {
     @Test
     void malformedRecordsCarryTheirBytesAndReason() {
         byte[] bytes = Fixtures.data(format);
-        MalformedRecord record = new MalformedRecord(format.id(), 7, 840, bytes, "unknown データ区分");
+        var record = new MalformedRecord(format.id(), 7, 840, bytes, "unknown データ区分");
 
         assertThat(record.kind()).isEqualTo(RecordKind.MALFORMED);
         assertThat(record.rawBytes()).isEqualTo(bytes).isNotSameAs(bytes);
@@ -99,7 +99,7 @@ class ModelTest {
     /// R-CLI4: unparseable bytes are still payment data, so they do not go in a log line.
     @Test
     void malformedRecordToStringDoesNotPrintTheRecord() {
-        MalformedRecord record = new MalformedRecord(format.id(), 7, 840, Fixtures.data(format), "reason");
+        var record = new MalformedRecord(format.id(), 7, 840, Fixtures.data(format), "reason");
 
         assertThat(record.toString())
                 .contains("recordNumber=7", "byteOffset=840", "bytes=120", "reason=reason")
@@ -108,7 +108,7 @@ class ModelTest {
 
     @Test
     void zenginFileCountsEveryRecord() {
-        ZenginFile file = new ZenginFile(format,
+        var file = new ZenginFile(format,
                 List.of(new Batch(header(), List.of(data(1L, 2)), Optional.empty(), List.of())),
                 Optional.empty(),
                 List.of(new MalformedRecord(format.id(), 4, 0, new byte[1], "stray")),

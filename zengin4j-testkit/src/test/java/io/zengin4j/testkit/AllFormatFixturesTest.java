@@ -171,7 +171,7 @@ class AllFormatFixturesTest {
     /// field ids they populate rather than only in prose.
     @Test
     void directDebitFixturesNameThePayerNotTheBeneficiary() {
-        KouzaFurikaeFixtures fixtures = KouzaFurikaeFixtures.create();
+        var fixtures = KouzaFurikaeFixtures.create();
         RecordDescriptor data = fixtures.descriptor()
                 .record(io.zengin4j.core.format.RecordKind.DATA);
 
@@ -184,7 +184,7 @@ class AllFormatFixturesTest {
     /// An instruction file carries no outcome yet.
     @Test
     void directDebitInstructionsCarryNoResultYet() {
-        KouzaFurikaeFixtures fixtures = KouzaFurikaeFixtures.create();
+        var fixtures = KouzaFurikaeFixtures.create();
         ZenginFile file = read(fixtures, fixtures.file());
 
         RecordDescriptor data = fixtures.descriptor()

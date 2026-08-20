@@ -33,7 +33,7 @@ class ValidatorContractTest {
     /// R-V1, again: a rule with a bug in it must not become the caller's exception.
     @Test
     void aRuleThatThrowsBecomesAFindingRatherThanAnException() {
-        ZenginValidator validator = ZenginValidator.builder()
+        var validator = ZenginValidator.builder()
                 .withRules(List.of(new ExplodingRule()))
                 .build();
 
@@ -49,7 +49,7 @@ class ValidatorContractTest {
     /// And the other rules still run when one of them is broken.
     @Test
     void aBrokenRuleDoesNotSuppressTheOthers() {
-        ZenginValidator validator = ZenginValidator.builder()
+        var validator = ZenginValidator.builder()
                 .addRule(new ExplodingRule())
                 .build();
 

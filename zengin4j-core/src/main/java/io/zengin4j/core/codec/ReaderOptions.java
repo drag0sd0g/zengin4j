@@ -61,7 +61,7 @@ public final class ReaderOptions {
     ///
     /// @return a builder that would rebuild these options
     public Builder toBuilder() {
-        Builder builder = new Builder();
+        var builder = new Builder();
         builder.charset = charset;
         builder.allowUnverifiedFormats = allowUnverifiedFormats;
         builder.format = format;

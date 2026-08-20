@@ -204,10 +204,10 @@ class ZediEnvelopeTest {
 
     @Test
     void aMessageBuiltFromAModelSerialisesItsOwnBytes() {
-        BusinessApplicationHeader head = new BusinessApplicationHeader(
+        var head = new BusinessApplicationHeader(
                 "9900000001", "9999", "M1", MessageId.PAIN_001_001_03,
                 java.time.OffsetDateTime.parse("2026-09-01T00:00:00Z"));
-        ZediMessage message = ZediMessage.of(head,
+        var message = ZediMessage.of(head,
                 io.zengin4j.iso20022.xml.XmlElement.element("Document")
                         .namespace(MessageId.PAIN_001_001_03.namespace())
                         .child(io.zengin4j.iso20022.xml.XmlElement.element("CstmrCdtTrfInitn")
