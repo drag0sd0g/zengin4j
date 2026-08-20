@@ -12,12 +12,17 @@ import io.zengin4j.iso20022.xml.XmlElement;
 /// a separate XML document concatenated ahead of the body — see
 /// [ZediEnvelopeReader] for why that matters more than it sounds.
 ///
-/// **Provisional.** No row of this model has been confirmed
-/// against two independent published sources (R-0.1), so like every format
-/// descriptor in this release it is `verified: false`. The element names
-/// are those of `head.001.001.01`; which of them the profile requires, and
-/// what it expects in `Fr` and `To` for a corporate sender, is
-/// recorded as unsettled in `docs/OPEN_QUESTIONS.md`.
+/// **Partial, deliberately.** The profile specifies this header in
+/// twenty-four items, and what is modelled here is the five that a converter
+/// can fill in: `Fr`, `To`, `BizMsgIdr`, `MsgDefIdr` and
+/// `CreDt`. The rest — `BizSvc`, and the centre confirmation codes
+/// and password embedded in `Fr` and `To` — are agreed bilaterally
+/// between a company and its bank, so no library can derive them from a Zengin
+/// file. **What this writes is a placeholder a caller completes, not a
+/// submittable header.** See OQ-15 in `docs/OPEN_QUESTIONS.md`.
+///
+/// A header read from a real file therefore **contains a credential**, which is
+/// worth remembering before rendering one in a diagnostic (R-E6).
 ///
 /// @param from                        `Fr` — the sender's identifier
 /// @param to                          `To` — the recipient's identifier
@@ -81,8 +86,8 @@ public record BusinessApplicationHeader(
     public XmlElement toXml() {
         return XmlElement.element(ROOT)
                 .namespace(MessageId.HEAD_001_001_01.namespace())
-                .childIfPresent(party("Fr", from))
-                .childIfPresent(party("To", to))
+                .childIfPresent(organisation("Fr", from))
+                .childIfPresent(financialInstitution("To", to))
                 .textChild("BizMsgIdr", businessMessageIdentifier)
                 .textChild("MsgDefIdr", messageDefinitionIdentifier.value())
                 .textChild("CreDt", IsoDateTime.formatNormalised(creationDate))
@@ -99,6 +104,42 @@ public record BusinessApplicationHeader(
                 .orElse("");
     }
 
+    /// The sender, as an organisation.
+    ///
+    /// `Fr` is the company transmitting the file, so it takes the
+    /// organisation branch. In the live profile its value is the sender's
+    /// centre confirmation code and a password agreed with the bank — neither
+    /// derivable from a Zengin file, which is why what this writes is a
+    /// placeholder a caller completes rather than something submittable.
+    ///
+    /// @param name the element name
+    /// @param id   the identifier
+    /// @return the element, or nothing when there is no identifier
+    private static Optional<XmlElement> organisation(String name, String id) {
+        return party(name, id, XmlElement.element("OrgId")
+                .child(XmlElement.element("Id")
+                        .child(XmlElement.element("OrgId")
+                                .child(XmlElement.element("Othr")
+                                        .textChild("Id", id)))));
+    }
+
+    /// The recipient, as a financial institution.
+    ///
+    /// `To` names a bank, and the profile addresses one through `FIId`
+    /// rather than `OrgId`. Both branches are legal `head.001` and a
+    /// schema accepts either, so nothing but the profile itself says which is
+    /// meant — and it says this one.
+    ///
+    /// @param name the element name
+    /// @param id   the identifier
+    /// @return the element, or nothing when there is no identifier
+    private static Optional<XmlElement> financialInstitution(String name, String id) {
+        return party(name, id, XmlElement.element("FIId")
+                .child(XmlElement.element("FinInstnId")
+                        .child(XmlElement.element("Othr")
+                                .textChild("Id", id))));
+    }
+
     /// A party element, or nothing.
     ///
     /// `Fr` and `To` are both mandatory in `head.001`, so an
@@ -106,17 +147,11 @@ public record BusinessApplicationHeader(
     /// behaviour: a missing recipient is a fact about the conversion, and writing
     /// an empty `<Othr/>` to keep the shape would hide it behind something
     /// that looks structurally fine and means nothing.
-    private static Optional<XmlElement> party(String name, String id) {
+    private static Optional<XmlElement> party(String name, String id, XmlElement.Builder body) {
         if (id.isBlank()) {
             return Optional.empty();
         }
-        return Optional.of(XmlElement.element(name)
-                .child(XmlElement.element("OrgId")
-                        .child(XmlElement.element("Id")
-                                .child(XmlElement.element("OrgId")
-                                        .child(XmlElement.element("Othr")
-                                                .textChild("Id", id)))))
-                .build());
+        return Optional.of(XmlElement.element(name).child(body).build());
     }
 
     private static Optional<OffsetDateTime> parseDate(String text) {

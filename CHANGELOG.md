@@ -882,6 +882,21 @@ was previously claimed is refuted — every row already said `verified: false`.
   unreadable field, instead of throwing a `DateTimeParseException` out of the conversion.
 - The committed golden moved by exactly one line, which is the whole of the behaviour change.
 
+### Fixed — the header addresses a bank as a bank
+
+- **`To` now uses `FIId/FinInstnId/Othr/Id`.** The recipient of a ZEDI file is a financial
+  institution and the profile addresses it as one; the writer was using the organisation branch for
+  both `Fr` and `To`. Both are legal `head.001` and a schema accepts either, so nothing but the
+  profile itself distinguishes them. `Fr` stays an organisation, which is what a sending company is.
+- The reader needed no change — it already tried both branches, and the organisation one first, so
+  headers written the old way still read. That is pinned by a test rather than assumed.
+- `BusinessApplicationHeader`'s documentation now says plainly what it is: **five of the profile's
+  twenty-four header items**, being the ones a converter can fill in. The centre confirmation codes
+  and the password that belong in `Fr` and `To`, and the `BizSvc` control string, are agreed
+  bilaterally with a bank — so what this writes is a placeholder a caller completes, not a
+  submittable header. A header read from a real file contains a credential, which R-E6 masking
+  applies to.
+
 ### Known limitations
 
 - **Every bundled format descriptor is `verified: false`**, though not for want of evidence: the

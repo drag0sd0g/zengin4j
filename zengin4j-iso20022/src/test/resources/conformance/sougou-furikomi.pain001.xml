@@ -12,15 +12,13 @@
     </OrgId>
   </Fr>
   <To>
-    <OrgId>
-      <Id>
-        <OrgId>
-          <Othr>
-            <Id>9999</Id>
-          </Othr>
-        </OrgId>
-      </Id>
-    </OrgId>
+    <FIId>
+      <FinInstnId>
+        <Othr>
+          <Id>9999</Id>
+        </Othr>
+      </FinInstnId>
+    </FIId>
   </To>
   <BizMsgIdr>9900000001-2026-09-01</BizMsgIdr>
   <MsgDefIdr>pain.001.001.03</MsgDefIdr>

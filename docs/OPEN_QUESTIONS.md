@@ -153,8 +153,10 @@ uncertain one.
    UTC, which is what lets the plain shape survive its own round trip.
    → [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile),
    [OQ-14](#oq-14--the-pain001-mapping-does-not-follow-the-profile)
-3. **Fix the writer's `To` path** to `FIId/FinInstnId/Othr/Id`. The reader already accepts both, so
-   this is a change to one method. → [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile)
+3. **Fix the writer's `To` path** to `FIId/FinInstnId/Othr/Id`. *Done 2026-08-20.* The writer now
+   distinguishes the two branches — `Fr` is an organisation, `To` is a financial institution — and
+   the reader was already accepting both, so nothing on the inbound leg moved.
+   → [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile)
 4. **Revise the mapping**, as its own epic: the branch codes out of `MmbId`, the trailer totals down
    into `PmtInf`, the party fields onto `Dbtr`/`UltmtDbtr`/`Cdtr`, the six dropped fields into the
    elements that hold them, and the inverse leg to match. Rows that end up matching the profile can
@@ -545,10 +547,10 @@ enough to be its own epic. The reward is that the corrected rows can cite a sour
 **Raised 2026-08-20.** The same document specifies the header in twenty-four items, and three things
 differ from what is written.
 
-- **`To` uses the wrong identifier path.** The profile addresses a bank through
-  `FIId/FinInstnId/Othr/Id`; `BusinessApplicationHeader.party(...)` writes the `OrgId/Id/OrgId/Othr/Id`
-  shape for both `Fr` and `To`. The **reader is already correct** — it tries both paths, and the
-  organisation path first — so only the writer is wrong.
+- ~~**`To` uses the wrong identifier path.**~~ *Fixed 2026-08-20.* The profile addresses a bank
+  through `FIId/FinInstnId/Othr/Id` and a company through `OrgId/Id/OrgId/Othr/Id`; the writer used
+  the organisation shape for both. Both are legal `head.001`, so no schema would have caught it —
+  only the profile says which is meant. The reader already tried both paths and needed no change.
 - ~~**`CreDt` must be UTC.**~~ *Fixed 2026-08-20.* Its type is `ISONormalisedDateTime`, whose
   lexical space ends in `Z`; `IsoDateTime.formatNormalised` converts the instant rather than writing
   whatever offset it was handed.
