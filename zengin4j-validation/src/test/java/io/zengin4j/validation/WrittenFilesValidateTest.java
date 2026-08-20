@@ -73,7 +73,7 @@ class WrittenFilesValidateTest {
         for (CharacterWritePolicy policy : CharacterWritePolicy.values()) {
             for (TruncationPolicy truncation : TruncationPolicy.values()) {
                 for (String name : NAMES) {
-                    EncodingOptions options = EncodingOptions.builder()
+                    var options = EncodingOptions.builder()
                             .characters(policy)
                             .truncation(truncation)
                             .unmappable(UnmappableCharacterPolicy.DROP)

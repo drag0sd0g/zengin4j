@@ -68,7 +68,7 @@ class BuilderEncodingPolicyTest {
 
     @Test
     void theBuilderCanBeToldToTransliterate() {
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
 
         ZenginFile file = builder(SOUGOU)
                 .encoding(EncodingOptions.builder()
@@ -104,7 +104,7 @@ class BuilderEncodingPolicyTest {
 
     @Test
     void theFieldsOwnCharacterClassDecides() {
-        EncodingOptions options = EncodingOptions.builder()
+        var options = EncodingOptions.builder()
                 .characters(CharacterWritePolicy.TRANSLITERATE).build();
 
         assertThat(nameOf(builder(SOUGOU).encoding(options, new LossCollector())
@@ -123,7 +123,7 @@ class BuilderEncodingPolicyTest {
 
     @Test
     void aLongNameCanBeShortenedThroughTheBuilder() {
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
 
         ZenginFile file = builder(SOUGOU)
                 .encoding(EncodingOptions.builder()
@@ -144,7 +144,7 @@ class BuilderEncodingPolicyTest {
 
     @Test
     void theBuilderCanBeToldToReplace() {
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
 
         ZenginFile file = builder(SOUGOU)
                 .encoding(EncodingOptions.builder()
@@ -212,7 +212,7 @@ class BuilderEncodingPolicyTest {
     @Test
     void aCleanValueRecordsNothingWhateverThePolicy() {
         for (CharacterWritePolicy policy : CharacterWritePolicy.values()) {
-            LossCollector loss = new LossCollector();
+            var loss = new LossCollector();
 
             builder(SOUGOU)
                     .encoding(EncodingOptions.builder().characters(policy).build(), loss)

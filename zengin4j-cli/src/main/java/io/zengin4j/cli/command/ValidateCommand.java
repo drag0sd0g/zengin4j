@@ -143,7 +143,7 @@ public final class ValidateCommand implements Callable<Integer> {
                     + bundled.validUntil() + ".");
             return bundled;
         }
-        Path source = Path.of(calendar);
+        var source = Path.of(calendar);
         JapaneseBankCalendar loaded = JapaneseBankCalendar.fromCsv(source);
         err.println("using holiday data from " + source + ", valid to " + loaded.validUntil() + ".");
         return loaded;

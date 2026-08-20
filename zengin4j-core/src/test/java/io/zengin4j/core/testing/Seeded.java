@@ -82,7 +82,7 @@ public final class Seeded {
         if (value instanceof byte[] bytes) {
             return bytes.length + " bytes";
         }
-        String text = String.valueOf(value);
+        var text = String.valueOf(value);
         return text.length() > 400 ? text.substring(0, 400) + "… (truncated)" : text;
     }
 }

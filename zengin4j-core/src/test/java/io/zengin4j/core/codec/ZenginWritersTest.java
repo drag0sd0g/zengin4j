@@ -135,7 +135,7 @@ class ZenginWritersTest {
     void writesToAStreamAndToDisk(@TempDir Path directory) throws IOException {
         ZenginFile file = read(Fixtures.file(descriptor));
 
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        var stream = new ByteArrayOutputStream();
         ZenginWriters.write(file, stream, WriterOptions.defaults());
 
         Path path = directory.resolve("out.txt");
@@ -165,7 +165,7 @@ class ZenginWritersTest {
 
     @Test
     void writerOptionsResolveAgainstTheFilesOwnFraming() {
-        FileFraming fileFraming = new FileFraming(false, SeparatorStyle.LF, true, false);
+        var fileFraming = new FileFraming(false, SeparatorStyle.LF, true, false);
 
         assertThat(WriterOptions.defaults().framingOverride()).isEmpty();
         assertThat(WriterOptions.defaults().resolve(fileFraming)).isEqualTo(fileFraming);

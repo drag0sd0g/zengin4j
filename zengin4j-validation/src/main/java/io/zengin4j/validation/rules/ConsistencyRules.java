@@ -214,7 +214,7 @@ public final class ConsistencyRules {
             if (bytes.length < layout.recordLength()) {
                 return null;
             }
-            StringBuilder key = new StringBuilder();
+            var key = new StringBuilder();
             for (String id : List.of("beneficiaryBankCode", "payerBankCode",
                     "beneficiaryBranchCode", "payerBranchCode",
                     "accountNumber", "payerAccountNumber")) {

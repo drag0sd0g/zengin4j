@@ -75,7 +75,7 @@ class Iso20022MapperTest {
     }
 
     private static ZediFile isoFile(CreditTransferTransaction... transactions) {
-        Pain001Document document = new Pain001Document(
+        var document = new Pain001Document(
                 new GroupHeader("MSG-1", OffsetDateTime.parse("2026-09-01T00:00:00Z"),
                         new Party("テストシヨウジ", "9900000001")),
                 List.of(new PaymentInstruction("MSG-1-1", LocalDate.of(2026, 9, 30),
@@ -314,7 +314,7 @@ class Iso20022MapperTest {
 
     @Test
     void aBase64AttachmentIsNotSqueezedIntoTwentyBytes() {
-        CreditTransferTransaction withEdi = new CreditTransferTransaction(
+        var withEdi = new CreditTransferTransaction(
                 "INV-1", "", Money.yen(1), new Agent("9999", "999", ""),
                 Party.named("ヤマダ"), new Account("9876543", "1"),
                 RemittanceInformation.of(EdiAttachment.of(
@@ -432,7 +432,7 @@ class Iso20022MapperTest {
 
     @Test
     void theInverseLegRefusesWithoutATargetFormat() {
-        MappingContext noFormat = MappingContext.builder("9900000001", REFERENCE).build();
+        var noFormat = MappingContext.builder("9900000001", REFERENCE).build();
 
         assertThatIllegalStateException()
                 .isThrownBy(() -> Iso20022Mapper.create()
@@ -612,7 +612,7 @@ class Iso20022MapperTest {
 
     @Test
     void reportsCombineAcrossLegs() {
-        MappingLossReport one = MappingLossReport.of(new io.zengin4j.core.loss.LossReport(
+        var one = MappingLossReport.of(new io.zengin4j.core.loss.LossReport(
                 List.of(LossEntry.of(LossKind.DROPPED, LossSeverity.MATERIAL,
                         "a", "b", "en", "ja"))));
 

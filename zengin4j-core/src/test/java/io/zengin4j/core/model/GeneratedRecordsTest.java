@@ -36,7 +36,7 @@ class GeneratedRecordsTest {
     /// R-D1: the record carries exactly its own fields, in its own order.
     @Test
     void exposesTheFieldsTheRecordActuallyHas() {
-        SougouFurikomiData data = (SougouFurikomiData) read(Fixtures.file(descriptor))
+        var data = (SougouFurikomiData) read(Fixtures.file(descriptor))
                 .allData().get(0);
 
         assertThat(data.dataKubun()).isEqualTo("2");
@@ -77,7 +77,7 @@ class GeneratedRecordsTest {
 
     @Test
     void decodesTheHeaderRoleAccessors() {
-        SougouFurikomiHeader header = (SougouFurikomiHeader) read(Fixtures.file(descriptor))
+        var header = (SougouFurikomiHeader) read(Fixtures.file(descriptor))
                 .batches().get(0).header();
 
         assertThat(header.codeKubun()).isEqualTo(CodeKubun.JIS);
@@ -135,7 +135,7 @@ class GeneratedRecordsTest {
     /// R-E6: an account number does not appear in full in a log line.
     @Test
     void masksAccountNumbersInToString() {
-        SougouFurikomiData data = (SougouFurikomiData) read(Fixtures.file(descriptor)).allData().get(0);
+        var data = (SougouFurikomiData) read(Fixtures.file(descriptor)).allData().get(0);
 
         assertThat(data.toString())
                 .contains("accountNumber=***6543")
@@ -158,7 +158,7 @@ class GeneratedRecordsTest {
     @Test
     void fallsBackToDescriptorDrivenRecordsForRuntimeFormats() {
         FormatDescriptor variant = Fixtures.renamed(descriptor, "runtime-variant");
-        FormatRegistry registry = FormatRegistry.builder()
+        var registry = FormatRegistry.builder()
                 .codeLists(FormatRegistry.defaults().codeLists())
                 .register(variant)
                 .build();
@@ -176,7 +176,7 @@ class GeneratedRecordsTest {
         assertThat(batch.trailer()).get().isInstanceOf(GenericTrailerRecord.class);
         assertThat(file.endRecord()).get().isInstanceOf(GenericEndRecord.class);
 
-        GenericDataRecord data = (GenericDataRecord) batch.data().get(0);
+        var data = (GenericDataRecord) batch.data().get(0);
         assertThat(data.amount()).isEqualTo(Fixtures.AMOUNT);
         assertThat(data.value("beneficiaryName")).isEqualTo(Fixtures.BENEFICIARY);
         assertThat(data.value("nonexistent")).isEmpty();
@@ -186,13 +186,13 @@ class GeneratedRecordsTest {
         assertThat(data.toString()).contains("accountNumber=***6543").doesNotContain(Fixtures.ACCOUNT);
         assertThat(Arrays.equals(data.rawBytes(), Fixtures.data(descriptor))).isTrue();
 
-        GenericHeaderRecord header = (GenericHeaderRecord) batch.header();
+        var header = (GenericHeaderRecord) batch.header();
         assertThat(header.codeKubun()).isEqualTo(CodeKubun.JIS);
         assertThat(header.effectiveDate()).contains(MonthDay.of(9, 30));
         assertThat(header.originatorName()).isEqualTo("ﾃｽﾄｼﾖｳｼﾞ");
         assertThat(header.kind()).isEqualTo(io.zengin4j.core.format.RecordKind.HEADER);
 
-        GenericEndRecord end = (GenericEndRecord) file.endRecord().orElseThrow();
+        var end = (GenericEndRecord) file.endRecord().orElseThrow();
         assertThat(end.filler()).hasSize(Fixtures.RECORD_LENGTH - 1);
         assertThat(batch.trailer().orElseThrow().recordCount()).isEqualTo(1);
     }
@@ -200,7 +200,7 @@ class GeneratedRecordsTest {
     @Test
     void genericRecordEqualityFollowsContent() {
         FormatDescriptor variant = Fixtures.renamed(descriptor, "runtime-variant");
-        FormatRegistry registry = FormatRegistry.builder()
+        var registry = FormatRegistry.builder()
                 .codeLists(FormatRegistry.defaults().codeLists())
                 .register(variant)
                 .build();

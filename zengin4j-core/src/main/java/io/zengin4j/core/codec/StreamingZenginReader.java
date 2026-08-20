@@ -297,7 +297,7 @@ final class StreamingZenginReader implements ZenginReader {
         }
         FieldDescriptor codeKubun = field.get();
         String raw = charset.decode(buffer, position + codeKubun.offset(), codeKubun.length());
-        CodeKubun value = CodeKubun.of(raw);
+        var value = CodeKubun.of(raw);
         if (value == CodeKubun.EBCDIC) {
             throw new UnsupportedEncodingVariantException(value, raw, absoluteOffset() + codeKubun.offset());
         }
@@ -497,7 +497,7 @@ final class StreamingZenginReader implements ZenginReader {
     }
 
     private void warn(String code, String messageEn, String messageJa, long offset) {
-        ZenginWarning warning = new ZenginWarning(code, messageEn, messageJa, offset);
+        var warning = new ZenginWarning(code, messageEn, messageJa, offset);
         warnings.add(warning);
         options.warningListener().accept(warning);
     }

@@ -24,17 +24,17 @@ final class MappingDocGenerator {
     /// @param sources  each declaration's file name
     /// @return the generated file
     GeneratedFile generate(List<MappingReader.Mapping> mappings, List<String> sources) {
-        StringBuilder out = new StringBuilder();
-        out.append("# Mapping reference").append(NL).append(NL)
-                .append("> GENERATED from ").append(String.join(", ", sources))
-                .append(" — do not edit. Change a declaration and run").append(NL)
-                .append("> `./gradlew generateFormatSources`; the build fails if this page and ")
-                .append("the declarations disagree.").append(NL).append(NL);
+        var out = new StringBuilder();
+        out.append("""
+                # Mapping reference
 
-        out.append("Every correspondence this library implements between a Zengin field and an ")
-                .append("ISO 20022").append(NL)
-                .append("element, in both directions, with what each one costs.").append(NL)
-                .append(NL);
+                > GENERATED from %s — do not edit. Change a declaration and run
+                > `./gradlew generateFormatSources`; the build fails if this page and the declarations disagree.
+
+                Every correspondence this library implements between a Zengin field and an ISO 20022
+                element, in both directions, with what each one costs.
+
+                """.formatted(String.join(", ", sources)));
 
         appendVerificationNote(out, mappings);
 
@@ -56,30 +56,27 @@ final class MappingDocGenerator {
 
         out.append("## Verification status").append(NL).append(NL);
         if (verified == 0) {
-            out.append("**No row here is verified.** All ").append(total)
-                    .append(" of them are marked `verified: false`, which under R-I19 means ")
-                    .append("none has").append(NL)
-                    .append("been checked against published profile documentation. They are not ")
-                    .append("guesses — they follow").append(NL)
-                    .append("the table in the build specification and the shape of the message ")
-                    .append("definition — but \"not a").append(NL)
-                    .append("guess\" and \"verified\" are different claims, and only the second ")
-                    .append("one is worth trusting a").append(NL)
-                    .append("payment to.").append(NL).append(NL)
-                    .append("The load-bearing one is the clearing-system identifier `JPZGN`. ")
-                    .append("It names the scheme every").append(NL)
-                    .append("bank code in the file belongs to, and it is unconfirmed — see Q8 in ")
-                    .append("[OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).").append(NL).append(NL)
-                    .append("The flag is not on the honour system: a row marked `verified: true` ")
-                    .append("must cite at least two").append(NL)
-                    .append("independent published sources, or the build fails. That is the same ")
-                    .append("bar R-0.1 sets for a").append(NL)
-                    .append("format descriptor.").append(NL).append(NL);
+            out.append("""
+                    **No row here is verified.** All %d of them are marked `verified: false`, which under R-I19 means none has
+                    been checked against published profile documentation. They are not guesses — they follow
+                    the table in the build specification and the shape of the message definition — but "not a
+                    guess" and "verified" are different claims, and only the second one is worth trusting a
+                    payment to.
+
+                    The load-bearing one is the clearing-system identifier `JPZGN`. It names the scheme every
+                    bank code in the file belongs to, and it is unconfirmed — see Q8 in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+
+                    The flag is not on the honour system: a row marked `verified: true` must cite at least two
+                    independent published sources, or the build fails. That is the same bar R-0.1 sets for a
+                    format descriptor.
+
+                    """.formatted(total));
         } else {
-            out.append(verified).append(" of ").append(total)
-                    .append(" rows have been checked against published profile documentation. ")
-                    .append("The rest are marked").append(NL)
-                    .append("`unverified` in the tables below.").append(NL).append(NL);
+            out.append("""
+                    %d of %d rows have been checked against published profile documentation. The rest are marked
+                    `unverified` in the tables below.
+
+                    """.formatted(verified, total));
         }
     }
 
@@ -90,8 +87,10 @@ final class MappingDocGenerator {
             out.append(mapping.note()).append(NL).append(NL);
         }
 
-        out.append("| Zengin | ISO 20022 | Direction | Loss | Status |").append(NL)
-                .append("|---|---|---|---|---|").append(NL);
+        out.append("""
+                | Zengin | ISO 20022 | Direction | Loss | Status |
+                |---|---|---|---|---|
+                """);
         for (MappingReader.Row row : mapping.rows()) {
             out.append("| ").append(cell(row.zenginField()))
                     .append(" | ").append(cell(row.isoPath()))
@@ -112,21 +111,21 @@ final class MappingDocGenerator {
     }
 
     private void appendReadingNote(StringBuilder out) {
-        out.append("## How to read the loss column").append(NL).append(NL)
-                .append("A row with no loss carries its value unchanged in both directions. ")
-                .append("Everything else names").append(NL)
-                .append("what happens and how much it matters:").append(NL).append(NL)
-                .append("| Severity | Means |").append(NL)
-                .append("|---|---|").append(NL)
-                .append("| `INFORMATIONAL` | Cosmetic. Nothing reconciles differently. |")
-                .append(NL)
-                .append("| `MATERIAL` | A party or a reference is noticeably altered. |")
-                .append(NL)
-                .append("| `CRITICAL` | The payment could mean something else, or reach ")
-                .append("somewhere else. |").append(NL).append(NL)
-                .append("A conversion refuses on `CRITICAL` by default. See ")
-                .append("[loss.md](loss.md) for what each kind means and").append(NL)
-                .append("what to do about it.").append(NL);
+        out.append("""
+                ## How to read the loss column
+
+                A row with no loss carries its value unchanged in both directions. Everything else names
+                what happens and how much it matters:
+
+                | Severity | Means |
+                |---|---|
+                | `INFORMATIONAL` | Cosmetic. Nothing reconciles differently. |
+                | `MATERIAL` | A party or a reference is noticeably altered. |
+                | `CRITICAL` | The payment could mean something else, or reach somewhere else. |
+
+                A conversion refuses on `CRITICAL` by default. See [loss.md](loss.md) for what each kind means and
+                what to do about it.
+                """);
     }
 
     private static String cell(String value) {

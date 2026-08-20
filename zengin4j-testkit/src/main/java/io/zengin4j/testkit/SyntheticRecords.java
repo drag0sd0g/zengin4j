@@ -74,7 +74,7 @@ public final class SyntheticRecords {
     public static byte[] file(List<byte[]> records, SeparatorStyle separator, boolean trailingEofByte) {
         byte[] between = separator.bytes().orElseThrow(() -> new IllegalArgumentException(
                 "MIXED is an observation, not a separator a writer can produce"));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        var out = new ByteArrayOutputStream();
         for (byte[] record : records) {
             out.writeBytes(record);
             out.writeBytes(between);

@@ -111,7 +111,7 @@ public final class JapaneseBankCalendar implements BusinessCalendar {
     /// @param date the date to test
     /// @return `true` for 31 December through 3 January
     public boolean inYearEndClosure(LocalDate date) {
-        MonthDay monthDay = MonthDay.from(date);
+        var monthDay = MonthDay.from(date);
         return monthDay.equals(CLOSURE_FROM) || monthDay.compareTo(CLOSURE_UNTIL) <= 0;
     }
 

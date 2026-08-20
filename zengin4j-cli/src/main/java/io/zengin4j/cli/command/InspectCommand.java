@@ -143,7 +143,7 @@ public final class InspectCommand implements Callable<Integer> {
     }
 
     private static String describeFraming(ZenginFile file) {
-        StringBuilder text = new StringBuilder(file.framing().separator().toString().toLowerCase(
+        var text = new StringBuilder(file.framing().separator().toString().toLowerCase(
                 java.util.Locale.ROOT) + "-separated");
         if (file.framing().byteOrderMarkPresent()) {
             text.append(", byte order mark present");
@@ -189,7 +189,7 @@ public final class InspectCommand implements Callable<Integer> {
 
     private String json(ZenginFile parsed, List<ZenginRecord> records) {
         FormatDescriptor descriptor = parsed.descriptor();
-        Json json = new Json();
+        var json = new Json();
         json.object(() -> {
             json.field("file", file.toString());
             json.field("format", descriptor.id().value());

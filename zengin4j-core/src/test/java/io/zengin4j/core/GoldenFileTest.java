@@ -73,7 +73,7 @@ class GoldenFileTest {
             write(EXPECTED, rendered);
             return;
         }
-        String expected = new String(resource(EXPECTED), StandardCharsets.UTF_8);
+        var expected = new String(resource(EXPECTED), StandardCharsets.UTF_8);
 
         // Checked separately so this failure names itself. A checkout that
         // rewrote the line endings otherwise fails the comparison below with a
@@ -150,7 +150,7 @@ class GoldenFileTest {
     /// Renders a parsed file one field per line. Stable, diffable, and it never
     /// prints a value the record does not carry.
     private String render(ZenginFile file) {
-        StringBuilder out = new StringBuilder();
+        var out = new StringBuilder();
         out.append("format          ").append(file.format()).append('\n')
                 .append("records         ").append(file.totalRecords()).append('\n')
                 .append("batches         ").append(file.batches().size()).append('\n')
@@ -216,7 +216,7 @@ class GoldenFileTest {
 
     /// Writes back into the source tree, not the build output, so the diff is reviewable.
     private static void write(String name, byte[] content) {
-        Path path = Path.of("src/test/resources").resolve(name.substring(1));
+        var path = Path.of("src/test/resources").resolve(name.substring(1));
         try {
             Files.createDirectories(path.getParent());
             Files.write(path, content);

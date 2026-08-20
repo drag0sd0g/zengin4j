@@ -57,12 +57,12 @@ class ZenginFileBuilderTest {
         assertThat(file.batches().get(0).header()).isInstanceOf(SougouFurikomiHeader.class);
         assertThat(file.allData().get(0)).isInstanceOf(SougouFurikomiData.class);
 
-        SougouFurikomiHeader header = (SougouFurikomiHeader) file.batches().get(0).header();
+        var header = (SougouFurikomiHeader) file.batches().get(0).header();
         assertThat(header.originatorCode()).isEqualTo("9900000001");
         assertThat(header.valueDate()).contains(MonthDay.of(9, 30));
         assertThat(header.valueDateRaw()).isEqualTo("0930");
 
-        SougouFurikomiData data = (SougouFurikomiData) file.allData().get(0);
+        var data = (SougouFurikomiData) file.allData().get(0);
         assertThat(data.beneficiaryName()).isEqualTo("ﾔﾏﾀﾞ ﾀﾛｳ");
         assertThat(data.amount()).isEqualTo(150_000L);
         assertThat(data.dataKubun()).isEqualTo("2");
@@ -125,7 +125,7 @@ class ZenginFileBuilderTest {
                         .set("beneficiaryName", "ﾔﾏﾀﾞ ﾀﾛｳ"))
                 .build();
 
-        SougouFurikomiHeader header = (SougouFurikomiHeader) file.batches().get(0).header();
+        var header = (SougouFurikomiHeader) file.batches().get(0).header();
         assertThat(header.originatorCode()).isEqualTo("9900000001");
         assertThat(header.valueDateRaw()).isEqualTo("0930");
         assertThat(((SougouFurikomiData) file.allData().get(0)).beneficiaryName()).isEqualTo("ﾔﾏﾀﾞ ﾀﾛｳ");
@@ -233,7 +233,7 @@ class ZenginFileBuilderTest {
     /// Reading and building name different remedies, because they need different ones.
     @Test
     void theReadingRemedyIsStillNamedWhenReadingIsWhatFailed() {
-        UnverifiedFormatException reading = new UnverifiedFormatException("sougou-furikomi");
+        var reading = new UnverifiedFormatException("sougou-furikomi");
 
         assertThat(reading.operation()).isEqualTo(UnverifiedFormatException.Operation.READING);
         assertThat(reading.messageEn())

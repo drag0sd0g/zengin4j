@@ -73,7 +73,7 @@ public final class ZenginGenerator {
     ///
     /// @return the file bytes; identical for identical settings
     public byte[] generate() {
-        Random random = new Random(seed);
+        var random = new Random(seed);
         List<byte[]> records = new ArrayList<>(payments + 3);
         records.add(fixtures.header());
         long total = 0;

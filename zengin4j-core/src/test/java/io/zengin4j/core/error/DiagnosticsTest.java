@@ -24,7 +24,7 @@ class DiagnosticsTest {
 
     @Test
     void everyExceptionCarriesBothLanguages() {
-        List<ZenginException> exceptions = List.of(
+        var exceptions = List.of(
                 new ZenginIOException("reading", new java.io.IOException("disk gone")),
                 new MalformedFileException(120, 2, "en", "ja"),
                 new MalformedFieldException("amount", 80, 'X'),
@@ -65,12 +65,12 @@ class DiagnosticsTest {
     /// R-E3: what was expected, what was found, and where.
     @Test
     void locatesEveryProblem() {
-        MalformedFileException file = new MalformedFileException(240, 3, "en", "ja");
+        var file = new MalformedFileException(240, 3, "en", "ja");
         assertThat(file.byteOffset()).isEqualTo(240);
         assertThat(file.recordNumber()).isEqualTo(3);
         assertThat(file.getMessage()).contains("record 3 at byte 240");
 
-        MalformedFieldException field = new MalformedFieldException("amount", 80, 'X');
+        var field = new MalformedFieldException("amount", 80, 'X');
         assertThat(field.fieldId()).isEqualTo("amount");
         assertThat(field.byteOffset()).isEqualTo(80);
         assertThat(field.offendingByte()).isEqualTo('X');

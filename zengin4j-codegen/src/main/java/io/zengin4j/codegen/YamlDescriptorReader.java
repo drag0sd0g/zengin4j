@@ -299,7 +299,7 @@ final class YamlDescriptorReader {
     // ------------------------------------------------------------- plumbing
 
     private static Object parse(String yaml, String origin) {
-        LoaderOptions options = new LoaderOptions();
+        var options = new LoaderOptions();
         // Parity with the reader this replaced: a repeated key is a mistake,
         // not a last-one-wins override.
         options.setAllowDuplicateKeys(false);
@@ -332,91 +332,86 @@ final class YamlDescriptorReader {
     }
 
     private static String requireString(Map<String, Object> node, String key, String origin) {
+        // A YAML scalar arrives as whichever Java type the parser inferred, so
+        // 21 and true are as much "a single value" here as "21" is.
         Object value = require(node, key, origin);
-        if (value instanceof String text) {
-            return text;
-        }
-        if (value instanceof Number || value instanceof Boolean) {
-            return String.valueOf(value);
-        }
-        throw new CodegenException(origin + ": key '" + key + "' must be a single value");
+        return switch (value) {
+            case String text -> text;
+            case Number _, Boolean _ -> String.valueOf(value);
+            case null, default ->
+                    throw new CodegenException(origin + ": key '" + key + "' must be a single value");
+        };
     }
 
     private static Optional<String> optionalString(Map<String, Object> node, String key, String origin) {
         Object value = node.get(key);
-        if (value == null) {
-            return Optional.empty();
-        }
-        if (value instanceof String text) {
-            return text.isEmpty() ? Optional.empty() : Optional.of(text);
-        }
-        if (value instanceof Number || value instanceof Boolean) {
-            return Optional.of(String.valueOf(value));
-        }
-        throw new CodegenException(origin + ": key '" + key + "' must be a single value");
+        return switch (value) {
+            case null -> Optional.empty();
+            case String text -> text.isEmpty() ? Optional.empty() : Optional.of(text);
+            case Number _, Boolean _ -> Optional.of(String.valueOf(value));
+            default ->
+                    throw new CodegenException(origin + ": key '" + key + "' must be a single value");
+        };
     }
 
     private static int requireInt(Map<String, Object> node, String key, String origin) {
         Object value = require(node, key, origin);
-        if (value instanceof Integer number) {
-            if (number < 0) {
-                throw new CodegenException(origin + ": key '" + key + "' must not be negative, found " + number);
-            }
-            return number;
-        }
-        throw new CodegenException(origin + ": key '" + key + "' must be a whole number, found '" + value + "'");
+        return switch (value) {
+            case Integer number when number >= 0 -> number;
+            case Integer number -> throw new CodegenException(
+                    origin + ": key '" + key + "' must not be negative, found " + number);
+            case null, default -> throw new CodegenException(
+                    origin + ": key '" + key + "' must be a whole number, found '" + value + "'");
+        };
     }
 
     private static boolean booleanValue(
             Map<String, Object> node, String key, boolean defaultValue, String origin) {
         Object value = node.get(key);
-        if (value == null) {
-            return defaultValue;
-        }
-        if (value instanceof Boolean flag) {
-            return flag;
-        }
-        throw new CodegenException(origin + ": key '" + key + "' must be true or false, found '" + value + "'");
+        return switch (value) {
+            case null -> defaultValue;
+            case Boolean flag -> flag;
+            default -> throw new CodegenException(
+                    origin + ": key '" + key + "' must be true or false, found '" + value + "'");
+        };
     }
 
     private static List<String> stringList(Map<String, Object> node, String key, String origin) {
-        Object value = node.get(key);
-        if (value == null) {
-            return List.of();
-        }
-        if (value instanceof List<?> list) {
-            List<String> result = new ArrayList<>(list.size());
-            for (Object item : list) {
-                if (item instanceof String text) {
-                    result.add(text);
-                } else {
-                    throw new CodegenException(origin + ": '" + key + "' must be a list of values");
+        return switch (node.get(key)) {
+            case null -> List.of();
+            case List<?> list -> {
+                List<String> result = new ArrayList<>(list.size());
+                for (Object item : list) {
+                    if (item instanceof String text) {
+                        result.add(text);
+                    } else {
+                        throw new CodegenException(origin + ": '" + key + "' must be a list of values");
+                    }
                 }
+                yield result;
             }
-            return result;
-        }
-        throw new CodegenException(origin + ": key '" + key + "' must be a list");
+            default -> throw new CodegenException(origin + ": key '" + key + "' must be a list");
+        };
     }
 
     @SuppressWarnings("unchecked")
     private static List<Map<String, Object>> mappingList(
             Map<String, Object> node, String key, String origin) {
-        Object value = node.get(key);
-        if (value == null) {
-            return List.of();
-        }
-        if (value instanceof List<?> list) {
-            List<Map<String, Object>> result = new ArrayList<>(list.size());
-            for (Object item : list) {
-                if (item instanceof Map<?, ?> map) {
-                    result.add((Map<String, Object>) map);
-                } else {
-                    throw new CodegenException(origin + ": '" + key + "' must be a list of mappings");
+        return switch (node.get(key)) {
+            case null -> List.of();
+            case List<?> list -> {
+                List<Map<String, Object>> result = new ArrayList<>(list.size());
+                for (Object item : list) {
+                    if (item instanceof Map<?, ?> map) {
+                        result.add((Map<String, Object>) map);
+                    } else {
+                        throw new CodegenException(origin + ": '" + key + "' must be a list of mappings");
+                    }
                 }
+                yield result;
             }
-            return result;
-        }
-        throw new CodegenException(origin + ": key '" + key + "' must be a list");
+            default -> throw new CodegenException(origin + ": key '" + key + "' must be a list");
+        };
     }
 
     private static void rejectUnknownKeys(

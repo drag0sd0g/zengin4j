@@ -205,7 +205,7 @@ class TruncationTest {
 
     @Test
     void truncateSafeShortensAndSaysSo() {
-        TransliterationOptions options = TransliterationOptions.builder()
+        var options = TransliterationOptions.builder()
                 .truncation(TruncationPolicy.TRUNCATE_SAFE)
                 .build();
 
@@ -219,7 +219,7 @@ class TruncationTest {
 
     @Test
     void truncateWithMarkerLeavesASignThatSomethingWasRemoved() {
-        TransliterationOptions options = TransliterationOptions.builder()
+        var options = TransliterationOptions.builder()
                 .truncation(TruncationPolicy.TRUNCATE_WITH_MARKER)
                 .build();
 
@@ -231,9 +231,9 @@ class TruncationTest {
 
     @Test
     void theMarkerCostsAByteSoTheTextIsShortenedFurther() {
-        TransliterationOptions marked = TransliterationOptions.builder()
+        var marked = TransliterationOptions.builder()
                 .truncation(TruncationPolicy.TRUNCATE_WITH_MARKER).build();
-        TransliterationOptions plain = TransliterationOptions.builder()
+        var plain = TransliterationOptions.builder()
                 .truncation(TruncationPolicy.TRUNCATE_SAFE).build();
 
         String withMarker = KanaTransliterator.toHalfWidth("ガクブチ", 5, marked).text();
@@ -254,7 +254,7 @@ class TruncationTest {
     /// making the file invalid instead.
     @Test
     void aMarkerTheFieldWouldRefuseIsRefused() {
-        TransliterationOptions starred = TransliterationOptions.builder()
+        var starred = TransliterationOptions.builder()
                 .truncation(TruncationPolicy.TRUNCATE_WITH_MARKER)
                 .truncationMarker("*")
                 .build();
@@ -267,7 +267,7 @@ class TruncationTest {
     /// And payroll names cannot be marked at all, because they admit no symbol.
     @Test
     void markedTruncationIsImpossibleInAPayrollNameAndSaysSo() {
-        TransliterationOptions payroll = TransliterationOptions.builder()
+        var payroll = TransliterationOptions.builder()
                 .characterClass(io.zengin4j.core.charset.CharacterClass.PAYROLL_NAME)
                 .truncation(TruncationPolicy.TRUNCATE_WITH_MARKER)
                 .build();
@@ -285,7 +285,7 @@ class TruncationTest {
                     io.zengin4j.core.charset.CharacterClass.BANK_NAME,
                     io.zengin4j.core.charset.CharacterClass.PARTY_NAME}) {
 
-            TransliterationOptions options = TransliterationOptions.builder()
+            var options = TransliterationOptions.builder()
                     .characterClass(characterClass)
                     .truncation(TruncationPolicy.TRUNCATE_WITH_MARKER)
                     .build();
@@ -302,7 +302,7 @@ class TruncationTest {
 
     @Test
     void aMarkerThatWouldNotItselfFitIsRefused() {
-        TransliterationOptions options = TransliterationOptions.builder()
+        var options = TransliterationOptions.builder()
                 .truncation(TruncationPolicy.TRUNCATE_WITH_MARKER)
                 .truncationMarker("---")
                 .build();
@@ -324,7 +324,7 @@ class TruncationTest {
     /// units.
     @Test
     void truncationIsSafeWhateverEncodingTheFileUses() {
-        TransliterationOptions utf8 = TransliterationOptions.builder()
+        var utf8 = TransliterationOptions.builder()
                 .charset(ZenginCharset.UTF_8)
                 .truncation(TruncationPolicy.TRUNCATE_SAFE)
                 .build();
@@ -343,7 +343,7 @@ class TruncationTest {
     @MethodSource("corpus")
     void noEncodingLetsAMarkBeSeparatedFromItsKana(String name) {
         for (ZenginCharset charset : ZenginCharset.values()) {
-            TransliterationOptions options = TransliterationOptions.builder()
+            var options = TransliterationOptions.builder()
                     .charset(charset)
                     .truncation(TruncationPolicy.TRUNCATE_SAFE)
                     .build();

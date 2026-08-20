@@ -26,25 +26,32 @@ final class FormatDocGenerator {
     }
 
     GeneratedFile generate(FormatDescriptor format, String source) {
-        StringBuilder out = new StringBuilder();
-        out.append("# ").append(format.nameJa()).append(" — ").append(format.nameEn()).append(NL).append(NL)
-                .append("<!-- GENERATED from ").append(source).append(" by ")
-                .append(RecordSourceGenerator.GENERATOR).append(". Do not edit by hand;")
-                .append(" edit the descriptor and run ./gradlew generateFormatSources. -->").append(NL)
-                .append(NL);
+        var out = new StringBuilder();
+        out.append("""
+                # %s — %s
+
+                <!-- GENERATED from %s by %s. Do not edit by hand; edit the descriptor and run ./gradlew generateFormatSources. -->
+
+                """.formatted(format.nameJa(), format.nameEn(), source,
+                        RecordSourceGenerator.GENERATOR));
 
         banner(out, format);
 
-        out.append("## At a glance").append(NL).append(NL)
-                .append("| | |").append(NL)
-                .append("|---|---|").append(NL)
-                .append("| Format id | `").append(format.id()).append("` |").append(NL)
-                .append("| 種別コード | `").append(format.typeCode()).append("` |").append(NL)
-                .append("| Record length | ").append(format.recordLength()).append(" bytes |").append(NL)
-                .append("| Verified | ").append(format.verified() ? "yes" : "**no**").append(" |").append(NL)
-                .append("| Sources cited | ").append(format.sources().isEmpty()
-                        ? "none" : String.valueOf(format.sources().size())).append(" |").append(NL)
-                .append(NL);
+        out.append("""
+                ## At a glance
+
+                | | |
+                |---|---|
+                | Format id | `%s` |
+                | 種別コード | `%s` |
+                | Record length | %d bytes |
+                | Verified | %s |
+                | Sources cited | %s |
+
+                """.formatted(format.id(), format.typeCode(), format.recordLength(),
+                        format.verified() ? "yes" : "**no**",
+                        format.sources().isEmpty()
+                                ? "none" : String.valueOf(format.sources().size())));
 
         if (!format.sources().isEmpty()) {
             out.append("### Sources").append(NL).append(NL);
@@ -78,66 +85,63 @@ final class FormatDocGenerator {
     /// on one field" are both `verified: false`, and telling a reader they are
     /// the same thing wastes the work that produced the difference.
     private void banner(StringBuilder out, FormatDescriptor format) {
+        // The blockquote spacer lines are "> " with a trailing space, which a
+        // text block would strip; \s writes the space and stops the stripping.
         if (format.verified()) {
-            out.append("> **Verified.** This layout has been confirmed against the independent")
-                    .append(" published sources cited below.").append(NL).append(NL);
+            out.append("""
+                    > **Verified.** This layout has been confirmed against the independent published sources cited below.
+
+                    """);
             return;
         }
         if (format.sources().isEmpty()) {
-            out.append("> ## ⚠ Unverified layout — no sources cited").append(NL)
-                    .append("> ").append(NL)
-                    .append("> Nothing has corroborated these byte offsets. They have **not** been")
-                    .append(NL)
-                    .append("> confirmed against two independent published sources (R-0.1), and")
-                    .append(NL)
-                    .append("> reading a file with this format requires").append(NL)
-                    .append("> `ReaderOptions.builder().allowUnverifiedFormats(true)`.").append(NL)
-                    .append("> ").append(NL)
-                    .append("> Building one requires the same acknowledgement, through").append(NL)
-                    .append("> `ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)`.")
-                    .append(NL)
-                    .append("> ").append(NL)
-                    .append("> A wrong byte offset in a payment file produces silently corrupted")
-                    .append(NL)
-                    .append("> financial instructions. Check the layout against your own")
-                    .append(NL)
-                    .append("> institution's specification before relying on it.").append(NL).append(NL);
+            out.append("""
+                    > ## ⚠ Unverified layout — no sources cited
+                    >\s
+                    > Nothing has corroborated these byte offsets. They have **not** been
+                    > confirmed against two independent published sources (R-0.1), and
+                    > reading a file with this format requires
+                    > `ReaderOptions.builder().allowUnverifiedFormats(true)`.
+                    >\s
+                    > Building one requires the same acknowledgement, through
+                    > `ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)`.
+                    >\s
+                    > A wrong byte offset in a payment file produces silently corrupted
+                    > financial instructions. Check the layout against your own
+                    > institution's specification before relying on it.
+
+                    """);
             return;
         }
-        out.append("> ## ⚠ Corroborated, but not yet verified").append(NL)
-                .append("> ").append(NL)
-                .append("> Every field offset and length below is corroborated by the ")
-                .append(format.sources().size()).append(" independent").append(NL)
-                .append("> published sources cited under Sources, and they agree. The format is")
-                .append(NL)
-                .append("> nevertheless held at `verified: false`, because at least one **field")
-                .append(NL)
-                .append("> attribute** is read differently by different sources, and R-0.2 keeps a")
-                .append(NL)
-                .append("> format unverified until such a disagreement is settled. The readings and")
-                .append(NL)
-                .append("> the resolution are in `docs/DISCREPANCIES.md`; the affected fields carry a")
-                .append(NL)
-                .append("> note in the table below.").append(NL)
-                .append("> ").append(NL)
-                .append("> Reading a file with this format still requires").append(NL)
-                .append("> `ReaderOptions.builder().allowUnverifiedFormats(true)`, and building one")
-                .append(NL)
-                .append("> requires").append(NL)
-                .append("> `ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)`. You")
-                .append(NL)
-                .append("> should still check the layout against your own institution's")
-                .append(NL)
-                .append("> specification.")
-                .append(NL).append(NL);
+        out.append("""
+                > ## ⚠ Corroborated, but not yet verified
+                >\s
+                > Every field offset and length below is corroborated by the %d independent
+                > published sources cited under Sources, and they agree. The format is
+                > nevertheless held at `verified: false`, because at least one **field
+                > attribute** is read differently by different sources, and R-0.2 keeps a
+                > format unverified until such a disagreement is settled. The readings and
+                > the resolution are in `docs/DISCREPANCIES.md`; the affected fields carry a
+                > note in the table below.
+                >\s
+                > Reading a file with this format still requires
+                > `ReaderOptions.builder().allowUnverifiedFormats(true)`, and building one
+                > requires
+                > `ZenginFileBuilder.forFormat(...).allowUnverifiedFormats(true)`. You
+                > should still check the layout against your own institution's
+                > specification.
+
+                """.formatted(format.sources().size()));
     }
 
     private void recordSection(StringBuilder out, RecordKind kind, RecordDescriptor record) {
-        out.append("### ").append(Names.capitalise(kind.descriptorKey())).append(" record")
-                .append(" — データ区分 `").append((char) record.discriminator()).append('`')
-                .append(NL).append(NL)
-                .append("| # | Field | 項目名 | Type | Length | Offset | Notes |").append(NL)
-                .append("|---|---|---|---|---|---|---|").append(NL);
+        out.append("""
+                ### %s record — データ区分 `%s`
+
+                | # | Field | 項目名 | Type | Length | Offset | Notes |
+                |---|---|---|---|---|---|---|
+                """.formatted(Names.capitalise(kind.descriptorKey()),
+                        (char) record.discriminator()));
         for (FieldDescriptor field : record.fields()) {
             out.append("| ").append(field.sequence())
                     .append(" | `").append(field.id()).append('`')
@@ -188,23 +192,29 @@ final class FormatDocGenerator {
         if (referenced.isEmpty()) {
             return;
         }
-        out.append("## Code lists").append(NL).append(NL)
-                .append("Every list is open: a value outside it is carried through as raw field")
-                .append(NL)
-                .append("content rather than rejected, because the published values are not yet")
-                .append(NL)
-                .append("confirmed and asserting that no other value exists would be a guess.")
-                .append(NL).append(NL);
+        out.append("""
+                ## Code lists
+
+                Every list is open: a value outside it is carried through as raw field
+                content rather than rejected, because the published values are not yet
+                confirmed and asserting that no other value exists would be a guess.
+
+                """);
         for (CodeList list : referenced.values()) {
-            out.append("### ").append(list.nameJa()).append(" — ").append(list.nameEn())
-                    .append(" (`").append(list.id()).append("`)").append(NL).append(NL)
-                    .append(list.verified() ? "**Verified**" : "**Not verified**")
-                    .append(" · ").append(list.sources().size())
-                    .append(list.sources().size() == 1 ? " source cited" : " sources cited")
-                    .append(NL).append(NL);
+            out.append("""
+                    ### %s — %s (`%s`)
+
+                    %s · %d%s
+
+                    """.formatted(list.nameJa(), list.nameEn(), list.id(),
+                            list.verified() ? "**Verified**" : "**Not verified**",
+                            list.sources().size(),
+                            list.sources().size() == 1 ? " source cited" : " sources cited"));
             list.note().ifPresent(note -> out.append("> ").append(note).append(NL).append(NL));
-            out.append("| Code | 名称 | Meaning | Verified | Notes |").append(NL)
-                    .append("|---|---|---|---|---|").append(NL);
+            out.append("""
+                    | Code | 名称 | Meaning | Verified | Notes |
+                    |---|---|---|---|---|
+                    """);
             for (CodeValue value : list.values()) {
                 out.append("| `").append(value.code()).append('`')
                         .append(" | ").append(value.nameJa())

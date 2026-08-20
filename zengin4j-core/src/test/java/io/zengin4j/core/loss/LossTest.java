@@ -75,7 +75,7 @@ class LossTest {
         LossEntry first = entry(LossKind.TRANSLITERATED, LossSeverity.INFORMATIONAL);
         LossEntry second = entry(LossKind.TRUNCATED, LossSeverity.MATERIAL);
 
-        LossReport report = new LossReport(List.of(first, second));
+        var report = new LossReport(List.of(first, second));
 
         assertThat(report.entries()).containsExactly(first, second);
         assertThat(report.isLossless()).isFalse();
@@ -83,7 +83,7 @@ class LossTest {
 
     @Test
     void aReportSelectsBySeverity() {
-        LossReport report = new LossReport(List.of(
+        var report = new LossReport(List.of(
                 entry(LossKind.TRANSLITERATED, LossSeverity.INFORMATIONAL),
                 entry(LossKind.TRUNCATED, LossSeverity.MATERIAL),
                 entry(LossKind.DROPPED, LossSeverity.MATERIAL)));
@@ -95,7 +95,7 @@ class LossTest {
 
     @Test
     void aReportSelectsAtOrAboveASeverity() {
-        LossReport report = new LossReport(List.of(
+        var report = new LossReport(List.of(
                 entry(LossKind.TRANSLITERATED, LossSeverity.INFORMATIONAL),
                 entry(LossKind.TRUNCATED, LossSeverity.MATERIAL),
                 entry(LossKind.COERCED, LossSeverity.CRITICAL)));
@@ -121,7 +121,7 @@ class LossTest {
 
     @Test
     void combiningWithAnEmptyReportChangesNothing() {
-        LossReport report = new LossReport(List.of(entry(LossKind.DROPPED, LossSeverity.MATERIAL)));
+        var report = new LossReport(List.of(entry(LossKind.DROPPED, LossSeverity.MATERIAL)));
 
         assertThat(report.and(LossReport.lossless())).isSameAs(report);
         assertThat(LossReport.lossless().and(report)).isSameAs(report);
@@ -129,7 +129,7 @@ class LossTest {
 
     @Test
     void aReportRendersOneEntryPerLine() {
-        LossReport report = new LossReport(List.of(
+        var report = new LossReport(List.of(
                 entry(LossKind.TRUNCATED, LossSeverity.MATERIAL),
                 entry(LossKind.DROPPED, LossSeverity.INFORMATIONAL)));
 
@@ -148,7 +148,7 @@ class LossTest {
     void aReportDoesNotChangeWhenItsSourceListDoes() {
         List<LossEntry> mutable =
                 new java.util.ArrayList<>(List.of(entry(LossKind.DROPPED, LossSeverity.MATERIAL)));
-        LossReport report = new LossReport(mutable);
+        var report = new LossReport(mutable);
 
         mutable.clear();
 
@@ -159,7 +159,7 @@ class LossTest {
 
     @Test
     void aCollectorGathersEntriesAndBuildsAReport() {
-        LossCollector collector = new LossCollector();
+        var collector = new LossCollector();
 
         assertThat(collector.isLossless()).isTrue();
         assertThat(collector.size()).isZero();
@@ -173,7 +173,7 @@ class LossTest {
 
     @Test
     void aCollectorStaysUsableAfterBuilding() {
-        LossCollector collector = new LossCollector();
+        var collector = new LossCollector();
         collector.record(entry(LossKind.DROPPED, LossSeverity.MATERIAL));
 
         LossReport snapshot = collector.build();
@@ -229,7 +229,7 @@ class LossTest {
     @ParameterizedTest
     @EnumSource(LossKind.class)
     void everyKindCanBeRecorded(LossKind kind) {
-        LossCollector collector = new LossCollector();
+        var collector = new LossCollector();
 
         collector.record(entry(kind, LossSeverity.MATERIAL));
 

@@ -50,8 +50,8 @@ class EncodingMatrixTest {
         ZenginFile viaMs932 = ZenginReaders.readFile(
                 new ByteArrayInputStream(file), options(ZenginCharset.MS932));
 
-        SougouFurikomiData fromShiftJis = (SougouFurikomiData) viaShiftJis.allData().get(0);
-        SougouFurikomiData fromMs932 = (SougouFurikomiData) viaMs932.allData().get(0);
+        var fromShiftJis = (SougouFurikomiData) viaShiftJis.allData().get(0);
+        var fromMs932 = (SougouFurikomiData) viaMs932.allData().get(0);
 
         assertThat(fromShiftJis.beneficiaryName()).isEqualTo(fromMs932.beneficiaryName())
                 .isEqualTo(Fixtures.BENEFICIARY);

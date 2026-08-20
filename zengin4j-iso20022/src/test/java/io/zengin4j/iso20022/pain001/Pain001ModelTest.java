@@ -43,7 +43,7 @@ class Pain001ModelTest {
     void aDocumentSurvivesBeingWrittenAndReadBack() {
         Pain001Document original = document();
 
-        Pain001Document parsed = Pain001Document.from(
+        var parsed = Pain001Document.from(
                 XmlParser.parse(XmlSerializer.toBytes(original.toXml())));
 
         assertThat(parsed).isEqualTo(original);
@@ -71,7 +71,7 @@ class Pain001ModelTest {
 
     @Test
     void everyTransactionIsReachableAcrossInstructions() {
-        Pain001Document two = new Pain001Document(document().groupHeader(),
+        var two = new Pain001Document(document().groupHeader(),
                 List.of(document().payments().get(0), document().payments().get(0)));
 
         assertThat(two.transactions()).hasSize(2);
@@ -145,7 +145,7 @@ class Pain001ModelTest {
 
     @Test
     void aSevenDigitMemberIdSplitsBackIntoABankAndABranch() {
-        Agent read = Agent.from(new Agent("9999", "998", "ﾃｽﾄ").toXml("DbtrAgt").orElseThrow());
+        var read = Agent.from(new Agent("9999", "998", "ﾃｽﾄ").toXml("DbtrAgt").orElseThrow());
 
         assertThat(read.bankCode()).isEqualTo("9999");
         assertThat(read.branchCode()).isEqualTo("998");
@@ -157,7 +157,7 @@ class Pain001ModelTest {
     /// arbitrary. The mapper reports it; the model only declines to guess.
     @Test
     void aMemberIdOfAnotherShapeIsKeptWholeRatherThanCutArbitrarily() {
-        Agent read = Agent.from(XmlElement.element("CdtrAgt")
+        var read = Agent.from(XmlElement.element("CdtrAgt")
                 .child(XmlElement.element("FinInstnId")
                         .child(XmlElement.element("ClrSysMmbId")
                                 .textChild("MmbId", "SOMEBANKXXX")))
@@ -190,7 +190,7 @@ class Pain001ModelTest {
 
     @Test
     void anAmountIsReadBackWithItsCurrency() {
-        Money read = Money.from(Money.yen(150_000).toXml()).orElseThrow();
+        var read = Money.from(Money.yen(150_000).toXml()).orElseThrow();
 
         assertThat(read.isYen()).isTrue();
         assertThat(read.toYen()).isEqualTo(150_000);
@@ -234,7 +234,7 @@ class Pain001ModelTest {
 
     @Test
     void anAmountAtTheBoundaryIsStillAnAmount() {
-        BigDecimal thirtyDigits = new BigDecimal("1".repeat(Money.MAX_INTEGER_DIGITS));
+        var thirtyDigits = new BigDecimal("1".repeat(Money.MAX_INTEGER_DIGITS));
 
         assertThat(new Money(thirtyDigits, "JPY").amount()).isEqualByComparingTo(thirtyDigits);
         assertThatIllegalArgumentException().isThrownBy(() ->
@@ -273,7 +273,7 @@ class Pain001ModelTest {
 
     @Test
     void aFractionalAmountIsRecognisedAsSuch() {
-        Money fractional = new Money(new BigDecimal("1000.50"), "JPY");
+        var fractional = new Money(new BigDecimal("1000.50"), "JPY");
 
         assertThat(fractional.hasFraction()).isTrue();
         assertThat(fractional.toYen()).isEqualTo(1000);
@@ -282,7 +282,7 @@ class Pain001ModelTest {
 
     @Test
     void anAbsentReferenceIsWrittenAsTheValueTheStandardDefinesForIt() {
-        CreditTransferTransaction noReference = new CreditTransferTransaction(
+        var noReference = new CreditTransferTransaction(
                 "", "", Money.yen(1), new Agent("9999", "999", ""),
                 Party.named("ﾔﾏﾀﾞ"), new Account("9876543", "1"), RemittanceInformation.NONE);
 
@@ -299,14 +299,14 @@ class Pain001ModelTest {
     /// XML for identical content. The lines are therefore stored verbatim.
     @Test
     void anAttachmentIsWrittenBackExactlyAsItArrived() {
-        List<String> arrived = List.of(
+        var arrived = List.of(
                 "MIME-Version: 1.0",
                 "Content-Type: text/xml",
                 EdiAttachment.TRANSFER_ENCODING,
                 "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48VHJhbkluZj48L1RyYW5J",
                 "bmY+");
 
-        EdiAttachment attachment = EdiAttachment.parse(arrived).orElseThrow();
+        var attachment = EdiAttachment.parse(arrived).orElseThrow();
 
         assertThat(attachment.toUnstructured()).isEqualTo(arrived);
         assertThat(attachment.base64Lines())
@@ -316,7 +316,7 @@ class Pain001ModelTest {
 
     @Test
     void anAttachmentSurvivesAWholeRemittanceRoundTrip() {
-        RemittanceInformation original = RemittanceInformation.of(
+        var original = RemittanceInformation.of(
                 EdiAttachment.of("<TranInf>ordered</TranInf>".getBytes(StandardCharsets.UTF_8)));
 
         RemittanceInformation parsed =
@@ -331,7 +331,7 @@ class Pain001ModelTest {
     void anAttachmentSplitsAtSeventySixCharacters() {
         byte[] payload = "x".repeat(200).getBytes(StandardCharsets.UTF_8);
 
-        EdiAttachment attachment = EdiAttachment.of(payload);
+        var attachment = EdiAttachment.of(payload);
 
         assertThat(attachment.base64Lines())
                 .allSatisfy(line -> assertThat(line.length())
@@ -343,7 +343,7 @@ class Pain001ModelTest {
     /// Recognised by the transfer-encoding header, not by position.
     @Test
     void anAttachmentIsRecognisedEvenWithUnusualHeaders() {
-        EdiAttachment attachment = EdiAttachment.parse(List.of(
+        var attachment = EdiAttachment.parse(List.of(
                 "Content-Type: text/xml",
                 EdiAttachment.TRANSFER_ENCODING,
                 "eA==")).orElseThrow();
@@ -354,7 +354,7 @@ class Pain001ModelTest {
 
     @Test
     void ordinaryRemittanceTextIsNotAnAttachment() {
-        RemittanceInformation text = new RemittanceInformation(List.of("INVOICE 12345"));
+        var text = new RemittanceInformation(List.of("INVOICE 12345"));
 
         assertThat(text.ediAttachment()).isEmpty();
         assertThat(text.freeText()).containsExactly("INVOICE 12345");
@@ -362,7 +362,7 @@ class Pain001ModelTest {
 
     @Test
     void anAttachmentThatDoesNotDecodeSaysSoWithoutLosingItsLines() {
-        EdiAttachment broken = new EdiAttachment(
+        var broken = new EdiAttachment(
                 List.of(EdiAttachment.TRANSFER_ENCODING), List.of("!!!not base64!!!"));
 
         assertThatIllegalStateException()

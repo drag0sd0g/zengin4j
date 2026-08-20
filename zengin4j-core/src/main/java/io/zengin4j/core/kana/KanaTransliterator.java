@@ -76,7 +76,7 @@ public final class KanaTransliterator {
         Objects.requireNonNull(text, "text");
         Objects.requireNonNull(options, "options");
 
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
         String narrowed = narrow(text, options, loss);
         String uppercased = uppercase(narrowed, loss);
         String voiced = enforceVoicingMarks(uppercased, text, options, loss);
@@ -107,7 +107,7 @@ public final class KanaTransliterator {
         }
 
         Transliteration narrowed = toHalfWidth(text, options);
-        LossCollector loss = new LossCollector();
+        var loss = new LossCollector();
         narrowed.loss().entries().forEach(loss::record);
 
         byte[] bytes = options.charset().encode(narrowed.text());
@@ -291,8 +291,8 @@ public final class KanaTransliterator {
     /// @return the widened text and an informational loss entry
     public static Transliteration toFullWidth(String text) {
         Objects.requireNonNull(text, "text");
-        LossCollector loss = new LossCollector();
-        StringBuilder out = new StringBuilder(text.length());
+        var loss = new LossCollector();
+        var out = new StringBuilder(text.length());
 
         for (int i = 0; i < text.length(); ) {
             // Greedy: a base followed by a mark is one character, and matching
@@ -331,7 +331,7 @@ public final class KanaTransliterator {
 
     /// Substitution, hiragana and narrowing, in one walk.
     private static String narrow(String text, TransliterationOptions options, LossCollector loss) {
-        StringBuilder out = new StringBuilder(text.length());
+        var out = new StringBuilder(text.length());
         List<String> kanji = new ArrayList<>();
         List<String> hiragana = new ArrayList<>();
         List<String> converted = new ArrayList<>();
@@ -340,7 +340,7 @@ public final class KanaTransliterator {
         for (int i = 0; i < text.length(); ) {
             int codePoint = text.codePointAt(i);
             i += Character.charCount(codePoint);
-            String character = new String(Character.toChars(codePoint));
+            var character = new String(Character.toChars(codePoint));
 
             KanaSubstitution substitution = KanaTables.substitution(character);
             if (substitution != null) {
@@ -359,7 +359,7 @@ public final class KanaTransliterator {
                     hiragana.add(character);
                     continue;
                 }
-                String katakana = new String(Character.toChars(KanaTables.katakanaFor(codePoint)));
+                var katakana = new String(Character.toChars(KanaTables.katakanaFor(codePoint)));
                 converted.add(character);
                 narrowedAnything |= appendNarrowed(out, katakana);
                 continue;
@@ -418,7 +418,7 @@ public final class KanaTransliterator {
         for (int i = 0; i < text.length(); ) {
             int codePoint = text.codePointAt(i);
             i += Character.charCount(codePoint);
-            String character = new String(Character.toChars(codePoint));
+            var character = new String(Character.toChars(codePoint));
 
             String narrowed = KanaTables.narrow(character);
             if (narrowed == null) {
@@ -437,7 +437,7 @@ public final class KanaTransliterator {
     /// the alternative to folding is refusing. Informational, because case
     /// carries no meaning in a field that can only hold one of them.
     private static String uppercase(String text, LossCollector loss) {
-        StringBuilder out = new StringBuilder(text.length());
+        var out = new StringBuilder(text.length());
         boolean changed = false;
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
@@ -471,7 +471,7 @@ public final class KanaTransliterator {
             TransliterationOptions options, LossCollector loss) {
 
         CharacterClass characterClass = options.characterClass();
-        StringBuilder kept = new StringBuilder(text.length());
+        var kept = new StringBuilder(text.length());
         List<String> refused = new ArrayList<>();
 
         for (int i = 0; i < text.length(); i++) {
@@ -515,7 +515,7 @@ public final class KanaTransliterator {
     private static String enforceVoicingMarks(String text, String original,
             TransliterationOptions options, LossCollector loss) {
 
-        StringBuilder kept = new StringBuilder(text.length());
+        var kept = new StringBuilder(text.length());
         List<String> stranded = new ArrayList<>();
 
         for (int i = 0; i < text.length(); i++) {

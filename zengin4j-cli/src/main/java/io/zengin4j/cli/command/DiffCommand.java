@@ -141,8 +141,10 @@ public final class DiffCommand implements Callable<Integer> {
                                     ? "" : " -> " + pair.rightNumber()));
                     for (FieldChange field : fieldChanges(left, pair.left(), pair.right())) {
                         out.println("    " + field.id() + " (" + field.nameJa() + ") "
-                                + "byte " + field.offset() + ": "
-                                + field.was() + " -> " + field.now());
+                                + "byte " + field.offset()
+                                + (field.firstDiffer() == field.offset()
+                                        ? "" : ", first differs at " + field.firstDiffer())
+                                + ": " + field.was() + " -> " + field.now());
                     }
                 }
             }
@@ -165,7 +167,7 @@ public final class DiffCommand implements Callable<Integer> {
         if (layout == null) {
             return "(unrecognised データ区分 '" + (char) record[0] + "')";
         }
-        StringBuilder text = new StringBuilder(layout.kind().toString());
+        var text = new StringBuilder(layout.kind().toString());
         for (FieldDescriptor field : layout.fields()) {
             if (field.filler() || record.length < field.endOffset()) {
                 continue;
@@ -187,7 +189,7 @@ public final class DiffCommand implements Callable<Integer> {
             // Different record kinds at the same position: there is no
             // field-level comparison to make, so say so rather than align
             // 受取人名 against 合計金額.
-            return List.of(new FieldChange("(record kind)", "データ区分", 0,
+            return List.of(new FieldChange("(record kind)", "データ区分", 0, 0,
                     String.valueOf((char) left[0]), String.valueOf((char) right[0])));
         }
         List<FieldChange> changes = new ArrayList<>();
@@ -195,8 +197,13 @@ public final class DiffCommand implements Callable<Integer> {
             if (left.length < field.endOffset() || right.length < field.endOffset()) {
                 continue;
             }
-            if (Arrays.equals(left, field.offset(), field.endOffset(),
-                    right, field.offset(), field.endOffset())) {
+            // mismatch() answers "are these equal" and "where do they part"
+            // in one pass. The second half is what a reader of a fixed-length
+            // file actually needs: the field starts at one offset, but the
+            // byte to look at in a hex dump is somewhere inside it.
+            int firstDifference = Arrays.mismatch(left, field.offset(), field.endOffset(),
+                    right, field.offset(), field.endOffset());
+            if (firstDifference < 0) {
                 continue;
             }
             FieldRendering.Row was =
@@ -204,6 +211,7 @@ public final class DiffCommand implements Callable<Integer> {
             FieldRendering.Row now =
                     FieldRendering.render(field, right, reading.charset(), unsafePrint);
             changes.add(new FieldChange(field.id(), field.nameJa(), field.offset(),
+                    field.offset() + firstDifference,
                     "'" + was.display().strip() + "'", "'" + now.display().strip() + "'"));
         }
         return changes;
@@ -212,7 +220,7 @@ public final class DiffCommand implements Callable<Integer> {
     // ------------------------------------------------------------------ json
 
     private String json(ZenginFile left, List<RecordAlignment.Pair> pairs, boolean changed) {
-        Json json = new Json();
+        var json = new Json();
         json.object(() -> {
             json.field("before", before.toString());
             json.field("after", after.toString());
@@ -246,6 +254,7 @@ public final class DiffCommand implements Callable<Integer> {
                                         json.field("id", field.id());
                                         json.field("nameJa", field.nameJa());
                                         json.field("offset", field.offset());
+                                        json.field("firstDifferingByte", field.firstDiffer());
                                         json.field("before", unquote(field.was()));
                                         json.field("after", unquote(field.now()));
                                     });
@@ -265,6 +274,12 @@ public final class DiffCommand implements Callable<Integer> {
                 : value;
     }
 
-    private record FieldChange(String id, String nameJa, int offset, String was, String now) {
+    /// One field that differs between two records.
+    ///
+    /// @param offset      where the field starts
+    /// @param firstDiffer the first byte inside it that actually differs, which
+    ///                    is what to look for in a hex dump
+    private record FieldChange(
+            String id, String nameJa, int offset, int firstDiffer, String was, String now) {
     }
 }

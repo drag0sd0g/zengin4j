@@ -44,7 +44,7 @@ class XmlTest {
     /// bound an expansion whose whole point is that bounds get raised.
     @Test
     void nestedEntityExpansionIsRefused() {
-        StringBuilder attack = new StringBuilder("<?xml version=\"1.0\"?>\n<!DOCTYPE lolz [\n")
+        var attack = new StringBuilder("<?xml version=\"1.0\"?>\n<!DOCTYPE lolz [\n")
                 .append("<!ENTITY lol0 \"lol\">\n");
         for (int i = 1; i <= 9; i++) {
             String inner = "&lol" + (i - 1) + ";";
@@ -341,7 +341,7 @@ class XmlTest {
 
     @Test
     void aFormattedTimestampParsesBackToWhatItCameFrom() {
-        OffsetDateTime original = OffsetDateTime.parse("2026-09-01T00:00Z");
+        var original = OffsetDateTime.parse("2026-09-01T00:00Z");
 
         assertThat(OffsetDateTime.parse(IsoDateTime.format(original))).isEqualTo(original);
     }

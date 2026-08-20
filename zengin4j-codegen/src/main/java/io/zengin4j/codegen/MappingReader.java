@@ -154,11 +154,10 @@ final class MappingReader {
     }
 
     private static List<String> sources(Map<?, ?> entry) {
-        Object declared = entry.get("sources");
-        if (!(declared instanceof List<?> list)) {
-            return List.of();
-        }
-        return list.stream().map(Object::toString).map(String::trim).toList();
+        return switch (entry.get("sources")) {
+            case List<?> list -> list.stream().map(Object::toString).map(String::trim).toList();
+            case null, default -> List.of();
+        };
     }
 
     /// The declarations write `"-"` where this model writes an empty string.

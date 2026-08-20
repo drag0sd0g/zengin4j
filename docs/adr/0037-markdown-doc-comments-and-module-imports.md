@@ -1,4 +1,4 @@
-# 0037 — Markdown doc comments, and `import module java.base`
+# 0037 — Markdown doc comments, module imports, and where `var` stops
 
 **Status:** Accepted
 **Requirements:** R-DOC5, R-0.12, R-MEM2, R-T2
@@ -7,8 +7,8 @@
 ## Context
 
 [ADR-0036](0036-java-25-baseline.md) moved the baseline to Java 25 and listed the features that
-motivated it. Two of them change how every file in the repository looks, so they are worth recording
-separately from the version bump that made them legal.
+motivated it. Three of them change how every file in the repository looks, so they are worth
+recording separately from the version bump that made them legal.
 
 Markdown documentation comments (JEP 467) let a doc comment be written as `///` lines containing
 CommonMark instead of `/** */` containing HTML. This is a documentation-heavy codebase — roughly ten
@@ -19,6 +19,10 @@ every list.
 Module imports (JEP 511) let `import module java.base;` stand in for the single-type imports of
 everything java.base exports. Before the change, 247 files imported at least one java.base type, 879
 imports in total.
+
+Local variable type inference has been available since Java 10 and unused here: the codebase had
+six `var` declarations against roughly 2,200 locals. The question it raises is not whether the
+feature works but where to stop, and that answer is specific to what this library is about.
 
 ## Decision
 
@@ -55,6 +59,16 @@ nobody can infer is worse than either extreme.
 **What this costs on review.** A diff that touches an import block no longer shows which JDK types a
 change started using. That information moves to the call site, where a reader has to know that
 `Deque` is java.base rather than seeing it declared.
+
+**`var` follows the same reasoning and lands in a different place.** The rule adopted is: `var` only
+where the right-hand side already names the type — a non-diamond `new X(...)`, a static factory
+whose owner is the type, or a cast. That is 285 declarations. It is *not* applied to the 1,106
+declarations initialised from a method call, nor to `new X<>()` where `var` would infer `Object`
+unless the type argument moved right, nor to any numeric local: this is a library about byte
+offsets, `byteOffset` is a `long` where field offsets are `int`, and erasing that at the declaration
+site costs more than the line it saves. Uniformity was the argument for applying module imports
+everywhere; here the same argument does not reach, because a `var` on a method-call initialiser
+leaves the type named nowhere in the method, while a module import leaves every use site unchanged.
 
 **The way back is mechanical.** `///` to `/** */` and module imports to single types are both
 whole-file transforms an IDE performs; neither is load-bearing, which is the property ADR-0036 asked

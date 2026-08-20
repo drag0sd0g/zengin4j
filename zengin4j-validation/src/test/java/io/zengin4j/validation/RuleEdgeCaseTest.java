@@ -245,7 +245,7 @@ class RuleEdgeCaseTest {
                 .allSatisfy(finding -> assertThat(finding.severity()).isEqualTo(Severity.ERROR));
         assertThat(report.findingsOf("V-999")).isEmpty();
 
-        ValidationReport clean = new ValidationReport(List.of());
+        var clean = new ValidationReport(List.of());
         assertThat(clean.isClean()).isTrue();
         assertThat(clean.isSubmittable()).isTrue();
         assertThat(clean.toText(Locale.ENGLISH)).isEqualTo("No findings.\n");
@@ -307,9 +307,9 @@ class RuleEdgeCaseTest {
     /// Findings at the same position order by rule id, so the report is stable.
     @Test
     void findingsAtOneLocationOrderByRuleId() {
-        Finding first = Finding.of(Severity.ERROR, "V-201").at(2, 122).field("a", 10)
+        var first = Finding.of(Severity.ERROR, "V-201").at(2, 122).field("a", 10)
                 .message("en", "ja").build();
-        Finding second = Finding.of(Severity.ERROR, "V-206").at(2, 122).field("a", 10)
+        var second = Finding.of(Severity.ERROR, "V-206").at(2, 122).field("a", 10)
                 .message("en", "ja").build();
 
         assertThat(first.compareTo(second)).isNegative();
@@ -320,15 +320,15 @@ class RuleEdgeCaseTest {
     /// A finding with no position sorts after one that has a position.
     @Test
     void findingsWithoutAPositionSortLast() {
-        Finding located = Finding.of(Severity.ERROR, "V-101").at(1, 0).message("en", "ja").build();
-        Finding fileWide = Finding.of(Severity.ERROR, "V-107").message("en", "ja").build();
+        var located = Finding.of(Severity.ERROR, "V-101").at(1, 0).message("en", "ja").build();
+        var fileWide = Finding.of(Severity.ERROR, "V-107").message("en", "ja").build();
 
         assertThat(located.compareTo(fileWide)).isNegative();
     }
 
     @Test
     void findingRendersALineInEitherLanguage() {
-        Finding finding = Finding.of(Severity.WARNING, "V-306")
+        var finding = Finding.of(Severity.WARNING, "V-306")
                 .at(4, 366)
                 .field("amount", 80)
                 .message("English text", "日本語のテキスト")

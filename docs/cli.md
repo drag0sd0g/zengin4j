@@ -208,13 +208,19 @@ zengin diff before.txt after.txt --allow-unverified
 
 ```
 ~ record 2
-    accountNumber (口座番号) byte 43: '***1248' -> '***5067'
-    amount (振込金額) byte 80: '0007404763' -> '0005205051'
+    accountNumber (口座番号) byte 43, first differs at 45: '***9485' -> '***4930'
+    amount (振込金額) byte 80, first differs at 83: '0001387164' -> '0002688956'
+~ record 4
+    beneficiaryName (受取人名) byte 50: 'ﾃｽﾄ ｶﾞｸﾌﾞﾁ' -> 'ｶﾅ ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ'
 ~ record 5
-    totalAmount (合計金額) byte 7: '000020390651' -> '000019072524'
+    totalAmount (合計金額) byte 7, first differs at 12: '000014308193' -> '000012320259'
 
-2 changed, 0 added, 0 removed.
+3 changed, 0 added, 0 removed.
 ```
+
+`byte 43` is where the field starts; `first differs at 45` is the byte to look
+for in a hex dump, and is omitted when the field differs from its first byte.
+The JSON form carries both as `offset` and `firstDifferingByte`.
 
 A textual diff of a fixed-length file tells you that record 2 changed and
 nothing else, because the record is one line and every byte of it is on that

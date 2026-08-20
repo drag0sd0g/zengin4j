@@ -47,7 +47,7 @@ public record FormatId(String value) implements Comparable<FormatId> {
     ///
     /// @return the camel-case form
     public String toTypeNamePrefix() {
-        StringBuilder result = new StringBuilder(value.length());
+        var result = new StringBuilder(value.length());
         boolean capitalise = true;
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);

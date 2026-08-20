@@ -146,7 +146,7 @@ public final class GenerateCommand implements Callable<Integer> {
     }
 
     private String describe(byte[] bytes, Path written) {
-        Json json = new Json();
+        var json = new Json();
         json.object(() -> {
             json.field("format", format);
             json.field("payments", count);

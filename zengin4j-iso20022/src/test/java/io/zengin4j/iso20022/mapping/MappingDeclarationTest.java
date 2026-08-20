@@ -41,7 +41,7 @@ class MappingDeclarationTest {
         FormatFixtures fixtures = FormatFixtures.forFormat(FORMAT);
         ZenginFile file = ZenginReaders.readFile(
                 new ByteArrayInputStream(fixtures.file()), fixtures.readerOptions());
-        MappingContext context = MappingContext.builder("9900000001", LocalDate.of(2026, 9, 1))
+        var context = MappingContext.builder("9900000001", LocalDate.of(2026, 9, 1))
                 .targetFormat(fixtures.descriptor())
                 .acceptAnyLoss()
                 .build();
@@ -128,7 +128,7 @@ class MappingDeclarationTest {
     @Test
     void everyElementOfAnInboundDocumentIsCarriedOrReported() {
         FormatFixtures fixtures = FormatFixtures.forFormat(FORMAT);
-        MappingContext context = MappingContext.builder("9911111111", LocalDate.of(2026, 9, 1))
+        var context = MappingContext.builder("9911111111", LocalDate.of(2026, 9, 1))
                 .targetFormat(fixtures.descriptor())
                 .acceptAnyLoss()
                 .build();
@@ -214,7 +214,7 @@ class MappingDeclarationTest {
     @Test
     void everyLocationALossEntryNamesIsOneTheDeclarationUses() {
         FormatFixtures fixtures = FormatFixtures.forFormat(FORMAT);
-        MappingContext context = MappingContext.builder("9911111111", LocalDate.of(2026, 9, 1))
+        var context = MappingContext.builder("9911111111", LocalDate.of(2026, 9, 1))
                 .targetFormat(fixtures.descriptor())
                 .acceptAnyLoss()
                 .build();
@@ -282,7 +282,7 @@ class MappingDeclarationTest {
             if (!row.hasZenginField()) {
                 continue;
             }
-            RecordKind kind = RecordKind.valueOf(
+            var kind = RecordKind.valueOf(
                     row.zenginRecord().orElseThrow().toUpperCase(Locale.ROOT));
             boolean exists = descriptor.record(kind).fields().stream()
                     .map(FieldDescriptor::id)
@@ -391,7 +391,7 @@ class MappingDeclarationTest {
     /// was `defaults()`, which `create()` already returns.
     @Test
     void aRegistryAcceptsAMappingForAFormatOfYourOwn() {
-        FormatId variant = FormatId.of("sougou-furikomi-house");
+        var variant = FormatId.of("sougou-furikomi-house");
         List<MappingRow> bundled = rows();
 
         MappingRegistry extended = MappingRegistry.defaults()
@@ -435,7 +435,7 @@ class MappingDeclarationTest {
     /// And the mapper actually uses the registry it was given.
     @Test
     void aMapperUsesTheRegistryItWasGiven() {
-        FormatId variant = FormatId.of("sougou-furikomi-house");
+        var variant = FormatId.of("sougou-furikomi-house");
         MappingRegistry extended = MappingRegistry.defaults()
                 .withMapping(variant, MessageId.PAIN_001_001_03, rows());
 

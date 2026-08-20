@@ -39,7 +39,7 @@ public final class XmlSerializer {
     /// @param root the root element
     /// @return the document text, CRLF line endings
     public static String toText(XmlElement root) {
-        StringBuilder out = new StringBuilder(DECLARATION).append(CRLF);
+        var out = new StringBuilder(DECLARATION).append(CRLF);
         write(root, "", "", out);
         return out.toString();
     }
@@ -84,7 +84,7 @@ public final class XmlSerializer {
     /// @param text the text
     /// @return the escaped text
     static String escapeText(String text) {
-        StringBuilder out = new StringBuilder(text.length());
+        var out = new StringBuilder(text.length());
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             switch (c) {
@@ -98,7 +98,7 @@ public final class XmlSerializer {
     }
 
     static String escapeAttribute(String value) {
-        StringBuilder out = new StringBuilder(value.length());
+        var out = new StringBuilder(value.length());
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
             switch (c) {

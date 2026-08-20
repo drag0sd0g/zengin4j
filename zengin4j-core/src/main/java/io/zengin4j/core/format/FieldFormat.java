@@ -58,7 +58,7 @@ public enum FieldFormat {
     ///
     /// @return the supported values, for diagnostics
     public static String supportedValues() {
-        StringBuilder result = new StringBuilder();
+        var result = new StringBuilder();
         for (FieldFormat candidate : values()) {
             if (!result.isEmpty()) {
                 result.append(", ");

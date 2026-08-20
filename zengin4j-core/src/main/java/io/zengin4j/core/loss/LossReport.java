@@ -98,7 +98,7 @@ public final class LossReport {
         if (entries.isEmpty()) {
             return "no loss\n";
         }
-        StringBuilder out = new StringBuilder();
+        var out = new StringBuilder();
         for (LossEntry entry : entries) {
             out.append(entry.toLine()).append('\n');
         }

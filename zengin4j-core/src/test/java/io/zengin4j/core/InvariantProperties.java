@@ -107,7 +107,7 @@ class InvariantProperties {
                     List<FieldSpec> fields = specs(layout.lengths);
 
                     if (sum == layout.declaredLength) {
-                        RecordDescriptor record = RecordDescriptor.of(
+                        var record = RecordDescriptor.of(
                                 GENERATED_ID, RecordKind.HEADER, (byte) '1', layout.declaredLength, fields);
 
                         assertThat(record.fields()).hasSize(layout.lengths.size());
@@ -175,7 +175,7 @@ class InvariantProperties {
     // --------------------------------------------------------------- helpers
 
     private static void assertReadIsWellBehaved(byte[] input, ParseMode mode) {
-        ReaderOptions options = ReaderOptions.builder()
+        var options = ReaderOptions.builder()
                 .registry(REGISTRY)
                 .allowUnverifiedFormats(true)
                 .mode(mode)

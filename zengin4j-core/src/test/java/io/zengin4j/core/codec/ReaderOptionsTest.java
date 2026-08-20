@@ -33,7 +33,7 @@ class ReaderOptionsTest {
     void everySettingRoundTripsThroughTheBuilder() {
         FormatRegistry registry = Fixtures.registry();
         List<ZenginWarning> warnings = new ArrayList<>();
-        ReaderOptions options = ReaderOptions.builder()
+        var options = ReaderOptions.builder()
                 .charset(ZenginCharset.SHIFT_JIS)
                 .allowUnverifiedFormats(true)
                 .format(Fixtures.SOUGOU_FURIKOMI)
@@ -76,7 +76,7 @@ class ReaderOptionsTest {
 
     @Test
     void warningsCarryBothLanguagesAndACode() {
-        ZenginWarning warning = new ZenginWarning("W-TEST", "english", "日本語", 42);
+        var warning = new ZenginWarning("W-TEST", "english", "日本語", 42);
 
         assertThat(warning.code()).isEqualTo("W-TEST");
         assertThat(warning.messageEn()).isEqualTo("english");

@@ -32,12 +32,12 @@ public final class CodegenMain {
     public static void main(String[] args) {
         Map<String, String> options = parse(args);
         String mode = required(options, "--mode");
-        Path formats = Path.of(required(options, "--formats"));
-        Path javaOut = Path.of(required(options, "--java-out"));
-        Path docsOut = Path.of(required(options, "--docs-out"));
-        Path kanaDir = Path.of(required(options, "--kana"));
-        Path mappingsDir = Path.of(required(options, "--mappings"));
-        Path isoJavaOut = Path.of(required(options, "--iso-java-out"));
+        var formats = Path.of(required(options, "--formats"));
+        var javaOut = Path.of(required(options, "--java-out"));
+        var docsOut = Path.of(required(options, "--docs-out"));
+        var kanaDir = Path.of(required(options, "--kana"));
+        var mappingsDir = Path.of(required(options, "--mappings"));
+        var isoJavaOut = Path.of(required(options, "--iso-java-out"));
 
         List<Path> descriptorFiles = descriptorFiles(formats);
         Map<String, CodeList> codeLists = YamlDescriptorReader.readCodeLists(
@@ -94,9 +94,9 @@ public final class CodegenMain {
             Path mappingsDir,
             Path isoJavaOut) {
 
-        RecordSourceGenerator sourceGenerator = new RecordSourceGenerator(javaOut);
-        FormatDocGenerator docGenerator = new FormatDocGenerator(docsOut);
-        BundledFormatsGenerator formatsGenerator = new BundledFormatsGenerator(javaOut);
+        var sourceGenerator = new RecordSourceGenerator(javaOut);
+        var docGenerator = new FormatDocGenerator(docsOut);
+        var formatsGenerator = new BundledFormatsGenerator(javaOut);
 
         List<GeneratedFile> files = new ArrayList<>();
         for (FormatDescriptor descriptor : descriptors) {
@@ -113,7 +113,7 @@ public final class CodegenMain {
 
         // The transliteration tables (R-K9). Same reasoning as the descriptors:
         // authored as data, compiled to Java, so core parses nothing at runtime.
-        KanaTablesGenerator kanaGenerator = new KanaTablesGenerator(javaOut);
+        var kanaGenerator = new KanaTablesGenerator(javaOut);
         Path substitutions = kanaDir.resolve(KANA_SUBSTITUTIONS_FILE);
         files.add(kanaGenerator.generate(
                 KanaSubstitutionReader.read(substitutions), KANA_SUBSTITUTIONS_FILE));
@@ -130,7 +130,7 @@ public final class CodegenMain {
             mappings.add(MappingReader.read(file, descriptors));
             mappingSources.add(file.getFileName().toString());
         }
-        MappingSourceGenerator mappingGenerator = new MappingSourceGenerator(isoJavaOut);
+        var mappingGenerator = new MappingSourceGenerator(isoJavaOut);
         files.add(mappingGenerator.generate(mappings, mappingSources));
         files.add(mappingGenerator.packageInfo());
         files.add(new MappingDocGenerator(docsOut.getParent())

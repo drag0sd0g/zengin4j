@@ -70,9 +70,9 @@ public final class Zengin implements Callable<Integer> {
     ///
     /// @param args the command line arguments
     public static void main(String[] args) {
-        PrintWriter out = new PrintWriter(new java.io.OutputStreamWriter(
+        var out = new PrintWriter(new java.io.OutputStreamWriter(
                 System.out, StandardCharsets.UTF_8), true);
-        PrintWriter err = new PrintWriter(new java.io.OutputStreamWriter(
+        var err = new PrintWriter(new java.io.OutputStreamWriter(
                 System.err, StandardCharsets.UTF_8), true);
         int status = run(args, out, err);
         out.flush();
@@ -92,7 +92,7 @@ public final class Zengin implements Callable<Integer> {
     /// @param err  where diagnostics go
     /// @return the exit status; see [ExitCode]
     public static int run(String[] args, PrintWriter out, PrintWriter err) {
-        CommandLine commandLine = new CommandLine(new Zengin())
+        var commandLine = new CommandLine(new Zengin())
                 .setOut(out)
                 .setErr(err)
                 // No ANSI colour, ever. picocli's AUTO mode decided the Windows
