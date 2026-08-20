@@ -202,6 +202,38 @@ class ZediEnvelopeTest {
                 .isEqualTo(original);
     }
 
+    /// `CreDt` is `ISONormalisedDateTime`, whose schema type carries a
+    /// pattern facet requiring the literal `Z`. A JST timestamp written with
+    /// its own offset fails that facet — and a validator is the only thing
+    /// that would ever have said so, which is why this is pinned here rather
+    /// than left to the golden.
+    @Test
+    void theHeaderTimestampIsNormalisedToUtc() {
+        var head = new BusinessApplicationHeader(
+                "9900000001", "9999", "M1", MessageId.PAIN_001_001_03,
+                java.time.OffsetDateTime.parse("2026-09-01T09:30:00+09:00"));
+
+        var written = new String(
+                io.zengin4j.iso20022.xml.XmlSerializer.toBytes(head.toXml()),
+                StandardCharsets.UTF_8);
+
+        assertThat(written).contains("<CreDt>2026-09-01T00:30:00Z</CreDt>");
+        assertThat(written).doesNotContain("+09:00");
+    }
+
+    /// And the instant survives the conversion: normalising is a change of
+    /// notation, not of time.
+    @Test
+    void normalisingTheHeaderTimestampKeepsTheInstant() {
+        var jst = java.time.OffsetDateTime.parse("2026-09-01T09:30:00+09:00");
+        var head = new BusinessApplicationHeader(
+                "9900000001", "9999", "M1", MessageId.PAIN_001_001_03, jst);
+
+        var reread = BusinessApplicationHeader.from(head.toXml());
+
+        assertThat(reread.creationDate()).isEqualTo(jst);
+    }
+
     @Test
     void aMessageBuiltFromAModelSerialisesItsOwnBytes() {
         var head = new BusinessApplicationHeader(

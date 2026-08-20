@@ -536,7 +536,9 @@ class Iso20022MapperTest {
 
         XmlElement header = result.output().onlyMessage().body()
                 .at("CstmrCdtTrfInitn/GrpHdr").orElseThrow();
-        assertThat(header.textAt("CreDtTm")).contains("2026-09-01T09:30:00+09:00");
+        // ISODateTime carries no offset: the wall clock the caller gave,
+        // written back as the profile bounds it at nineteen characters.
+        assertThat(header.textAt("CreDtTm")).contains("2026-09-01T09:30:00");
         assertThat(header.textAt("MsgId")).contains("BATCH-7");
     }
 

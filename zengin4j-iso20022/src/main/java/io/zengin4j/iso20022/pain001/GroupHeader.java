@@ -45,7 +45,7 @@ public record GroupHeader(
         Objects.requireNonNull(element, "element");
         return new GroupHeader(
                 element.textAt("MsgId").orElse(""),
-                element.textAt("CreDtTm").map(OffsetDateTime::parse).orElse(EPOCH),
+                element.textAt("CreDtTm").flatMap(IsoDateTime::parse).orElse(EPOCH),
                 element.at("InitgPty").map(Party::from).orElse(Party.named("")));
     }
 

@@ -147,9 +147,11 @@ uncertain one.
 
 1. **Record the findings** — this document, [D-004](DISCREPANCIES.md), and the source entry.
    *Done 2026-08-20.*
-2. **Fix the two `CreDt` formats.** The header's must be UTC to satisfy `ISONormalisedDateTime`;
-   `pain.001`'s carries no offset at all. Small, self-contained, and wrong today whatever else
-   changes. → [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile),
+2. **Fix the two `CreDt` formats.** *Done 2026-08-20.* `IsoDateTime` now renders both shapes and
+   reads either: `format` writes `ISODateTime` with no offset for `GrpHdr/CreDtTm`, and
+   `formatNormalised` converts to UTC for the header's `CreDt`. A value with no offset is read as
+   UTC, which is what lets the plain shape survive its own round trip.
+   → [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile),
    [OQ-14](#oq-14--the-pain001-mapping-does-not-follow-the-profile)
 3. **Fix the writer's `To` path** to `FIId/FinInstnId/Othr/Id`. The reader already accepts both, so
    this is a change to one method. → [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile)
@@ -525,9 +527,10 @@ R-I6 wants: the filler bytes survive the round trip because there is somewhere t
 
 Each of these is currently reported as a loss. Six loss entries would stop existing.
 
-*One more, unrelated to placement.* `GrpHdr/CreDtTm` is specified with **no UTC offset at all** —
-nineteen characters, or twenty-three with milliseconds. `IsoDateTime` appends one, which makes the
-value twenty-five characters for a JST input and puts it past the stated maximum.
+*One more, unrelated to placement — and already fixed.* `GrpHdr/CreDtTm` is specified with **no UTC
+offset at all**, nineteen characters or twenty-three with milliseconds. `IsoDateTime` used to append
+one, which made the value twenty-five characters for a JST input and put it past the stated maximum.
+Corrected 2026-08-20; the rest of this entry stands.
 
 **Implemented:** the mapping as declared, every row `verified: false`, which is exactly the claim the
 evidence supported. Nothing was ever asserted about conformance that this refutes.
@@ -546,8 +549,9 @@ differ from what is written.
   `FIId/FinInstnId/Othr/Id`; `BusinessApplicationHeader.party(...)` writes the `OrgId/Id/OrgId/Othr/Id`
   shape for both `Fr` and `To`. The **reader is already correct** — it tries both paths, and the
   organisation path first — so only the writer is wrong.
-- **`CreDt` must be UTC.** Its type is `ISONormalisedDateTime`, whose lexical space ends in `Z`.
-  `IsoDateTime` formats with `XXX`, which emits `+09:00` for a JST input and would fail that facet.
+- ~~**`CreDt` must be UTC.**~~ *Fixed 2026-08-20.* Its type is `ISONormalisedDateTime`, whose
+  lexical space ends in `Z`; `IsoDateTime.formatNormalised` converts the instant rather than writing
+  whatever offset it was handed.
 - **`BizSvc` is used and is not modelled.** It carries a colon-delimited control string — transfer
   mode, file name, character-code flag, connection type, resend flag. `Prty` and `Rltd` do not appear
   in the profile at all, which closes the other half of

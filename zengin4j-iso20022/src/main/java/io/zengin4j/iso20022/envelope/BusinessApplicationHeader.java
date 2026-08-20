@@ -85,7 +85,7 @@ public record BusinessApplicationHeader(
                 .childIfPresent(party("To", to))
                 .textChild("BizMsgIdr", businessMessageIdentifier)
                 .textChild("MsgDefIdr", messageDefinitionIdentifier.value())
-                .textChild("CreDt", IsoDateTime.format(creationDate))
+                .textChild("CreDt", IsoDateTime.formatNormalised(creationDate))
                 .build();
     }
 
@@ -120,10 +120,6 @@ public record BusinessApplicationHeader(
     }
 
     private static Optional<OffsetDateTime> parseDate(String text) {
-        try {
-            return Optional.of(OffsetDateTime.parse(text));
-        } catch (java.time.format.DateTimeParseException notADate) {
-            return Optional.empty();
-        }
+        return IsoDateTime.parse(text);
     }
 }

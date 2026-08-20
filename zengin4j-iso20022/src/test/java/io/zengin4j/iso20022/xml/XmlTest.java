@@ -334,15 +334,66 @@ class XmlTest {
     @Test
     void aTimestampAlwaysCarriesItsSeconds() {
         assertThat(IsoDateTime.format(OffsetDateTime.parse("2026-09-01T00:00Z")))
+                .isEqualTo("2026-09-01T00:00:00");
+        assertThat(IsoDateTime.formatNormalised(OffsetDateTime.parse("2026-09-01T00:00Z")))
                 .isEqualTo("2026-09-01T00:00:00Z");
-        assertThat(IsoDateTime.format(OffsetDateTime.parse("2026-09-01T12:34:56+09:00")))
-                .isEqualTo("2026-09-01T12:34:56+09:00");
+    }
+
+    /// `ISODateTime` — what `GrpHdr/CreDtTm` is — carries no offset, and the
+    /// profile bounds it at nineteen characters without milliseconds. Writing
+    /// `+09:00` made it twenty-five, which is past that maximum.
+    @Test
+    void thePlainShapeCarriesNoOffsetAndIsNineteenCharacters() {
+        var jst = OffsetDateTime.parse("2026-09-01T12:34:56+09:00");
+
+        assertThat(IsoDateTime.format(jst)).isEqualTo("2026-09-01T12:34:56").hasSize(19);
+    }
+
+    /// `ISONormalisedDateTime` — what the header's `CreDt` is — has a schema
+    /// pattern facet requiring the literal `Z`, so an offset does not merely
+    /// look unusual there, it fails validation. The instant is preserved.
+    @Test
+    void theNormalisedShapeIsUtcAndEndsInZ() {
+        var jst = OffsetDateTime.parse("2026-09-01T12:34:56+09:00");
+
+        assertThat(IsoDateTime.formatNormalised(jst))
+                .isEqualTo("2026-09-01T03:34:56Z")
+                .hasSize(20)
+                .endsWith("Z");
+        assertThat(OffsetDateTime.parse(IsoDateTime.formatNormalised(jst)))
+                .isEqualTo(jst);
+    }
+
+    /// The plain shape has to survive its own round trip, which is the whole
+    /// reason an offset-less value is read as UTC rather than refused.
+    @Test
+    void aPlainTimestampReadsBackAndWritesOutUnchanged() {
+        var text = "2026-09-01T12:34:56";
+
+        var parsed = IsoDateTime.parse(text).orElseThrow();
+
+        assertThat(IsoDateTime.format(parsed)).isEqualTo(text);
+        assertThat(parsed.getOffset()).isEqualTo(java.time.ZoneOffset.UTC);
     }
 
     @Test
-    void aFormattedTimestampParsesBackToWhatItCameFrom() {
-        var original = OffsetDateTime.parse("2026-09-01T00:00Z");
+    void bothShapesAreReadable() {
+        assertThat(IsoDateTime.parse("2026-09-01T00:00:00Z"))
+                .contains(OffsetDateTime.parse("2026-09-01T00:00:00Z"));
+        assertThat(IsoDateTime.parse("2026-09-01T12:34:56+09:00"))
+                .contains(OffsetDateTime.parse("2026-09-01T12:34:56+09:00"));
+        assertThat(IsoDateTime.parse("2026-09-01T09:05:01.045"))
+                .contains(OffsetDateTime.parse("2026-09-01T09:05:01.045Z"));
+    }
 
-        assertThat(OffsetDateTime.parse(IsoDateTime.format(original))).isEqualTo(original);
+    /// A timestamp read from someone else's file is not a timestamp until it
+    /// parses, and a document that says otherwise must not take the conversion
+    /// down with an exception from outside this module's vocabulary.
+    @Test
+    void anUnreadableTimestampIsEmptyRatherThanThrown() {
+        assertThat(IsoDateTime.parse("not a date")).isEmpty();
+        assertThat(IsoDateTime.parse("")).isEmpty();
+        assertThat(IsoDateTime.parse(null)).isEmpty();
+        assertThat(IsoDateTime.parse("2026-13-45T99:99:99")).isEmpty();
     }
 }
