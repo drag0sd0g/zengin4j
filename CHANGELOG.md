@@ -866,6 +866,22 @@ settled three questions and opened two.
 No mapping row changes state on the strength of this yet; the corrections come first. Nothing that
 was previously claimed is refuted — every row already said `verified: false`.
 
+### Fixed — the two timestamp shapes
+
+- **`GrpHdr/CreDtTm` no longer carries a UTC offset.** The profile specifies `ISODateTime` there:
+  nineteen characters, or twenty-three with milliseconds, and no offset. A JST timestamp was being
+  written as twenty-five, past the stated maximum.
+- **The business application header's `CreDt` is normalised to UTC.** Its type is
+  `ISONormalisedDateTime`, whose schema pattern facet requires the literal `Z`, so `+09:00` there
+  was not unconventional but invalid. The instant is converted, not truncated.
+- `IsoDateTime` now renders both shapes and **reads either**, plus anything else `xs:dateTime`
+  permits. A value with no offset reads as UTC — a choice rather than a fact, since the shape
+  carries no zone, and the one that makes the plain form survive its own round trip.
+- Along the way, `GrpHdr/CreDtTm` stopped being parsed with a bare `OffsetDateTime::parse`. An
+  unreadable timestamp in somebody else's file now yields the epoch placeholder like every other
+  unreadable field, instead of throwing a `DateTimeParseException` out of the conversion.
+- The committed golden moved by exactly one line, which is the whole of the behaviour change.
+
 ### Known limitations
 
 - **Every bundled format descriptor is `verified: false`**, though not for want of evidence: the
