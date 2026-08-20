@@ -130,7 +130,7 @@ conservative default rather than the only reading.
 
 ## D-004 — Where the 支店番号 goes in `ClrSysMmbId`
 
-**Status:** open, and the implementation is on the wrong side of it. Raised 2026-08-20.
+**Status:** resolved 2026-08-20, in favour of the profile. The implementation was corrected.
 
 **Sources**
 
@@ -139,6 +139,7 @@ conservative default rather than the only reading.
 | ISO 20022 `ExternalClearingSystemIdentification1Code`, the registered definition of `JPZGN` | "Bank **Branch** code used in Japan" — a single identifier naming an office, which reads as bank code followed by branch code |
 | Industry references describing `pain.001` for Japan | A seven-digit identifier after `JPZGN`, with no separator |
 | 全銀ネット ZEDI 接続ガイダンス FB編, the request mapping (items 40, 43, 55, 60) | `ClrSysMmbId/MmbId` is 銀行番号 alone, `N(4)`. 支店番号 is `N(3)` and belongs in `FinInstnId/BrnchId/Id` |
+| 三菱UFJ銀行 BizSTATION 総合振込（XML形式）レコードフォーマット, same item numbers | The same, independently — `MmbId` `N(4)`, 支店番号 under `BrnchId` |
 
 **Analysis.** The first two readings are about the code set; the third is about the profile that uses
 it. They are not equally authoritative for this question. `JPZGN`'s definition says what the code
@@ -153,10 +154,19 @@ guidance fixes it as a constant (item 39). Only the seven-digit `MmbId` reading 
 `BrnchId` is deliberately unused, on the reasoning recorded in Q8 — which was a reasonable inference
 from the code-set definition alone, and is contradicted by the profile.
 
-**The conservative reading is now the profile's**, because it is the document the receiving system is
-built from. Correcting it is part of [OQ-14](OPEN_QUESTIONS.md); it is not a one-line change, because
-the inverse leg takes a member id apart on the assumption that it is four digits plus three, and that
-assumption disappears along with the concatenation.
+**Resolved in favour of the profile**, and no longer on the strength of one document: a participating
+bank publishes the same placement in its own customer-facing specification, which is the independent
+corroboration R-I19 asks for. These six rows are the first in this mapping to be marked
+`verified: true`.
+
+**Corrected 2026-08-20.** `MmbId` carries 銀行番号 and `BrnchId/Id` carries 支店番号, on both agents.
+The inverse leg reads the branch from its own element instead of slicing a member id, so the
+"cannot tell where the bank ends" case is gone — and with it the `COERCED`/`CRITICAL` entry that
+reported it. What replaced it is narrower and still worth saying: a document with no `BrnchId/Id`
+leaves a mandatory Zengin field empty, which is reported `DROPPED`/`CRITICAL`.
+
+The reader still accepts a seven-digit `MmbId` with no `BrnchId`, because that is what this library
+wrote until now and its own output should not become unreadable. An explicit branch always wins.
 
 ## Reporting a discrepancy
 

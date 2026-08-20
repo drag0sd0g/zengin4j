@@ -157,11 +157,23 @@ uncertain one.
    distinguishes the two branches — `Fr` is an organisation, `To` is a financial institution — and
    the reader was already accepting both, so nothing on the inbound leg moved.
    → [OQ-15](#oq-15--the-business-application-header-does-not-follow-the-profile)
-4. **Revise the mapping**, as its own epic: the branch codes out of `MmbId`, the trailer totals down
-   into `PmtInf`, the party fields onto `Dbtr`/`UltmtDbtr`/`Cdtr`, the six dropped fields into the
-   elements that hold them, and the inverse leg to match. Rows that end up matching the profile can
+4. **Revise the mapping**, as its own epic, in six phases. Rows that end up matching the profile
    cite it and stop saying `verified: false`, which is the whole point.
    → [OQ-14](#oq-14--the-pain001-mapping-does-not-follow-the-profile)
+
+   | Phase | What | State |
+   |---|---|---|
+   | 1 | Branch codes out of `MmbId` into `BrnchId/Id`, both agents | **Done 2026-08-20** |
+   | 2 | Trailer totals down from `GrpHdr` into `PmtInf`; drop `GrpHdr/CtrlSum` | |
+   | 3 | 委託者コード onto `Dbtr`, 委託者名 onto `UltmtDbtr`; empty `InitgPty` | |
+   | 4 | 顧客コード1 and 2 onto `Cdtr/Id`; delete `EndToEndIdPolicy` | |
+   | 5 | The six dropped fields into their elements, including the `InstrForDbtrAgt` packing | |
+   | 6 | Fixed values, then the verification sweep | |
+
+   **R-I19 needs no exception.** The search for an independent second source found one: a
+   participating bank publishes the same request format in its own customer-facing specification,
+   and it agrees with the profile element for element. Two independent published sources is the bar
+   and the bar is met, so verified rows are earned rather than granted.
 
 ---
 

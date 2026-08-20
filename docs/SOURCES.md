@@ -119,12 +119,24 @@ is only an opinion.
     mapping in ninety (OQ-14, [D-004](DISCREPANCIES.md)) — including `ClrSysId/Cd` fixed to `JPZGN`,
     which is Q8's primary confirmation. Anyone re-reading it should render rather than extract.
 
-10. **`zengin-code/source-data`** — machine-readable Japanese financial institution codes.
+10. **三菱UFJ銀行** — 「総合振込（XML形式）レコードフォーマット」BizSTATION, 2018年12月.
+    Retrieved 2026-08-20 via
+    <https://bizstation.bk.mufg.jp/biz/help/pdf/form_3_1_3_20181225.pdf>.
+    A participating bank's own customer-facing specification of the same request, and the
+    independent second source R-I19 asks for: it is published by an institution rather than by the
+    body that defines the profile. It agrees with the connection guidance element for element,
+    including the two placements that overturned earlier readings — `ClrSysMmbId/MmbId` as 銀行番号
+    alone and 支店番号 in `BrnchId`, and both trailer totals under `PmtInf` rather than
+    `GrpHdr`.
+
+    Its text layer is intact, so unlike the connection guidance it can be read without rendering.
+
+11. **`zengin-code/source-data`** — machine-readable Japanese financial institution codes.
    <https://github.com/zengin-code/source-data>, retrieved 2026-08-15. 1,146 institutions; `9900`
    (ゆうちょ銀行) is the only assigned code in the `99xx` block, which is what closes OQ-5. A
    dataset, not a specification — evidence about which codes are *in use*, not about the format.
 
-11. **`Kyash/zengin-go`** — `samples/sample.txt`. Retrieved 2026-08-15. Used for differential
+12. **`Kyash/zengin-go`** — `samples/sample.txt`. Retrieved 2026-08-15. Used for differential
     testing (R-T17), not as authority: decoding it with this library's offsets reconciles the
     file's own trailer totals, which is empirical corroboration no document can provide. Also the
     source of a data point in [D-002](DISCREPANCIES.md), and of the observation recorded in OQ-4.

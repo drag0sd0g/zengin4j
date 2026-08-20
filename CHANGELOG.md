@@ -897,6 +897,21 @@ was previously claimed is refuted — every row already said `verified: false`.
   submittable header. A header read from a real file contains a credential, which R-E6 masking
   applies to.
 
+### Changed — 支店番号 moves out of the member id (mapping revision, phase 1)
+
+- **`ClrSysMmbId/MmbId` now carries 銀行番号 alone and 支店番号 goes in `FinInstnId/BrnchId/Id`**, on
+  the debtor and creditor agents alike. It was written as one seven-digit member id with `BrnchId`
+  unused; the ZEDI profile and an independent bank specification both give it split. See D-004.
+- **The reader accepts both.** A seven-digit `MmbId` with no `BrnchId` — what this library wrote
+  until now — still splits four and three, so its own earlier output stays readable. An explicit
+  branch always wins.
+- **The "member id cannot be taken apart" loss is gone**, because nothing is taken apart any more.
+  What replaced it reports a narrower and still real problem: a document with no `BrnchId/Id` leaves
+  a mandatory Zengin field empty, `DROPPED`/`CRITICAL`.
+- **The first six verified mapping rows.** Both member ids, both branch ids and both `JPZGN`
+  constants now cite two independent published sources, which is what R-I19 asks for. `docs/mapping.md`
+  reports 6 of 36 rather than none.
+
 ### Known limitations
 
 - **Every bundled format descriptor is `verified: false`**, though not for want of evidence: the

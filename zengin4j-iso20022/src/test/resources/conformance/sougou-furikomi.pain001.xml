@@ -68,9 +68,12 @@
             <ClrSysId>
               <Cd>JPZGN</Cd>
             </ClrSysId>
-            <MmbId>9999998</MmbId>
+            <MmbId>9999</MmbId>
           </ClrSysMmbId>
           <Nm>テストギンコウ</Nm>
+          <BrnchId>
+            <Id>998</Id>
+          </BrnchId>
         </FinInstnId>
       </DbtrAgt>
       <CdtTrfTxInf>
@@ -86,9 +89,12 @@
               <ClrSysId>
                 <Cd>JPZGN</Cd>
               </ClrSysId>
-              <MmbId>9999999</MmbId>
+              <MmbId>9999</MmbId>
             </ClrSysMmbId>
             <Nm>テストギンコウ</Nm>
+            <BrnchId>
+              <Id>999</Id>
+            </BrnchId>
           </FinInstnId>
         </CdtrAgt>
         <Cdtr>
@@ -121,9 +127,12 @@
               <ClrSysId>
                 <Cd>JPZGN</Cd>
               </ClrSysId>
-              <MmbId>9999999</MmbId>
+              <MmbId>9999</MmbId>
             </ClrSysMmbId>
             <Nm>テストギンコウ</Nm>
+            <BrnchId>
+              <Id>999</Id>
+            </BrnchId>
           </FinInstnId>
         </CdtrAgt>
         <Cdtr>
@@ -156,9 +165,12 @@
               <ClrSysId>
                 <Cd>JPZGN</Cd>
               </ClrSysId>
-              <MmbId>9999999</MmbId>
+              <MmbId>9999</MmbId>
             </ClrSysMmbId>
             <Nm>テストギンコウ</Nm>
+            <BrnchId>
+              <Id>999</Id>
+            </BrnchId>
           </FinInstnId>
         </CdtrAgt>
         <Cdtr>

@@ -78,7 +78,7 @@ final class Pain001ToZengin {
                 values.set("originBranchCode", identifier(first.debtorAgent().branchCode(),
                         descriptor, RecordKind.HEADER, "originBranchCode",
                         IsoPaths.DEBTOR_AGENT_MEMBER));
-                reportUnsplittableMember(first.debtorAgent(), IsoPaths.DEBTOR_AGENT_MEMBER,
+                reportMissingBranch(first.debtorAgent(), IsoPaths.DEBTOR_AGENT_BRANCH,
                         "header.originBranchCode");
                 values.set("originBankName", narrow(first.debtorAgent().name(),
                         descriptor, RecordKind.HEADER, "originBankName",
@@ -288,8 +288,8 @@ final class Pain001ToZengin {
                     identifier(transaction.creditorAgent().branchCode(),
                             descriptor, RecordKind.DATA, "beneficiaryBranchCode",
                             IsoPaths.CREDITOR_AGENT_MEMBER));
-            reportUnsplittableMember(transaction.creditorAgent(),
-                    IsoPaths.CREDITOR_AGENT_MEMBER, "data.beneficiaryBranchCode");
+            reportMissingBranch(transaction.creditorAgent(),
+                    IsoPaths.CREDITOR_AGENT_BRANCH, "data.beneficiaryBranchCode");
             values.set("beneficiaryBankName", narrow(transaction.creditorAgent().name(),
                     descriptor, RecordKind.DATA, "beneficiaryBankName",
                     IsoPaths.CREDITOR_AGENT_NAME, LossSeverity.INFORMATIONAL));
@@ -307,28 +307,31 @@ final class Pain001ToZengin {
         });
     }
 
-    /// A member id that is not four digits plus three.
+    /// An agent that names a bank but no branch.
     ///
-    /// Within 全銀システム a participant is an office, and an office is 銀行番号
-    /// followed by 支店番号 — seven digits. A sender that wrote something else is
-    /// not producing a malformed file, but this mapping cannot say where the
-    /// bank ends and the branch begins, and guessing would put digits in the
-    /// wrong field. Reported `CRITICAL`: a wrong branch code sends the
-    /// payment to a different office.
-    private void reportUnsplittableMember(Agent agent, String memberPath, String targetField) {
-        if (agent.splitsCleanly()) {
+    /// 支店番号 is its own element, so nothing has to be sliced out of the member
+    /// id any more and the old "cannot tell where the bank ends" case is gone
+    /// with it. What remains is simpler and still worth saying: a Zengin record
+    /// has a mandatory three-digit 支店番号, and a `pain.001` that omits
+    /// `BrnchId/Id` leaves nothing to put there.
+    ///
+    /// Reported `CRITICAL` for the same reason as before — a payment
+    /// carrying a bank but no office does not reach anybody, and a zero-filled
+    /// branch reaches the wrong one.
+    private void reportMissingBranch(Agent agent, String branchPath, String targetField) {
+        if (agent.isEmpty() || !agent.branchCode().isBlank()) {
             return;
         }
-        loss.record(LossEntry.of(LossKind.COERCED, LossSeverity.CRITICAL,
-                        agent.memberId(), agent.bankCode(),
-                        "the clearing-system member id '" + agent.memberId() + "' is not four "
-                                + "digits of 銀行番号 followed by three of 支店番号, so the branch "
-                                + "could not be read out of it. 支店番号 was left empty rather "
-                                + "than guessed at.",
-                        "清算機関のメンバー識別子 '" + agent.memberId()
-                                + "' が銀行番号 4 桁 + 支店番号 3 桁の形式ではないため、支店番号を"
-                                + "取り出せませんでした。推測せず空欄としました。")
-                .at(memberPath, targetField));
+        loss.record(LossEntry.of(LossKind.DROPPED, LossSeverity.CRITICAL,
+                        "", "",
+                        "the agent names 銀行番号 '" + agent.bankCode() + "' but carries no "
+                                + "支店番号: the document has no BrnchId/Id to read one from. "
+                                + "支店番号 was left empty rather than guessed at, and a Zengin "
+                                + "record requires it.",
+                        "銀行番号 '" + agent.bankCode() + "' はありますが支店番号がありません。"
+                                + "BrnchId/Id が設定されていないため、推測せず空欄としました。"
+                                + "全銀レコードでは支店番号は必須です。")
+                .at(branchPath, targetField));
     }
 
     /// The amount, or a diagnosis of why it cannot be one.

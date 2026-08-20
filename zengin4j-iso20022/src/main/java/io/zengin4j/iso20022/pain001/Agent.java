@@ -9,25 +9,21 @@ import io.zengin4j.iso20022.xml.XmlElement;
 /// branch by its three-digit 支店番号 — not by BIC, which most institutions have
 /// and which the fixed-length formats never carry.
 ///
-/// ## Why the two codes become one identifier
+/// ## Where each code goes
 ///
-/// `ClrSysMmbId/MmbId` means "this party's identifier *within the
-/// named clearing system*". Within 全銀システム the thing that identifies a
-/// participant is the office, and an office is the bank code followed by the
-/// branch code — seven digits. A four-digit bank code identifies an institution,
-/// not a participant, so splitting the two across `MmbId` and
-/// `BrnchId` would put something in `MmbId` that is not a member
-/// identifier.
+/// `ClrSysMmbId/MmbId` carries 銀行番号 alone, four digits, and 支店番号 goes in
+/// `FinInstnId/BrnchId/Id`, three digits. Both the ZEDI profile and an
+/// independent bank's own specification give it that way, on the debtor and
+/// creditor sides alike.
 ///
-/// This model therefore holds the two codes separately, because that is what
-/// a Zengin record has, and writes them concatenated, because that is what the
-/// element means. §15.9 and Q8 both give it as seven digits.
+/// This was previously written as one seven-digit `MmbId` with `BrnchId`
+/// unused, reasoning that a 全銀システム participant is an office rather than an
+/// institution and so the member identifier must name the office. That is a
+/// defensible reading of what `MmbId` means, and it is not what the profile
+/// does — see D-004 in `docs/DISCREPANCIES.md`.
 ///
-/// The clearing-system identifier that names the scheme is
-/// **unconfirmed**. `JPZGN` is the plausible candidate and is
-/// what this writes; it has not been checked against the ISO 20022 External Code
-/// Sets, which is recorded as Q8 in `docs/OPEN_QUESTIONS.md` and is why
-/// every row of this mapping is `verified: false`.
+/// The clearing system is named by `JPZGN`, which the profile fixes as a
+/// constant.
 ///
 /// @param bankCode   銀行番号, four digits
 /// @param branchCode 支店番号, three digits; empty when the file has none
@@ -36,14 +32,12 @@ import io.zengin4j.iso20022.xml.XmlElement;
 public record Agent(String bankCode, String branchCode, String name) {
 
     /// The clearing system this profile names.
-    ///
-    /// Unconfirmed — see the class documentation and Q8.
     public static final String CLEARING_SYSTEM = "JPZGN";
 
-    /// How many digits of a member id belong to the bank.
+    /// How many digits 銀行番号 has.
     public static final int BANK_CODE_LENGTH = 4;
 
-    /// How many digits belong to the branch.
+    /// How many digits 支店番号 has.
     public static final int BRANCH_CODE_LENGTH = 3;
 
     /// Validates the agent.
@@ -55,49 +49,33 @@ public record Agent(String bankCode, String branchCode, String name) {
         Objects.requireNonNull(name, "name");
     }
 
-    /// The identifier this institution has within the clearing system.
+    /// Whether this agent identifies anything at all.
     ///
-    /// @return 銀行番号 followed by 支店番号
-    public String memberId() {
-        return bankCode + branchCode;
-    }
-
-    /// Whether the member id read back would split the way it was written.
-    ///
-    /// False only when there is a member id and it is not four digits plus
-    /// three — which is not a malformed file, only one this mapping cannot take
-    /// apart. An *absent* agent splits cleanly by vacuity: there is
-    /// nothing to take apart, and reporting it as malformed would send a reader
-    /// looking for a defect in a value that was never there.
-    ///
-    /// @return true if there is nothing to split, or it splits as expected
-    public boolean splitsCleanly() {
-        if (memberId().isEmpty()) {
-            return true;
-        }
-        return bankCode.length() == BANK_CODE_LENGTH
-                && (branchCode.isEmpty() || branchCode.length() == BRANCH_CODE_LENGTH);
+    /// @return true when neither code nor name is present
+    public boolean isEmpty() {
+        return bankCode.isBlank() && branchCode.isBlank() && name.isBlank();
     }
 
     /// Reads an agent from its element.
     ///
-    /// A seven-digit member id splits four and three. Anything else is kept
-    /// whole in [#bankCode()], with no branch — the caller can see that
-    /// through [#splitsCleanly()] and report it rather than guessing where
-    /// the boundary was.
+    /// Reads the profile's shape, and also the seven-digit `MmbId` this
+    /// library used to write — otherwise files it produced before that was
+    /// corrected would stop being readable by it. An explicit `BrnchId/Id`
+    /// always wins over anything inferred from a long member id.
     ///
     /// @param element the `DbtrAgt` or `CdtrAgt` element
     /// @return the agent
     public static Agent from(XmlElement element) {
         Objects.requireNonNull(element, "element");
         String member = element.textAt("FinInstnId/ClrSysMmbId/MmbId").orElse("");
+        String branch = element.textAt("FinInstnId/BrnchId/Id").orElse("");
         String institutionName = element.textAt("FinInstnId/Nm").orElse("");
 
-        if (member.length() == BANK_CODE_LENGTH + BRANCH_CODE_LENGTH) {
+        if (branch.isEmpty() && member.length() == BANK_CODE_LENGTH + BRANCH_CODE_LENGTH) {
             return new Agent(member.substring(0, BANK_CODE_LENGTH),
                     member.substring(BANK_CODE_LENGTH), institutionName);
         }
-        return new Agent(member, "", institutionName);
+        return new Agent(member, branch, institutionName);
     }
 
     /// Renders the agent.
@@ -105,16 +83,19 @@ public record Agent(String bankCode, String branchCode, String name) {
     /// @param elementName the element name — `DbtrAgt` or `CdtrAgt`
     /// @return the element, or empty when the agent carries nothing to write
     public Optional<XmlElement> toXml(String elementName) {
-        if (memberId().isBlank() && name.isBlank()) {
+        if (isEmpty()) {
             return Optional.empty();
         }
         XmlElement.Builder institution = XmlElement.element("FinInstnId");
-        if (!memberId().isBlank()) {
+        if (!bankCode.isBlank()) {
             institution.child(XmlElement.element("ClrSysMmbId")
                     .child(XmlElement.element("ClrSysId").textChild("Cd", CLEARING_SYSTEM))
-                    .textChild("MmbId", memberId()));
+                    .textChild("MmbId", bankCode));
         }
         institution.textChild("Nm", name);
+        if (!branchCode.isBlank()) {
+            institution.child(XmlElement.element("BrnchId").textChild("Id", branchCode));
+        }
 
         return Optional.of(XmlElement.element(elementName).child(institution).build());
     }
