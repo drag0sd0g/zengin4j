@@ -202,6 +202,60 @@ class ZediEnvelopeTest {
                 .isEqualTo(original);
     }
 
+    /// `Fr` and `To` take different branches of `head.001`, and both are
+    /// legal, so a schema cannot tell them apart — only the profile does. The
+    /// sender is a company and takes `OrgId`; the recipient is a bank and
+    /// takes `FIId`.
+    @Test
+    void theSenderIsAnOrganisationAndTheRecipientIsABank() {
+        var head = new BusinessApplicationHeader(
+                "9900000001", "9999", "M1", MessageId.PAIN_001_001_03,
+                java.time.OffsetDateTime.parse("2026-09-01T00:00:00Z"));
+
+        var written = new String(
+                io.zengin4j.iso20022.xml.XmlSerializer.toBytes(head.toXml()),
+                StandardCharsets.UTF_8);
+
+        assertThat(written)
+                .contains("<Fr>")
+                .containsSubsequence("<Fr>", "<OrgId>", "9900000001", "</Fr>")
+                .containsSubsequence("<To>", "<FIId>", "<FinInstnId>", "9999", "</To>");
+        assertThat(written.substring(written.indexOf("<To>"), written.indexOf("</To>")))
+                .as("the recipient must not carry the organisation branch")
+                .doesNotContain("OrgId");
+    }
+
+    /// Changing the branch the writer uses must not cost the reader anything:
+    /// it accepts both, which is why this fix was one method.
+    @Test
+    void aRecipientWrittenAsABankReadsBackUnchanged() {
+        var head = new BusinessApplicationHeader(
+                "9900000001", "9999", "M1", MessageId.PAIN_001_001_03,
+                java.time.OffsetDateTime.parse("2026-09-01T00:00:00Z"));
+
+        assertThat(BusinessApplicationHeader.from(head.toXml())).isEqualTo(head);
+    }
+
+    /// Headers written before this change addressed the bank through `OrgId`.
+    /// They still read, because the reader was already right.
+    @Test
+    void aRecipientWrittenTheOldWayStillReads() {
+        var legacy = io.zengin4j.iso20022.xml.XmlElement.element("AppHdr")
+                .namespace(MessageId.HEAD_001_001_01.namespace())
+                .child(io.zengin4j.iso20022.xml.XmlElement.element("To")
+                        .child(io.zengin4j.iso20022.xml.XmlElement.element("OrgId")
+                                .child(io.zengin4j.iso20022.xml.XmlElement.element("Id")
+                                        .child(io.zengin4j.iso20022.xml.XmlElement.element("OrgId")
+                                                .child(io.zengin4j.iso20022.xml.XmlElement
+                                                        .element("Othr")
+                                                        .textChild("Id", "9999"))))))
+                .textChild("MsgDefIdr", "pain.001.001.03")
+                .textChild("CreDt", "2026-09-01T00:00:00Z")
+                .build();
+
+        assertThat(BusinessApplicationHeader.from(legacy).to()).isEqualTo("9999");
+    }
+
     /// `CreDt` is `ISONormalisedDateTime`, whose schema type carries a
     /// pattern facet requiring the literal `Z`. A JST timestamp written with
     /// its own offset fails that facet — and a validator is the only thing
