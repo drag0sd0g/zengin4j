@@ -50,6 +50,16 @@ public record FieldSpec(
         List<String> codes) {
 
     /// Validates the components.
+    ///
+    /// The width checks are repeated in [FieldDescriptor], which is where they
+    /// are load-bearing — its constructor is public, so a spec is not the only
+    /// way to reach one. Checking here as well means the caller who wrote the
+    /// width is the one who hears about it.
+    ///
+    /// @throws NullPointerException     if any component is null
+    /// @throws IllegalArgumentException if the length is not positive, or an
+    ///   `N` field is wider than
+    ///   [FieldType#MAX_NUMERIC_DIGITS]
     public FieldSpec {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(nameJa, "nameJa");
@@ -61,6 +71,17 @@ public record FieldSpec(
         Objects.requireNonNull(note, "note");
         Objects.requireNonNull(charClass, "charClass");
         codes = List.copyOf(codes);
+        if (length < 1) {
+            throw new IllegalArgumentException(
+                    "field '" + id + "' must be at least one byte, found " + length);
+        }
+        if (type == FieldType.N && length > FieldType.MAX_NUMERIC_DIGITS) {
+            throw new IllegalArgumentException("field '" + id + "' is N(" + length
+                    + "), and an N field is decoded into a long: past "
+                    + FieldType.MAX_NUMERIC_DIGITS + " digits the decoded value wraps and a large"
+                    + " amount reads back as a negative one, with nothing thrown. Declare it as C"
+                    + " if the field really is that wide and is not an amount.");
+        }
     }
 
     /// Describes a field with no optional attributes set.

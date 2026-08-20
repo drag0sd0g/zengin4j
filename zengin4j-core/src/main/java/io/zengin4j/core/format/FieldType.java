@@ -24,6 +24,23 @@ public enum FieldType {
     /// unconfirmed (Q5).
     C(Alignment.LEFT, (byte) ' ');
 
+    /// The widest `N` field that can be decoded without losing the value.
+    ///
+    /// A zoned-decimal field is decoded into a `long`, and nineteen digits is
+    /// where that stops being safe: 9,999,999,999,999,999,999 is larger than
+    /// `Long.MAX_VALUE`, and the decoder accumulates with `value * 10 + digit`,
+    /// which wraps rather than throwing. The result would be a **negative
+    /// amount, returned silently** — the single worst thing a payment library
+    /// can do.
+    ///
+    /// The widest numeric field any published format declares is twelve
+    /// digits, so this constrains nobody using a bundled descriptor. It exists
+    /// for the consumer-supplied descriptors R-X1 allows, where the width is
+    /// whatever the caller writes.
+    ///
+    /// @since 0.6.0
+    public static final int MAX_NUMERIC_DIGITS = 18;
+
     private final Alignment alignment;
     private final byte padByte;
 

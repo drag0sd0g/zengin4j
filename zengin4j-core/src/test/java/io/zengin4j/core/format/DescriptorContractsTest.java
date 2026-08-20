@@ -218,6 +218,64 @@ class DescriptorContractsTest {
         assertThat(verified.sources()).hasSize(2);
     }
 
+    /// An `N` field is decoded into a `long`. Nothing downstream checks for
+    /// overflow — `FieldCodec` accumulates with `value * 10 + digit` — so the
+    /// width is the only place the wrap can be prevented, and it is prevented
+    /// at the point the width is written rather than the point it is decoded.
+    @Test
+    void numericFieldsCannotBeWideEnoughToOverflowALong() {
+        assertThat(FieldType.MAX_NUMERIC_DIGITS).isEqualTo(18);
+
+        assertThat(FieldSpec.of(1, "amount", "金額", "Amount", FieldType.N,
+                FieldType.MAX_NUMERIC_DIGITS).length()).isEqualTo(18);
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> FieldSpec.of(1, "amount", "金額", "Amount", FieldType.N, 19))
+                .withMessageContaining("N(19)")
+                .withMessageContaining("reads back as a negative one");
+    }
+
+    /// The limit is 18 because 19 is where a full field stops fitting. Pinning
+    /// the arithmetic rather than the constant, so moving the constant without
+    /// moving the reason fails here.
+    @Test
+    void theNumericWidthLimitIsExactlyWhereALongStopsHolding() {
+        var widest = new BigInteger("9".repeat(FieldType.MAX_NUMERIC_DIGITS));
+        assertThat(widest).isLessThanOrEqualTo(BigInteger.valueOf(Long.MAX_VALUE));
+
+        var oneWider = new BigInteger("9".repeat(FieldType.MAX_NUMERIC_DIGITS + 1));
+        assertThat(oneWider).isGreaterThan(BigInteger.valueOf(Long.MAX_VALUE));
+    }
+
+    /// `FieldDescriptor`'s constructor is public, so a caller can reach one
+    /// without going through a spec. The guard has to be there too or it is
+    /// decoration.
+    @Test
+    void aWideNumericFieldIsRefusedEvenWhenTheSpecIsBypassed() {
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> field(1, "amount", 0, 19, Optional.empty()))
+                .withMessageContaining("N(19)");
+
+        assertThat(field(1, "amount", 0, 18, Optional.empty()).length()).isEqualTo(18);
+    }
+
+    /// Character fields carry names, not values, and are never decoded into a
+    /// long — 受取人名 is already 30 bytes and one bundled field is 119.
+    @Test
+    void characterFieldsAreNotLimitedByTheNumericWidth() {
+        assertThat(FieldSpec.of(1, "name", "名", "Name", FieldType.C, 119).length()).isEqualTo(119);
+    }
+
+    @Test
+    void fieldsMustBeAtLeastOneByteWide() {
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> FieldSpec.of(1, "x", "項目", "Field", FieldType.N, 0))
+                .withMessageContaining("at least one byte");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> FieldSpec.of(1, "x", "項目", "Field", FieldType.C, -5))
+                .withMessageContaining("at least one byte");
+    }
+
     private static FormatDescriptor format(Map<RecordKind, RecordDescriptor> records) {
         return new FormatDescriptor(ID, "例", "Example", "21", 4, false, List.of(), Optional.empty(),
                 new EnumMap<>(records));

@@ -70,6 +70,13 @@ public record FieldDescriptor(
         if (length < 1) {
             throw new IllegalArgumentException("field '" + id + "' must be at least one byte, found " + length);
         }
+        if (type == FieldType.N && length > FieldType.MAX_NUMERIC_DIGITS) {
+            throw new IllegalArgumentException("field '" + id + "' is N(" + length
+                    + "), and an N field is decoded into a long: past "
+                    + FieldType.MAX_NUMERIC_DIGITS + " digits the decoded value wraps and a large"
+                    + " amount reads back as a negative one, with nothing thrown. Declare it as C"
+                    + " if the field really is that wide and is not an amount.");
+        }
         if (offset < 0) {
             throw new IllegalArgumentException("field '" + id + "' has a negative offset");
         }
