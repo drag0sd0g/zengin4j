@@ -16,7 +16,7 @@ jazzer = "0.30.0"
 jacoco = "0.8.15"
 jmh = "1.37"
 cyclonedx = "2.4.1"
-jackson = "2.20.0"
+jackson = "2.22.2"
 # The CLI's argument parser. A runtime dependency of zengin4j-cli only, which
 # ships as an application and is not published (ADR-0024).
 picocli = "4.7.7"
