@@ -20,7 +20,7 @@ jackson = "2.20.0"
 # The CLI's argument parser. A runtime dependency of zengin4j-cli only, which
 # ships as an application and is not published (ADR-0024).
 picocli = "4.7.7"
-pitest = "1.25.9"
+pitest = "1.30.0"
 pitest-junit5 = "1.2.3"
 # Build-scoped only: used by zengin4j-codegen to read the descriptors and
 # generate them into core. It never reaches a published runtime class path.
